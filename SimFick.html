@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador — Ley de Fick</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#10131A;
+    --ink-800:#1A1E27;
+    --border:#2C313F;
+    --amber:#D99A3D;
+    --amber-soft: rgba(217,154,61,0.16);
+    --teal:#4FB8A8;
+    --teal-soft: rgba(79,184,168,0.14);
+    --coral:#E2604F;
+    --coral-soft: rgba(226,96,79,0.16);
+    --violet:#8E7CC3;
+    --paper:#EDE8DD;
+    --muted:#8A8F9C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink-900);color:var(--paper);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:26px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--amber);}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:30px;margin:8px 0 6px;font-weight:600;}
+  .subtitle{color:var(--muted);font-size:13.5px;max-width:680px;line-height:1.5;}
+  .course-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  .intro-note{background:var(--ink-800);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:22px;font-size:13.5px;line-height:1.6;}
+  .intro-note b{color:var(--amber);}
+  .formula{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--teal);background:var(--ink-900);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:inline-block;margin:8px 0;}
+  .intro-note .link-note{color:var(--violet);font-weight:600;}
+
+  .sim-grid{display:grid;grid-template-columns:296px 1fr;gap:22px;align-items:start;}
+  @media (max-width:900px){.sim-grid{grid-template-columns:1fr;}}
+
+  .panel{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .panel h2{font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;}
+  .panel + .panel{margin-top:14px;}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip{background:var(--ink-900);border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:6px 12px;font-size:11.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .chip.active{background:var(--amber-soft);border-color:var(--amber);color:var(--amber);font-weight:600;}
+  .site-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+  label.small{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-top:10px;margin-bottom:4px;}
+  .range-row{display:flex;align-items:center;gap:8px;}
+  input[type=range]{flex:1;accent-color:var(--amber);}
+  .range-val{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--paper);width:44px;text-align:right;}
+
+  .drug-card{background:var(--ink-900);border:1px solid var(--border);border-left:4px solid var(--accent,var(--amber));border-radius:10px;padding:12px 14px;margin-top:10px;}
+  .drug-card:first-child{margin-top:0;}
+  .dname-row{display:flex;justify-content:space-between;align-items:center;}
+  .dname{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;}
+  .remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;}
+  .remove-btn:hover{color:var(--coral);}
+  .add-drug{background:var(--ink-800);border:1px dashed var(--border);color:var(--muted);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:12px;width:100%;}
+  .add-drug:hover:not(:disabled){color:var(--amber);border-color:var(--amber);}
+  .add-drug:disabled{opacity:.4;cursor:not-allowed;}
+
+  .stage-panel{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .stage-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+  .stage-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;}
+  .stage-sub{font-size:11.5px;color:var(--muted);}
+
+  #particleStage{position:relative;height:180px;background:var(--ink-900);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .zone-label{position:absolute;top:8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+  .zone-label.left{left:12px;}
+  .zone-label.right{right:12px;}
+  #membraneBar{position:absolute;left:50%;top:0;bottom:0;width:8px;margin-left:-4px;
+    background:repeating-linear-gradient(180deg, var(--border) 0 6px, var(--ink-800) 6px 12px);
+    border-left:1px solid var(--border);border-right:1px solid var(--border);}
+  .membrane-label{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--muted);background:var(--ink-900);padding:1px 6px;border-radius:4px;}
+  .particle{position:absolute;width:9px;height:9px;border-radius:50%;transition:left .45s ease, top .5s ease;box-shadow:0 0 4px rgba(0,0,0,.4);}
+
+  .scrubber-row{display:flex;align-items:center;gap:12px;margin-top:14px;}
+  .play-btn{background:var(--amber);color:var(--ink-900);border:none;border-radius:50%;width:32px;height:32px;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .time-readout{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--amber);width:70px;text-align:right;}
+
+  .focus-readout{font-size:12.5px;color:var(--muted);margin-top:8px;}
+  .focus-readout b{color:var(--paper);}
+
+  svg.chart{width:100%;height:auto;display:block;}
+  .readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .readout-card{background:var(--ink-900);border:1px solid var(--border);border-radius:8px;padding:10px 12px;border-top:3px solid var(--accent);}
+  .rc-name{font-size:11px;color:var(--muted);}
+  .rc-val{font-family:'IBM Plex Mono',monospace;font-size:18px;margin:2px 0;}
+  .rc-val small{font-size:11px;color:var(--muted);font-weight:400;}
+  .rc-phase{font-size:10.5px;color:var(--muted);}
+  .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:11.5px;color:var(--muted);}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+
+  .two-col-bottom{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:26px;}
+  @media (max-width:900px){.two-col-bottom{grid-template-columns:1fr;}}
+  .bottom-panel{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .bottom-panel h2{font-family:'Space Grotesk',sans-serif;font-size:15.5px;margin:0 0 10px;}
+  table.ref-table{width:100%;border-collapse:collapse;font-size:12px;}
+  table.ref-table th{text-align:left;color:var(--muted);font-weight:500;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  table.ref-table td{padding:7px 4px;border-bottom:1px solid var(--border);vertical-align:top;}
+  table.ref-table tr:last-child td{border-bottom:none;}
+  .var-name{font-family:'IBM Plex Mono',monospace;color:var(--amber);white-space:nowrap;}
+  .eff-up{color:var(--teal);}
+  .eff-down{color:var(--coral);}
+
+  .panel ol{margin:0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .panel ol li{margin-bottom:7px;}
+  .pdesc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+
+  .disclaimer{margin-top:24px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Absorción y difusión pasiva</div>
+    <h1>Simulador — Ley de Fick</h1>
+    <p class="subtitle">Explora cómo el tamaño molecular, la liposolubilidad, la ionización y las características de la membrana determinan la velocidad con la que un fármaco difunde de un compartimento a otro.</p>
+    <div class="course-tag">Farmacología Básica · ENMH-IPN · Grupo 5PM6 · Periodo 2027/1</div>
+  </header>
+
+  <div class="intro-note">
+    <b>1.ª Ley de Fick:</b> la velocidad de difusión pasiva a través de una membrana es directamente proporcional al área, al coeficiente de difusión, al coeficiente de partición lípido/agua y al gradiente de concentración, e inversamente proporcional al grosor de la membrana.
+    <div class="formula">Velocidad = (D · A · K · ΔC) / Δx</div>
+    A diferencia del etanol (eliminación de <b>orden cero</b>, vista en el simulador anterior), la difusión pasiva descrita por Fick genera un <span class="link-note">acercamiento exponencial al equilibrio</span>: la velocidad depende del gradiente, así que va disminuyendo a medida que las concentraciones se igualan — un comportamiento de <b>orden uno</b>.
+  </div>
+
+  <div class="sim-grid">
+    <div>
+      <div class="panel">
+        <h2>Sitio de difusión</h2>
+        <div class="chip-row" id="siteChips"></div>
+        <div id="customSiteSliders"></div>
+        <div class="site-note" id="siteNote"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Fármacos a comparar</h2>
+        <div id="drugCards"></div>
+        <button class="add-drug" id="addDrugBtn">+ Agregar fármaco</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="stage-panel">
+        <div class="stage-header">
+          <div>
+            <div class="stage-title">Difusión en tiempo real</div>
+            <div class="stage-sub">Cada punto representa una fracción de las moléculas del fármaco enfocado</div>
+          </div>
+          <div class="chip-row" id="focusChips"></div>
+        </div>
+
+        <div id="particleStage">
+          <div class="zone-label left">Donador</div>
+          <div class="zone-label right">Receptor</div>
+          <div id="membraneBar"></div>
+          <div class="membrane-label">membrana</div>
+        </div>
+
+        <div class="scrubber-row">
+          <button class="play-btn" id="playBtn">▶</button>
+          <input type="range" id="scrubberRange" min="0" max="10" step="0.05" value="0">
+          <div class="time-readout" id="timeLabel">t = 0.0</div>
+          <button class="play-btn" id="resetBtn" title="Reiniciar simulador" aria-label="Reiniciar simulador" style="background:var(--ink-900);color:var(--muted);border:1px solid var(--border);">⟲</button>
+        </div>
+        <div class="focus-readout" id="focusReadout"></div>
+      </div>
+
+      <div class="stage-panel" style="margin-top:16px;">
+        <div class="stage-header">
+          <div>
+            <div class="stage-title">Gradiente de concentración remanente</div>
+            <div class="stage-sub">% del gradiente inicial (ΔC) que aún no se ha disipado</div>
+          </div>
+          <div class="legend-row" id="curveLegend"></div>
+        </div>
+        <div id="chartSvgWrap"></div>
+        <div class="readouts" id="readouts"></div>
+        <div class="legend-row">
+          <span><span class="legend-swatch" style="background:var(--muted);"></span>línea punteada: 5% remanente ≈ equilibrio práctico</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col-bottom">
+    <div class="bottom-panel">
+      <h2>Cómo afecta cada variable a la velocidad</h2>
+      <div class="pdesc">Referencia rápida de la ecuación de Fick.</div>
+      <table class="ref-table">
+        <tr><th>Variable</th><th>Si aumenta...</th></tr>
+        <tr><td class="var-name">D</td><td><span class="eff-up">↑ velocidad</span> — molécula más pequeña, difunde más rápido</td></tr>
+        <tr><td class="var-name">K</td><td><span class="eff-up">↑ velocidad</span> — mayor liposolubilidad, cruza mejor la bicapa</td></tr>
+        <tr><td class="var-name">A</td><td><span class="eff-up">↑ velocidad</span> — más superficie de contacto (ej. microvellosidades)</td></tr>
+        <tr><td class="var-name">Δx</td><td><span class="eff-down">↓ velocidad</span> — mayor distancia a recorrer (ej. piel vs. alvéolo)</td></tr>
+        <tr><td class="var-name">ΔC</td><td><span class="eff-up">↑ velocidad</span> — mayor diferencia de concentración entre lados</td></tr>
+        <tr><td class="var-name">% no ionizado</td><td><span class="eff-up">↑ velocidad</span> — solo la forma no ionizada atraviesa la bicapa (hipótesis de partición de pH)</td></tr>
+      </table>
+    </div>
+    <div class="bottom-panel">
+      <h2>Preguntas para discusión en clase</h2>
+      <div class="pdesc">Para participación o cierre de sesión.</div>
+      <ol>
+        <li>¿Por qué un fármaco muy liposoluble atraviesa la membrana más rápido que uno hidrosoluble, aunque ambos tengan el mismo tamaño molecular?</li>
+        <li>¿Por qué solo la fracción no ionizada de un ácido o base débil difunde según la ley de Fick? Relaciónalo con la hipótesis de partición de pH.</li>
+        <li>Compara la absorción intestinal (microvellosidades) con la absorción a través de la piel: ¿qué variable de la ecuación explica la diferencia?</li>
+        <li>¿Por qué la difusión pasiva siempre tiende a un equilibrio, mientras que el transporte activo puede mover un fármaco en contra de su gradiente?</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    Herramienta educativa con fines didácticos para la clase de Farmacología Básica. Los valores de D, K, área y grosor de membrana son relativos y sirven para comparar comportamientos, no corresponden a mediciones experimentales de un fármaco o sitio anatómico específico.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const COLORS = ['#D99A3D','#4FB8A8','#8E7CC3'];
+  const NAMES  = ['Fármaco A','Fármaco B','Fármaco C'];
+
+  const SITES = [
+    { key:'intestino', name:'Intestino delgado', A:180, Dx:1,   note:'Superficie enorme por las microvellosidades y epitelio de una sola capa: sitio de absorción más eficiente para difusión pasiva.' },
+    { key:'piel',       name:'Piel',              A:25,  Dx:15,  note:'Área de contacto pequeña y estrato córneo grueso: barrera lenta, típica de administración transdérmica.' },
+    { key:'alveolo',    name:'Alvéolo pulmonar',  A:280, Dx:0.4, note:'Membrana alveolo-capilar extremadamente delgada y de gran superficie: ideal para gases y anestésicos inhalados.' },
+    { key:'bhe',        name:'Barrera hematoencefálica', A:60, Dx:8, note:'Uniones estrechas entre células endoteliales: restringe el paso de fármacos poco liposolubles al SNC.' },
+    { key:'custom',     name:'Personalizado',     A:100, Dx:5,   note:'Ajusta manualmente el área y el grosor de la membrana.' }
+  ];
+
+  const R_REF = 20;       // D=1, K=1, frac=100%, A=100, Dx=5
+  const K_TARGET = 0.5;   // velocidad de referencia en el eje de tiempo 0-10
+  const SCALE = K_TARGET / R_REF;
+  const T_AXIS = 10;
+
+  let siteKey = 'intestino';
+  let customA = 100, customDx = 5;
+
+  let drugs = [
+    { id:0, D:1.0, K:1.0, frac:80 },
+    { id:1, D:1.0, K:4.0, frac:90 },
+    { id:2, D:0.5, K:0.3, frac:30 }
+  ];
+  let nextId = 3;
+  let focusId = 0;
+  let currentT = 0;
+  let playing = false;
+  let playTimer = null;
+
+  function colorForIdx(i){ return COLORS[i % COLORS.length]; }
+  function nameForIdx(i){ return NAMES[i % NAMES.length]; }
+  function fmt(n,d){ return Number(n).toFixed(d); }
+
+  function currentSite(){
+    const s = SITES.find(function(s){ return s.key === siteKey; });
+    if (siteKey === 'custom') return { key:'custom', name:'Personalizado', A:customA, Dx:customDx, note:s.note };
+    return s;
+  }
+
+  function kDispFor(d, site){
+    const R = d.D * d.K * (d.frac/100) * site.A / site.Dx;
+    return SCALE * R;
+  }
+
+  function pctRemaining(t, k){ return 100 * Math.exp(-k * t); }
+
+  // ---------- Site panel ----------
+  function renderSitePanel(){
+    const chips = document.getElementById('siteChips');
+    chips.innerHTML = SITES.map(function(s){
+      return '<button class="chip ' + (s.key===siteKey?'active':'') + '" data-site="' + s.key + '">' + s.name + '</button>';
+    }).join('');
+    chips.querySelectorAll('.chip').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        siteKey = btn.getAttribute('data-site');
+        fullRender();
+      });
+    });
+
+    const customWrap = document.getElementById('customSiteSliders');
+    if (siteKey === 'custom') {
+      customWrap.innerHTML =
+        '<label class="small">Área de superficie (u. rel.)</label>' +
+        '<div class="range-row"><input type="range" id="customAInput" min="10" max="300" step="5" value="' + customA + '"><span class="range-val" id="customAVal">' + customA + '</span></div>' +
+        '<label class="small">Grosor de membrana (μm)</label>' +
+        '<div class="range-row"><input type="range" id="customDxInput" min="0.3" max="20" step="0.1" value="' + customDx + '"><span class="range-val" id="customDxVal">' + fmt(customDx,1) + '</span></div>';
+      document.getElementById('customAInput').addEventListener('input', function(e){
+        customA = parseFloat(e.target.value);
+        document.getElementById('customAVal').textContent = customA;
+        updateAll();
+      });
+      document.getElementById('customDxInput').addEventListener('input', function(e){
+        customDx = parseFloat(e.target.value);
+        document.getElementById('customDxVal').textContent = fmt(customDx,1);
+        updateAll();
+      });
+    } else {
+      customWrap.innerHTML = '';
+    }
+    document.getElementById('siteNote').textContent = currentSite().note;
+  }
+
+  // ---------- Drug cards ----------
+  function renderDrugCards(){
+    const wrap = document.getElementById('drugCards');
+    wrap.innerHTML = drugs.map(function(d, idx){
+      const color = colorForIdx(idx);
+      return (
+        '<div class="drug-card" style="--accent:' + color + '">' +
+          '<div class="dname-row">' +
+            '<span class="dname" style="color:' + color + '">' + nameForIdx(idx) + '</span>' +
+            (drugs.length > 1 ? '<button class="remove-btn" data-remove="' + d.id + '" aria-label="Quitar fármaco">✕</button>' : '') +
+          '</div>' +
+          '<label class="small">Coef. de difusión D (tamaño molecular⁻¹)</label>' +
+          '<div class="range-row"><input type="range" min="0.2" max="2" step="0.05" value="' + d.D + '" data-field="D" data-id="' + d.id + '"><span class="range-val">' + fmt(d.D,2) + '</span></div>' +
+          '<label class="small">Coef. de partición K (liposolubilidad)</label>' +
+          '<div class="range-row"><input type="range" min="0.1" max="5" step="0.05" value="' + d.K + '" data-field="K" data-id="' + d.id + '"><span class="range-val">' + fmt(d.K,2) + '</span></div>' +
+          '<label class="small">% de fármaco no ionizado</label>' +
+          '<div class="range-row"><input type="range" min="0" max="100" step="1" value="' + d.frac + '" data-field="frac" data-id="' + d.id + '"><span class="range-val">' + Math.round(d.frac) + '%</span></div>' +
+        '</div>'
+      );
+    }).join('');
+
+    wrap.querySelectorAll('[data-remove]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = Number(btn.getAttribute('data-remove'));
+        drugs = drugs.filter(function(d){ return d.id !== id; });
+        if (!drugs.find(function(d){ return d.id === focusId; })) focusId = drugs[0].id;
+        fullRender();
+      });
+    });
+    wrap.querySelectorAll('input[type=range]').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        const id = Number(inp.getAttribute('data-id'));
+        const field = inp.getAttribute('data-field');
+        const d = drugs.find(function(dd){ return dd.id === id; });
+        if (!d) return;
+        d[field] = parseFloat(inp.value);
+        inp.nextElementSibling.textContent = field === 'frac' ? Math.round(d[field]) + '%' : fmt(d[field],2);
+        updateAll();
+      });
+    });
+
+    document.getElementById('addDrugBtn').disabled = drugs.length >= 3;
+  }
+
+  function renderFocusChips(){
+    const wrap = document.getElementById('focusChips');
+    wrap.innerHTML = drugs.map(function(d, idx){
+      const color = colorForIdx(idx);
+      const active = d.id === focusId;
+      return '<button class="chip" data-focus="' + d.id + '" style="' + (active ? ('background:' + color + '22;border-color:' + color + ';color:' + color + ';font-weight:600;') : '') + '">' + nameForIdx(idx) + '</button>';
+    }).join('');
+    wrap.querySelectorAll('[data-focus]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        focusId = Number(btn.getAttribute('data-focus'));
+        renderFocusChips();
+        updateAll();
+      });
+    });
+  }
+
+  // ---------- Particle stage ----------
+  const N_PARTICLES = 28;
+  let particlesInit = false;
+  const particleMeta = [];
+  function ensureParticles(){
+    const stage = document.getElementById('particleStage');
+    if (particlesInit) return;
+    for (let i = 0; i < N_PARTICLES; i++) {
+      particleMeta.push({
+        y: 22 + Math.random() * 66,
+        leftX: 8 + Math.random() * 32,
+        rightX: 60 + Math.random() * 32
+      });
+      const el = document.createElement('div');
+      el.className = 'particle';
+      stage.appendChild(el);
+    }
+    particlesInit = true;
+  }
+  function updateParticles(){
+    ensureParticles();
+    const stage = document.getElementById('particleStage');
+    const els = stage.querySelectorAll('.particle');
+    const site = currentSite();
+    const idx = drugs.findIndex(function(d){ return d.id === focusId; });
+    const d = drugs[idx] || drugs[0];
+    const color = colorForIdx(idx >= 0 ? idx : 0);
+    const k = kDispFor(d, site);
+    const c1 = 50 + 50 * Math.exp(-k * currentT); // % on donor side
+    const leftCount = Math.round(N_PARTICLES * c1 / 100);
+    els.forEach(function(el, i){
+      const meta = particleMeta[i];
+      const onLeft = i < leftCount;
+      el.style.left = (onLeft ? meta.leftX : meta.rightX) + '%';
+      el.style.top = meta.y + '%';
+      el.style.background = color;
+    });
+  }
+
+  // ---------- Chart ----------
+  const W = 760, H = 300, M = { left: 46, right: 20, top: 14, bottom: 30 };
+  const plotW = W - M.left - M.right, plotH = H - M.top - M.bottom;
+  function buildChart(){
+    function xs(t){ return M.left + (t / T_AXIS) * plotW; }
+    function ys(v){ return M.top + plotH - (v / 100) * plotH; }
+    const site = currentSite();
+
+    let svg = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+    for (let t = 0; t <= T_AXIS + 0.001; t += 1) {
+      const gx = xs(t);
+      svg += '<line x1="' + gx + '" y1="' + M.top + '" x2="' + gx + '" y2="' + (M.top+plotH) + '" stroke="var(--border)" stroke-width="1"></line>';
+      if (t % 2 === 0) svg += '<text x="' + gx + '" y="' + (M.top+plotH+16) + '" fill="var(--muted)" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono, monospace">' + t + '</text>';
+    }
+    for (let v = 0; v <= 100.001; v += 20) {
+      const gy = ys(v);
+      svg += '<line x1="' + M.left + '" y1="' + gy + '" x2="' + (M.left+plotW) + '" y2="' + gy + '" stroke="var(--border)" stroke-width="1"></line>';
+      svg += '<text x="' + (M.left-6) + '" y="' + (gy+3) + '" fill="var(--muted)" font-size="9.5" text-anchor="end" font-family="IBM Plex Mono, monospace">' + v + '%</text>';
+    }
+    const gy5 = ys(5);
+    svg += '<line x1="' + M.left + '" y1="' + gy5 + '" x2="' + (M.left+plotW) + '" y2="' + gy5 + '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"></line>';
+
+    drugs.forEach(function(d, idx){
+      const color = colorForIdx(idx);
+      const k = kDispFor(d, site);
+      let path = '';
+      const n = 120;
+      for (let i = 0; i <= n; i++) {
+        const t = (T_AXIS * i) / n;
+        const v = pctRemaining(t, k);
+        const px = xs(t), py = ys(v);
+        path += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2) + ' ';
+      }
+      svg += '<path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2.2"></path>';
+    });
+
+    const scrubX = xs(Math.min(currentT, T_AXIS));
+    svg += '<line x1="' + scrubX + '" y1="' + M.top + '" x2="' + scrubX + '" y2="' + (M.top+plotH) + '" stroke="var(--paper)" stroke-width="1" stroke-dasharray="2,3" opacity="0.55"></line>';
+    drugs.forEach(function(d, idx){
+      const color = colorForIdx(idx);
+      const k = kDispFor(d, site);
+      const v = pctRemaining(currentT, k);
+      const py = ys(v);
+      svg += '<circle cx="' + scrubX + '" cy="' + py + '" r="4.5" fill="' + color + '" stroke="var(--ink-900)" stroke-width="1.5"></circle>';
+    });
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderReadouts(){
+    const site = currentSite();
+    const el = document.getElementById('readouts');
+    el.innerHTML = drugs.map(function(d, idx){
+      const color = colorForIdx(idx);
+      const k = kDispFor(d, site);
+      const v = pctRemaining(currentT, k);
+      const phase = v > 5 ? 'Difundiendo' : 'En equilibrio práctico';
+      return (
+        '<div class="readout-card" style="--accent:' + color + '">' +
+          '<div class="rc-name" style="color:' + color + '">' + nameForIdx(idx) + '</div>' +
+          '<div class="rc-val">' + fmt(v,1) + '<small>% remanente</small></div>' +
+          '<div class="rc-phase">' + phase + '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    const legend = document.getElementById('curveLegend');
+    legend.innerHTML = drugs.map(function(d, idx){
+      const color = colorForIdx(idx);
+      return '<span><span class="legend-swatch" style="background:' + color + '"></span>' + nameForIdx(idx) + '</span>';
+    }).join('');
+  }
+
+  function renderFocusReadout(){
+    const site = currentSite();
+    const idx = drugs.findIndex(function(d){ return d.id === focusId; });
+    const d = drugs[idx] || drugs[0];
+    const k = kDispFor(d, site);
+    const v = pctRemaining(currentT, k);
+    const t5 = k > 0 ? (Math.log(20) / k) : Infinity;
+    let msg;
+    if (k <= 0.0005) {
+      msg = 'con estos parámetros, prácticamente no difunde de forma pasiva en la escala de tiempo mostrada.';
+    } else if (t5 < 0.3) {
+      msg = 'el equilibrio se alcanza casi instantáneamente con estos parámetros.';
+    } else if (t5 <= T_AXIS) {
+      msg = 'alcanza equilibrio práctico (≤5% de gradiente) alrededor de t ≈ ' + fmt(t5,1) + '.';
+    } else {
+      msg = 'aún no alcanza el equilibrio dentro de la ventana de tiempo mostrada.';
+    }
+    document.getElementById('focusReadout').innerHTML =
+      '<b>' + nameForIdx(idx >= 0 ? idx : 0) + '</b> en <b>' + site.name + '</b>: gradiente remanente <b>' + fmt(v,1) + '%</b> — ' + msg;
+  }
+
+  // ---------- Orchestration ----------
+  function updateAll(){
+    document.getElementById('chartSvgWrap').innerHTML = buildChart();
+    document.getElementById('timeLabel').textContent = 't = ' + fmt(currentT,1);
+    renderReadouts();
+    renderFocusReadout();
+    updateParticles();
+  }
+
+  function fullRender(){
+    renderSitePanel();
+    renderDrugCards();
+    renderFocusChips();
+    updateAll();
+  }
+
+  function resetAll(){
+    if (playing) {
+      playing = false;
+      clearInterval(playTimer);
+      document.getElementById('playBtn').textContent = '▶';
+    }
+    siteKey = 'intestino';
+    customA = 100;
+    customDx = 5;
+    drugs = [
+      { id:0, D:1.0, K:1.0, frac:80 },
+      { id:1, D:1.0, K:4.0, frac:90 },
+      { id:2, D:0.5, K:0.3, frac:30 }
+    ];
+    nextId = 3;
+    focusId = 0;
+    currentT = 0;
+    scrubberEl.value = 0;
+    fullRender();
+  }
+  document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+  document.getElementById('addDrugBtn').addEventListener('click', function(){
+    if (drugs.length >= 3) return;
+    drugs.push({ id: nextId++, D: 1.0, K: 1.0, frac: 70 });
+    fullRender();
+  });
+
+  const scrubberEl = document.getElementById('scrubberRange');
+  scrubberEl.addEventListener('input', function(){
+    currentT = parseFloat(scrubberEl.value);
+    updateAll();
+  });
+
+  document.getElementById('playBtn').addEventListener('click', function(){
+    const btn = document.getElementById('playBtn');
+    if (playing) {
+      playing = false;
+      clearInterval(playTimer);
+      btn.textContent = '▶';
+      return;
+    }
+    playing = true;
+    btn.textContent = '❚❚';
+    if (currentT >= T_AXIS) currentT = 0;
+    playTimer = setInterval(function(){
+      currentT += T_AXIS / 220;
+      if (currentT >= T_AXIS) {
+        currentT = T_AXIS;
+        playing = false;
+        clearInterval(playTimer);
+        btn.textContent = '▶';
+      }
+      scrubberEl.value = currentT;
+      updateAll();
+    }, 40);
+  });
+
+  fullRender();
+})();
+</script>
+</body>
+</html>
