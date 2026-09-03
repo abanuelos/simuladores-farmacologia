@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caso clínico — Elección de forma farmacéutica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#10131A;
+    --ink-800:#1A1E27;
+    --border:#2C313F;
+    --amber:#D99A3D;
+    --amber-soft: rgba(217,154,61,0.16);
+    --teal:#4FB8A8;
+    --teal-soft: rgba(79,184,168,0.16);
+    --coral:#E2604F;
+    --coral-soft: rgba(226,96,79,0.16);
+    --violet:#8E7CC3;
+    --paper:#EDE8DD;
+    --muted:#8A8F9C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink-900);color:var(--paper);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:24px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--amber);}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:28px;margin:8px 0 6px;font-weight:600;}
+  .subtitle{color:var(--muted);font-size:13.5px;max-width:640px;line-height:1.5;}
+  .course-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  .intro-note{background:var(--ink-800);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:22px;font-size:13px;line-height:1.6;}
+  .intro-note b{color:var(--amber);}
+
+  .progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .progress-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
+  .score-chip{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--ink-800);border:1px solid var(--border);border-radius:20px;padding:5px 12px;color:var(--paper);}
+  .progress-bar{height:5px;background:var(--ink-800);border-radius:3px;overflow:hidden;margin-bottom:22px;}
+  .progress-fill{height:100%;background:var(--amber);border-radius:3px;transition:width .3s ease;}
+
+  .case-panel{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:22px 24px;}
+  .case-tag{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--violet);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .vignette{font-size:14.5px;line-height:1.65;margin-bottom:14px;}
+  .question{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;margin-bottom:16px;color:var(--amber);}
+
+  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:560px){.options-grid{grid-template-columns:1fr;}}
+  .opt-btn{background:var(--ink-900);border:1px solid var(--border);border-radius:10px;padding:14px 14px;text-align:left;cursor:pointer;color:var(--paper);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.4;transition:border-color .15s ease;}
+  .opt-btn:hover:not(:disabled){border-color:var(--amber);}
+  .opt-btn:disabled{cursor:default;}
+  .opt-emoji{font-size:18px;margin-right:6px;}
+  .opt-btn.correct{border-color:var(--teal);background:var(--teal-soft);}
+  .opt-btn.incorrect{border-color:var(--coral);background:var(--coral-soft);}
+  .opt-btn.dim{opacity:.55;}
+
+  .feedback{margin-top:18px;border-top:1px solid var(--border);padding-top:16px;}
+  .fb-banner{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;padding:10px 14px;border-radius:8px;margin-bottom:12px;}
+  .fb-banner.ok{background:var(--teal-soft);color:var(--teal);}
+  .fb-banner.bad{background:var(--coral-soft);color:var(--coral);}
+  .fb-explain{font-size:13px;line-height:1.6;color:var(--paper);margin-bottom:16px;}
+  .fb-explain b{color:var(--amber);}
+
+  .bars-title{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+  .bar-row{display:grid;grid-template-columns:150px 1fr 64px;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;}
+  .bar-label{color:var(--paper);}
+  .bar-track{background:var(--ink-900);border-radius:5px;height:14px;overflow:hidden;border:1px solid var(--border);}
+  .bar-fill{height:100%;border-radius:5px 0 0 5px;}
+  .bar-time{font-family:'IBM Plex Mono',monospace;color:var(--muted);text-align:right;}
+  .bar-row.correct .bar-label{color:var(--teal);font-weight:600;}
+  .bar-row.chosen-wrong .bar-label{color:var(--coral);font-weight:600;}
+
+  .next-btn{margin-top:18px;background:var(--amber);color:var(--ink-900);border:none;border-radius:8px;padding:10px 20px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
+
+  .summary-panel{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;}
+  .summary-score{font-family:'Space Grotesk',sans-serif;font-size:38px;font-weight:700;color:var(--amber);margin:8px 0;}
+  table.summary-table{width:100%;border-collapse:collapse;margin-top:18px;font-size:12.5px;text-align:left;}
+  table.summary-table th{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:500;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  table.summary-table td{padding:8px 6px;border-bottom:1px solid var(--border);}
+  .res-ok{color:var(--teal);}
+  .res-bad{color:var(--coral);}
+  .reset-btn{margin-top:20px;background:var(--ink-900);color:var(--paper);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;}
+  .reset-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .disclaimer{margin-top:22px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px;line-height:1.6;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Liberación — LADME</div>
+    <h1>Caso clínico: elección de forma farmacéutica</h1>
+    <p class="subtitle">Cada situación clínica exige una forma farmacéutica distinta según su perfil de liberación. Elige la opción correcta y compara qué tan rápido —o qué tan sostenido— libera el fármaco cada alternativa.</p>
+    <div class="course-tag">Farmacología Básica · ENMH-IPN · Grupo 5PM6 · Periodo 2027/1</div>
+  </header>
+
+  <div class="intro-note">
+    La <b>liberación</b> es el primer paso de LADME: determina cuándo y a qué velocidad el principio activo queda disponible para absorberse. Elegir la forma farmacéutica correcta no siempre significa elegir la más rápida — a veces el objetivo clínico exige justo lo contrario: liberación lenta y sostenida.
+  </div>
+
+  <div id="activityArea">
+    <div class="progress-row">
+      <div class="progress-label" id="progressLabel">Caso 1 de 5</div>
+      <div class="score-chip" id="scoreChip">Aciertos: 0/0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="case-panel">
+      <div class="case-tag" id="caseTag">Caso clínico</div>
+      <div class="vignette" id="vignetteText"></div>
+      <div class="question" id="questionText"></div>
+      <div class="options-grid" id="optionsGrid"></div>
+
+      <div class="feedback hidden" id="feedbackBox">
+        <div class="fb-banner" id="fbBanner"></div>
+        <div class="fb-explain" id="fbExplain"></div>
+        <div class="bars-title">Tiempo aproximado de inicio de acción por opción</div>
+        <div id="barsWrap"></div>
+        <button class="next-btn" id="nextBtn">Siguiente caso →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-panel hidden" id="summaryPanel">
+    <div class="eyebrow">Resultado final</div>
+    <div class="summary-score" id="summaryScore">0/5</div>
+    <div id="summaryText" style="color:var(--muted);font-size:13px;"></div>
+    <table class="summary-table" id="summaryTable"></table>
+    <button class="reset-btn" id="resetBtn">↻ Repetir actividad</button>
+  </div>
+
+  <div class="disclaimer">
+    Los tiempos de inicio de acción son valores aproximados con fines didácticos y varían según el fármaco específico, la dosis y las características del paciente.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const CASES = [
+    {
+      tag: 'Urgencia — anafilaxia',
+      vignette: 'Paciente masculino de 34 años presenta broncoespasmo, urticaria generalizada e hipotensión pocos minutos después de comer camarón. Se sospecha choque anafiláctico y se decide administrar adrenalina de inmediato.',
+      question: '¿Qué forma farmacéutica eliges para revertir el cuadro lo más rápido posible?',
+      options: [
+        { key:'im', label:'Autoinyector intramuscular (IM)', emoji:'💉', timeMin:5, correct:true,
+          explain:'La vía IM (cara anterolateral del muslo) tiene absorción rápida y confiable en anafilaxia, y es más práctica y segura de administrar de inmediato que preparar una vía IV en ese momento.' },
+        { key:'oral', label:'Tableta oral de liberación inmediata', emoji:'💊', timeMin:45, correct:false,
+          explain:'La vía oral depende de la deglución y del vaciamiento gástrico; en un paciente con compromiso de la vía aérea o hipotensión, es demasiado lenta y poco confiable.' },
+        { key:'parche', label:'Parche transdérmico', emoji:'🩹', timeMin:720, correct:false,
+          explain:'Los parches están diseñados para liberar el fármaco lentamente durante horas o días; son inútiles cuando se necesita un efecto en minutos.' },
+        { key:'jarabe', label:'Jarabe oral', emoji:'🥤', timeMin:30, correct:false,
+          explain:'Aunque se absorbe algo más rápido que una tableta, sigue dependiendo del tránsito gastrointestinal — demasiado lento para una urgencia.' }
+      ]
+    },
+    {
+      tag: 'Urgencia — angina de pecho',
+      vignette: 'Paciente de 58 años refiere dolor torácico opresivo de inicio súbito, irradiado al brazo izquierdo. Se decide administrar nitroglicerina para aliviar la crisis anginosa aguda.',
+      question: '¿Qué forma farmacéutica es adecuada para una crisis aguda?',
+      options: [
+        { key:'sublingual', label:'Comprimido sublingual', emoji:'👅', timeMin:3, correct:true,
+          explain:'La mucosa sublingual tiene una absorción muy rápida y evita el metabolismo de primer paso hepático — ideal para revertir una crisis aguda en minutos.' },
+        { key:'prolongada', label:'Tableta oral de liberación prolongada', emoji:'💊', timeMin:180, correct:false,
+          explain:'Está diseñada para mantener niveles estables durante horas con fines profilácticos, no para actuar en una crisis aguda.' },
+        { key:'parche2', label:'Parche transdérmico', emoji:'🩹', timeMin:720, correct:false,
+          explain:'Se usa para profilaxis continua de la angina, no para tratar un episodio agudo — su liberación es demasiado lenta.' },
+        { key:'capsula', label:'Cápsula de liberación retardada', emoji:'⏳', timeMin:240, correct:false,
+          explain:'El recubrimiento retrasa deliberadamente la liberación; es lo opuesto a lo que se necesita en una urgencia.' }
+      ]
+    },
+    {
+      tag: 'Protección gástrica',
+      vignette: 'Paciente con antecedente de gastritis crónica requiere naproxeno de forma prolongada para dolor articular. Se busca minimizar el contacto directo del fármaco con la mucosa gástrica.',
+      question: '¿Qué forma farmacéutica reduce mejor la irritación gástrica directa?',
+      options: [
+        { key:'enterico', label:'Tableta con recubrimiento entérico', emoji:'🧪', timeMin:180, correct:true,
+          explain:'El recubrimiento entérico resiste el pH ácido del estómago y se disuelve en el pH más básico del intestino, evitando la liberación directa sobre la mucosa gástrica.' },
+        { key:'convencional', label:'Tableta convencional', emoji:'💊', timeMin:45, correct:false,
+          explain:'Se disuelve directamente en el estómago, exactamente lo que se busca evitar en este paciente.' },
+        { key:'jarabe2', label:'Jarabe oral', emoji:'🥤', timeMin:20, correct:false,
+          explain:'Libera el fármaco de inmediato en el estómago, sin ninguna protección para la mucosa gástrica.' },
+        { key:'sublingual2', label:'Comprimido sublingual', emoji:'👅', timeMin:5, correct:false,
+          explain:'No está diseñado para este propósito ni es una presentación disponible para este tipo de fármaco en este contexto.' }
+      ]
+    },
+    {
+      tag: 'Dolor oncológico crónico',
+      vignette: 'Paciente con dolor oncológico crónico requiere control estable del dolor durante al menos 72 horas, evitando picos y valles de concentración plasmática.',
+      question: '¿Qué forma farmacéutica se ajusta mejor a este objetivo?',
+      options: [
+        { key:'parche3', label:'Parche transdérmico de liberación prolongada', emoji:'🩹', timeMin:1440, correct:true,
+          explain:'Libera el fármaco lentamente durante 72 horas, manteniendo niveles plasmáticos estables — ideal para dolor crónico, evitando redosificaciones frecuentes.' },
+        { key:'ivbolo', label:'Solución IV en bolo', emoji:'💉', timeMin:2, correct:false,
+          explain:'Actúa muy rápido pero dura poco: requeriría redosificar constantemente, generando picos y valles — poco práctico para manejo ambulatorio.' },
+        { key:'sublingual3', label:'Tableta sublingual de acción rápida', emoji:'👅', timeMin:8, correct:false,
+          explain:'Útil para el dolor irruptivo (episodios agudos), pero no para mantener un control basal continuo.' },
+        { key:'convencional2', label:'Tableta oral convencional', emoji:'💊', timeMin:45, correct:false,
+          explain:'Requeriría tomarse cada pocas horas, generando fluctuaciones de concentración — no ofrece un control estable de 72 horas.' }
+      ]
+    },
+    {
+      tag: 'Urgencia — crisis convulsiva',
+      vignette: 'Paciente presenta una crisis convulsiva activa en un entorno sin acceso venoso disponible de inmediato.',
+      question: '¿Qué forma farmacéutica de diazepam es más apropiada en este momento?',
+      options: [
+        { key:'rectal', label:'Solución/gel rectal', emoji:'🧴', timeMin:8, correct:true,
+          explain:'La mucosa rectal permite una absorción rápida y es una alternativa práctica cuando no hay acceso venoso disponible — de elección en crisis convulsivas fuera del hospital.' },
+        { key:'oral2', label:'Tableta oral', emoji:'💊', timeMin:45, correct:false,
+          explain:'Un paciente convulsionando no puede deglutir de forma segura, y además el inicio de acción oral es demasiado lento para esta urgencia.' },
+        { key:'parche4', label:'Parche transdérmico', emoji:'🩹', timeMin:720, correct:false,
+          explain:'Su liberación es demasiado lenta para una urgencia neurológica activa.' },
+        { key:'capsula2', label:'Cápsula de liberación prolongada', emoji:'⏳', timeMin:300, correct:false,
+          explain:'Diseñada para liberar el fármaco lentamente a lo largo del tiempo — lo opuesto a lo que exige una crisis aguda.' }
+      ]
+    }
+  ];
+
+  let idx = 0;
+  let answered = false;
+  let results = []; // { correct: bool, chosenLabel, correctLabel }
+
+  function fmtTime(t){
+    if (t < 60) return Math.round(t) + ' min';
+    if (t < 1440) return (Math.round((t/60)*10)/10) + ' h';
+    return (Math.round((t/1440)*10)/10) + ' días';
+  }
+
+  function barPct(t){
+    const lo = Math.log10(1), hi = Math.log10(1600);
+    let pct = ((Math.log10(t) - lo) / (hi - lo)) * 100;
+    return Math.max(6, Math.min(100, pct));
+  }
+
+  function renderCase(){
+    const c = CASES[idx];
+    document.getElementById('progressLabel').textContent = 'Caso ' + (idx+1) + ' de ' + CASES.length;
+    document.getElementById('progressFill').style.width = ((idx)/CASES.length*100) + '%';
+    const correctSoFar = results.filter(function(r){return r.correct;}).length;
+    document.getElementById('scoreChip').textContent = 'Aciertos: ' + correctSoFar + '/' + results.length;
+
+    document.getElementById('caseTag').textContent = c.tag;
+    document.getElementById('vignetteText').textContent = c.vignette;
+    document.getElementById('questionText').textContent = c.question;
+
+    const grid = document.getElementById('optionsGrid');
+    grid.innerHTML = c.options.map(function(o){
+      return '<button class="opt-btn" data-key="' + o.key + '"><span class="opt-emoji">' + o.emoji + '</span>' + o.label + '</button>';
+    }).join('');
+    grid.querySelectorAll('.opt-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){ selectOption(btn.getAttribute('data-key')); });
+    });
+
+    answered = false;
+    document.getElementById('feedbackBox').classList.add('hidden');
+  }
+
+  function selectOption(key){
+    if (answered) return;
+    answered = true;
+    const c = CASES[idx];
+    const chosen = c.options.find(function(o){ return o.key === key; });
+    const correctOpt = c.options.find(function(o){ return o.correct; });
+
+    document.querySelectorAll('.opt-btn').forEach(function(btn){
+      btn.disabled = true;
+      const k = btn.getAttribute('data-key');
+      const opt = c.options.find(function(o){ return o.key === k; });
+      if (opt.correct) btn.classList.add('correct');
+      else if (k === key) btn.classList.add('incorrect');
+      else btn.classList.add('dim');
+    });
+
+    results.push({ correct: chosen.correct, chosenLabel: chosen.label, correctLabel: correctOpt.label, caseTag: c.tag });
+
+    const fb = document.getElementById('feedbackBox');
+    fb.classList.remove('hidden');
+    const banner = document.getElementById('fbBanner');
+    if (chosen.correct) {
+      banner.className = 'fb-banner ok';
+      banner.textContent = '✓ Correcto';
+    } else {
+      banner.className = 'fb-banner bad';
+      banner.textContent = '✕ No es la mejor opción — la correcta era: ' + correctOpt.label;
+    }
+    document.getElementById('fbExplain').innerHTML = '<b>' + chosen.label + ':</b> ' + chosen.explain +
+      (chosen.correct ? '' : '<br><br><b>' + correctOpt.label + ':</b> ' + correctOpt.explain);
+
+    document.getElementById('barsWrap').innerHTML = c.options.map(function(o){
+      const rowClass = o.correct ? 'correct' : (o.key === key ? 'chosen-wrong' : '');
+      const color = o.correct ? 'var(--teal)' : (o.key === key ? 'var(--coral)' : 'var(--violet)');
+      return (
+        '<div class="bar-row ' + rowClass + '">' +
+          '<div class="bar-label">' + o.emoji + ' ' + o.label + '</div>' +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + barPct(o.timeMin) + '%;background:' + color + '"></div></div>' +
+          '<div class="bar-time">' + fmtTime(o.timeMin) + '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    const correctSoFar = results.filter(function(r){return r.correct;}).length;
+    document.getElementById('scoreChip').textContent = 'Aciertos: ' + correctSoFar + '/' + results.length;
+    document.getElementById('progressFill').style.width = ((idx+1)/CASES.length*100) + '%';
+
+    document.getElementById('nextBtn').textContent = (idx === CASES.length - 1) ? 'Ver resultado final →' : 'Siguiente caso →';
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', function(){
+    if (idx < CASES.length - 1) {
+      idx++;
+      renderCase();
+    } else {
+      showSummary();
+    }
+  });
+
+  function showSummary(){
+    document.getElementById('activityArea').classList.add('hidden');
+    const panel = document.getElementById('summaryPanel');
+    panel.classList.remove('hidden');
+    const correctCount = results.filter(function(r){return r.correct;}).length;
+    document.getElementById('summaryScore').textContent = correctCount + '/' + CASES.length;
+    let msg;
+    if (correctCount === CASES.length) msg = '¡Excelente! Identificaste correctamente cómo la liberación de cada forma farmacéutica se ajusta a la necesidad clínica.';
+    else if (correctCount >= CASES.length - 1) msg = 'Muy buen desempeño — repasa el caso que falló para reforzar el concepto de liberación.';
+    else msg = 'Repasa cómo cada forma farmacéutica libera el fármaco a distinta velocidad antes de repetir la actividad.';
+    document.getElementById('summaryText').textContent = msg;
+
+    const table = document.getElementById('summaryTable');
+    table.innerHTML = '<tr><th>Caso</th><th>Tu elección</th><th>Resultado</th></tr>' +
+      results.map(function(r){
+        return '<tr><td>' + r.caseTag + '</td><td>' + r.chosenLabel + '</td><td class="' + (r.correct?'res-ok':'res-bad') + '">' + (r.correct ? '✓ Correcto' : '✕ Correcta: ' + r.correctLabel) + '</td></tr>';
+      }).join('');
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    idx = 0;
+    results = [];
+    document.getElementById('summaryPanel').classList.add('hidden');
+    document.getElementById('activityArea').classList.remove('hidden');
+    renderCase();
+  });
+
+  renderCase();
+})();
+</script>
+</body>
+</html>
