@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clasifica: factores que alteran la absorción</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F5F0;
+    --surface:#FFFFFF;
+    --border:#DCD8CC;
+    --ink:#20242E;
+    --muted:#6B7178;
+    --amber:#B8721F;
+    --amber-soft:#FBEEDC;
+    --amber-border:#E7C48F;
+    --teal:#1F7A6C;
+    --teal-soft:#E1F3EF;
+    --teal-border:#9AD4C7;
+    --coral:#C8452F;
+    --coral-soft:#FBE6E1;
+    --violet:#5F4A96;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{border-bottom:2px solid var(--border);padding-bottom:18px;margin-bottom:22px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:11.5px;color:var(--amber);font-weight:600;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:28px;margin:8px 0 6px;font-weight:700;color:var(--ink);}
+  .subtitle{color:var(--muted);font-size:14px;max-width:680px;line-height:1.55;}
+  .course-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  .intro-note{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--amber);border-radius:10px;padding:14px 18px;margin-bottom:22px;font-size:13.5px;line-height:1.6;}
+  .intro-note b{color:var(--amber);}
+
+  .status-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;}
+  .status-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 14px;color:var(--ink);}
+  .status-chip b{color:var(--teal);}
+  .reset-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink);}
+  .reset-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .pool-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+  .pool-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  #poolArea{display:flex;flex-wrap:wrap;gap:10px;min-height:52px;}
+  .empty-pool{color:var(--muted);font-size:13px;font-style:italic;padding:8px 0;}
+
+  .chip{background:var(--surface);border:2px solid var(--border);border-radius:9px;padding:10px 14px;font-size:13.5px;cursor:grab;user-select:none;transition:border-color .15s ease, transform .12s ease, box-shadow .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .chip:active{cursor:grabbing;}
+  .chip:hover{border-color:var(--amber);}
+  .chip.selected{border-color:var(--violet);box-shadow:0 0 0 3px rgba(95,74,150,0.15);}
+  .chip.shake{animation:shake .4s ease;border-color:var(--coral);}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+
+  .zones-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){.zones-grid{grid-template-columns:1fr;}}
+  .zone{border-radius:12px;padding:16px;min-height:220px;border:2px dashed var(--border);}
+  .zone.aumenta{background:var(--teal-soft);border-color:var(--teal-border);}
+  .zone.disminuye{background:var(--amber-soft);border-color:var(--amber-border);}
+  .zone.dragover{border-style:solid;}
+  .zone-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+  .zone.aumenta .zone-title{color:var(--teal);}
+  .zone.disminuye .zone-title{color:var(--amber);}
+  .zone-sub{font-size:11.5px;color:var(--muted);margin-bottom:12px;}
+  .placed-list{display:flex;flex-direction:column;gap:8px;}
+  .placed-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;display:flex;align-items:center;gap:8px;}
+  .placed-chip .check{font-weight:700;}
+  .zone.aumenta .placed-chip .check{color:var(--teal);}
+  .zone.disminuye .placed-chip .check{color:var(--amber);}
+
+  .feedback-bar{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:13px;min-height:20px;}
+  .feedback-bar.ok{background:var(--teal-soft);color:var(--teal);border:1px solid var(--teal-border);}
+  .feedback-bar.bad{background:var(--coral-soft);color:var(--coral);border:1px solid #EDBCB0;}
+  .feedback-bar.neutral{background:transparent;color:var(--muted);}
+
+  .completion{margin-top:20px;background:var(--surface);border:2px solid var(--teal-border);border-radius:12px;padding:22px;text-align:center;}
+  .completion .big{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--teal);}
+  .completion .sub{color:var(--muted);font-size:13px;margin-top:6px;}
+
+  .hint-panel{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Absorción — LADME</div>
+    <h1>Clasifica: ¿aumenta o disminuye la absorción?</h1>
+    <p class="subtitle">Arrastra cada factor a la columna correcta. También puedes tocar un factor y luego tocar la columna (útil en pantallas táctiles).</p>
+    <div class="course-tag">Farmacología Básica · ENMH-IPN · Grupo 5PM6 · Periodo 2027/1</div>
+  </header>
+
+  <div class="intro-note">
+    Una vez liberado, el fármaco debe <b>absorberse</b> — atravesar membranas biológicas para llegar a la circulación sistémica. Propiedades del fármaco (liposolubilidad, ionización, tamaño), del sitio de absorción (superficie, flujo sanguíneo) y del entorno (alimentos, motilidad) determinan qué tan bien ocurre este paso.
+  </div>
+
+  <div class="status-row">
+    <div class="status-chip">Colocados correctamente: <b id="correctCount">0</b>/10</div>
+    <div class="status-chip">Intentos fallidos: <span id="wrongCount">0</span></div>
+    <button class="reset-btn" id="resetBtn">↻ Reiniciar</button>
+  </div>
+
+  <div class="pool-panel">
+    <div class="pool-title">Factores por clasificar</div>
+    <div id="poolArea"></div>
+  </div>
+
+  <div class="zones-grid">
+    <div class="zone aumenta" id="zoneAumenta" data-zone="aumenta">
+      <div class="zone-title">📈 Aumentan la absorción</div>
+      <div class="zone-sub">Suelta o toca aquí</div>
+      <div class="placed-list" id="listAumenta"></div>
+    </div>
+    <div class="zone disminuye" id="zoneDisminuye" data-zone="disminuye">
+      <div class="zone-title">📉 Disminuyen la absorción</div>
+      <div class="zone-sub">Suelta o toca aquí</div>
+      <div class="placed-list" id="listDisminuye"></div>
+    </div>
+  </div>
+
+  <div class="feedback-bar neutral" id="feedbackBar">Selecciona o arrastra un factor para comenzar.</div>
+
+  <div class="completion hidden" id="completionPanel">
+    <div class="big">🎉 ¡Clasificación completa!</div>
+    <div class="sub" id="completionSub"></div>
+  </div>
+
+  <div class="hint-panel">
+    <b>Tip para proyectar:</b> los estudiantes pueden pasar al frente y arrastrar con el mouse, o tocar un factor y luego tocar la columna si el equipo tiene pantalla táctil.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const FACTORS = [
+    { key:'f1', label:'Mayor liposolubilidad del fármaco (forma no ionizada)', correct:'aumenta',
+      explain:'Las moléculas liposolubles atraviesan más fácilmente la bicapa lipídica de la membrana (mayor K en la ley de Fick).' },
+    { key:'f2', label:'Mayor superficie de absorción (ej. microvellosidades intestinales)', correct:'aumenta',
+      explain:'A mayor área de contacto, mayor cantidad de fármaco puede difundir por unidad de tiempo.' },
+    { key:'f3', label:'Mayor flujo sanguíneo en el sitio de absorción', correct:'aumenta',
+      explain:'Un buen flujo sanguíneo retira el fármaco ya absorbido y mantiene el gradiente de concentración que impulsa la difusión.' },
+    { key:'f4', label:'Estómago vacío (ayuno)', correct:'aumenta',
+      explain:'El vaciamiento gástrico más rápido permite que el fármaco llegue antes al intestino delgado, su principal sitio de absorción.' },
+    { key:'f5', label:'Menor tamaño de partícula / fármaco ya disuelto', correct:'aumenta',
+      explain:'Las partículas pequeñas o ya disueltas están listas para difundir sin esperar a desintegrarse o disolverse.' },
+    { key:'f6', label:'Alimentos que forman complejos insolubles (ej. calcio de lácteos con tetraciclinas)', correct:'disminuye',
+      explain:'El complejo insoluble formado no puede atravesar la membrana intestinal, reduciendo la cantidad disponible para absorberse.' },
+    { key:'f7', label:'Aumento de la motilidad intestinal (ej. diarrea)', correct:'disminuye',
+      explain:'Un tránsito intestinal más rápido reduce el tiempo de contacto del fármaco con la mucosa absortiva.' },
+    { key:'f8', label:'Fármaco en su forma ionizada al pH del medio', correct:'disminuye',
+      explain:'Las moléculas ionizadas son polares y no atraviesan fácilmente la bicapa lipídica de la membrana.' },
+    { key:'f9', label:'Vasoconstricción en el sitio de administración (ej. epinefrina con anestésico local)', correct:'disminuye',
+      explain:'Al reducir el flujo sanguíneo local, el fármaco tarda más en ser retirado del sitio, retrasando su paso a la circulación sistémica.' },
+    { key:'f10', label:'Reducción de la superficie de absorción (ej. resección intestinal)', correct:'disminuye',
+      explain:'Menos área disponible significa menos difusión posible por unidad de tiempo.' }
+  ];
+
+  let poolKeys = [];
+  let placed = {}; // key -> zone
+  let selectedKey = null;
+  let wrongCount = 0;
+  let draggingKey = null;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function factorByKey(k){ return FACTORS.find(function(f){ return f.key === k; }); }
+
+  function init(){
+    poolKeys = shuffle(FACTORS.map(function(f){ return f.key; }));
+    placed = {};
+    selectedKey = null;
+    wrongCount = 0;
+    document.getElementById('completionPanel').classList.add('hidden');
+    setFeedback('Selecciona o arrastra un factor para comenzar.', 'neutral');
+    render();
+  }
+
+  function setFeedback(text, kind){
+    const el = document.getElementById('feedbackBar');
+    el.textContent = text;
+    el.className = 'feedback-bar ' + kind;
+  }
+
+  function render(){
+    document.getElementById('correctCount').textContent = Object.keys(placed).length;
+    document.getElementById('wrongCount').textContent = wrongCount;
+
+    const pool = document.getElementById('poolArea');
+    if (poolKeys.length === 0) {
+      pool.innerHTML = '<div class="empty-pool">Todos los factores han sido clasificados.</div>';
+    } else {
+      pool.innerHTML = poolKeys.map(function(k){
+        const f = factorByKey(k);
+        const sel = (k === selectedKey) ? ' selected' : '';
+        return '<div class="chip' + sel + '" draggable="true" data-key="' + k + '">' + f.label + '</div>';
+      }).join('');
+    }
+
+    ['aumenta','disminuye'].forEach(function(zone){
+      const listEl = document.getElementById(zone === 'aumenta' ? 'listAumenta' : 'listDisminuye');
+      const keys = Object.keys(placed).filter(function(k){ return placed[k] === zone; });
+      listEl.innerHTML = keys.map(function(k){
+        const f = factorByKey(k);
+        return '<div class="placed-chip"><span class="check">✓</span>' + f.label + '</div>';
+      }).join('');
+    });
+
+    attachHandlers();
+  }
+
+  function attachHandlers(){
+    document.querySelectorAll('.chip').forEach(function(chip){
+      chip.addEventListener('dragstart', function(e){
+        draggingKey = chip.getAttribute('data-key');
+        e.dataTransfer.setData('text/plain', draggingKey);
+      });
+      chip.addEventListener('click', function(){
+        const k = chip.getAttribute('data-key');
+        selectedKey = (selectedKey === k) ? null : k;
+        render();
+      });
+    });
+
+    ['zoneAumenta','zoneDisminuye'].forEach(function(id){
+      const zoneEl = document.getElementById(id);
+      const zoneName = zoneEl.getAttribute('data-zone');
+
+      zoneEl.addEventListener('dragover', function(e){
+        e.preventDefault();
+        zoneEl.classList.add('dragover');
+      });
+      zoneEl.addEventListener('dragleave', function(){
+        zoneEl.classList.remove('dragover');
+      });
+      zoneEl.addEventListener('drop', function(e){
+        e.preventDefault();
+        zoneEl.classList.remove('dragover');
+        const k = e.dataTransfer.getData('text/plain') || draggingKey;
+        if (k) attemptPlace(k, zoneName);
+        draggingKey = null;
+      });
+      zoneEl.addEventListener('click', function(e){
+        if (e.target.closest('.placed-chip')) return;
+        if (selectedKey) {
+          attemptPlace(selectedKey, zoneName);
+          selectedKey = null;
+        }
+      });
+    });
+  }
+
+  function attemptPlace(key, zoneName){
+    const f = factorByKey(key);
+    if (!f) return;
+    if (f.correct === zoneName) {
+      placed[key] = zoneName;
+      poolKeys = poolKeys.filter(function(k){ return k !== key; });
+      setFeedback('✓ Correcto — ' + f.explain, 'ok');
+      selectedKey = null;
+      render();
+      if (poolKeys.length === 0) showCompletion();
+    } else {
+      wrongCount++;
+      setFeedback('✕ No es correcto — ' + f.explain, 'bad');
+      const chipEl = document.querySelector('.chip[data-key="' + key + '"]');
+      if (chipEl) {
+        chipEl.classList.add('shake');
+        setTimeout(function(){ chipEl.classList.remove('shake'); }, 400);
+      }
+      document.getElementById('wrongCount').textContent = wrongCount;
+    }
+  }
+
+  function showCompletion(){
+    const panel = document.getElementById('completionPanel');
+    panel.classList.remove('hidden');
+    document.getElementById('completionSub').textContent =
+      wrongCount === 0
+        ? 'Clasificaste los 10 factores sin errores.'
+        : 'Clasificaste los 10 factores con ' + wrongCount + ' intento(s) fallido(s).';
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', init);
+
+  init();
+})();
+</script>
+</body>
+</html>
