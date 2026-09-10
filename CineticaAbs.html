@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad: Cinética de absorción</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1.25rem;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    line-height: 1.6;
+  }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 14px; color: #555555; margin-bottom: 1.5rem; }
+  #problem { font-size: 15px; margin-bottom: 0.75rem; }
+  svg { display: block; width: 100%; height: auto; margin-bottom: 0.75rem; }
+  .ts { font-size: 12px; fill: #555555; font-family: inherit; }
+  .opts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #C9C7BE;
+    background: #FFFFFF;
+    cursor: pointer;
+  }
+  button:hover { background: #F7F8FA; }
+  .optbtn { min-width: 90px; }
+  .opt-ok { border-color: #1D9E75 !important; background: #E1F5EE !important; color: #085041 !important; }
+  .opt-bad { border-color: #E24B4A !important; background: #FCEBEB !important; color: #A32D2D !important; }
+  .opt-dis { opacity: 0.45; pointer-events: none; }
+  #status, #scoreline { font-size: 13px; color: #555555; min-height: 20px; margin-bottom: 4px; }
+  #finalgrade { font-size: 16px; font-weight: 500; display: none; margin-bottom: 0.75rem; }
+  #newBtn { margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+
+<h1>Cinética de absorción: predicción gráfica</h1>
+<p class="subtitle">Farmacología Básica · Grupo 5PM6 · Elige el valor correcto en cada paso para trazar la gráfica</p>
+
+<div id="problem"></div>
+
+<svg id="chart" viewBox="0 0 680 320" role="img">
+<title>Gráfica de cantidad restante contra el tiempo</title>
+<line id="xaxis" x1="60" y1="280" x2="620" y2="280" stroke="#C9C7BE" stroke-width="1"/>
+<line id="yaxis" x1="60" y1="40" x2="60" y2="280" stroke="#C9C7BE" stroke-width="1"/>
+<g id="ticks"></g>
+<g id="lines"></g>
+<g id="points"></g>
+</svg>
+
+<div id="opts" class="opts"></div>
+<div id="status"></div>
+<div id="scoreline"></div>
+<div id="finalgrade"></div>
+
+<button id="newBtn">&#8635; Nuevo problema</button>
+
+<script>
+let state = {};
+const NS = "http://www.w3.org/2000/svg";
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function round2(n) { return Math.round(n * 100) / 100; }
+function xFor(i) { return 60 + 112 * i; }
+function yFor(v) { return 280 - (v / state.dose) * 240; }
+
+function generate() {
+  const type = pick(["cero", "primer"]);
+  if (type === "cero") {
+    const dose = pick([10, 12, 15, 18, 20, 24, 30]);
+    const rate = pick([1, 2, 3, 4, 5]);
+    const values = [];
+    let rem = dose;
+    for (let i = 0; i < 5; i++) { rem = Math.max(rem - rate, 0); values.push(rem); }
+    state = { type, dose, rate, values, step: 0, revealed: [dose], stepWrong: 0, totalWrong: 0, totalScore: 0, firstTryCount: 0 };
+  } else {
+    const dose = pick([8, 10, 12, 16, 20, 24, 32, 40]);
+    const pct = 50;
+    const values = [];
+    let rem = dose;
+    for (let i = 0; i < 5; i++) { rem = round2(rem * (1 - pct / 100)); values.push(rem); }
+    state = { type, dose, pct, values, step: 0, revealed: [dose], stepWrong: 0, totalWrong: 0, totalScore: 0, firstTryCount: 0 };
+  }
+}
+
+function makeDistractors(prev, correct) {
+  let cands;
+  if (state.type === "cero") {
+    cands = [prev, Math.max(prev - 2 * state.rate, 0), prev + state.rate, Math.max(correct - 1, 0), correct + 1];
+  } else {
+    cands = [prev, round2(prev * 0.75), round2(prev * 0.25), round2(correct + prev * 0.1), round2(Math.max(correct - prev * 0.1, 0))];
+  }
+  const set = new Set();
+  const out = [];
+  for (const c of cands) {
+    const r = state.type === "primer" ? round2(c) : Math.round(c);
+    if (r !== correct && !set.has(r) && r >= 0) { set.add(r); out.push(r); }
+    if (out.length === 3) break;
+  }
+  let jitter = 1;
+  while (out.length < 3) {
+    const r = state.type === "primer" ? round2(correct + jitter * 0.5) : Math.max(correct + jitter, 0);
+    if (r !== correct && !set.has(r)) { set.add(r); out.push(r); }
+    jitter++;
+  }
+  return out;
+}
+
+function drawAxesLabels() {
+  const ticks = document.getElementById("ticks");
+  ticks.innerHTML = "";
+  for (let i = 0; i <= 5; i++) {
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("class", "ts");
+    t.setAttribute("x", xFor(i));
+    t.setAttribute("y", 300);
+    t.setAttribute("text-anchor", "middle");
+    t.textContent = "t" + i;
+    ticks.appendChild(t);
+  }
+  const yl = document.createElementNS(NS, "text");
+  yl.setAttribute("class", "ts");
+  yl.setAttribute("x", 60);
+  yl.setAttribute("y", 24);
+  yl.setAttribute("text-anchor", "middle");
+  yl.textContent = "Cantidad";
+  ticks.appendChild(yl);
+}
+
+function plotPoint(i, v, color) {
+  const pts = document.getElementById("points");
+  const c = document.createElementNS(NS, "circle");
+  c.setAttribute("cx", xFor(i));
+  c.setAttribute("cy", yFor(v));
+  c.setAttribute("r", 5);
+  c.setAttribute("fill", color);
+  pts.appendChild(c);
+  const lbl = document.createElementNS(NS, "text");
+  lbl.setAttribute("class", "ts");
+  lbl.setAttribute("x", xFor(i));
+  lbl.setAttribute("y", yFor(v) - 12);
+  lbl.setAttribute("text-anchor", "middle");
+  lbl.textContent = v;
+  pts.appendChild(lbl);
+  if (i > 0) {
+    const prevV = i === 1 ? state.dose : state.values[i - 2];
+    const line = document.createElementNS(NS, "line");
+    line.setAttribute("x1", xFor(i - 1));
+    line.setAttribute("y1", yFor(prevV));
+    line.setAttribute("x2", xFor(i));
+    line.setAttribute("y2", yFor(v));
+    line.setAttribute("stroke", color);
+    line.setAttribute("stroke-width", "2");
+    document.getElementById("lines").appendChild(line);
+  }
+}
+
+function updateScoreline() {
+  document.getElementById("scoreline").textContent = "Aciertos al primer intento: " + state.firstTryCount + "/5 · Intentos fallidos: " + state.totalWrong;
+}
+
+function render() {
+  document.getElementById("points").innerHTML = "";
+  document.getElementById("lines").innerHTML = "";
+  document.getElementById("finalgrade").style.display = "none";
+  drawAxesLabels();
+  const p = document.getElementById("problem");
+  const color = state.type === "cero" ? "#0F6E56" : "#3C3489";
+  if (state.type === "cero") {
+    p.innerHTML = "<strong>Cinética de orden cero.</strong> Se administran " + state.dose + " unidades. Se absorben " + state.rate + " unidades por hora (velocidad constante). Elige en cada paso cuánto queda sin absorber.";
+  } else {
+    p.innerHTML = "<strong>Cinética de primer orden.</strong> Se administran " + state.dose + " unidades. Cada hora se absorbe el " + state.pct + "% de lo que queda (una vida media). Elige en cada paso cuánto queda sin absorber.";
+  }
+  plotPoint(0, state.dose, color);
+  updateScoreline();
+  renderOptions();
+}
+
+function renderOptions() {
+  const container = document.getElementById("opts");
+  container.innerHTML = "";
+  if (state.step >= 5) {
+    document.getElementById("status").textContent = "¡Gráfica completa!";
+    const fg = document.getElementById("finalgrade");
+    fg.style.display = "block";
+    fg.textContent = "Calificación: " + state.totalScore.toFixed(1) + "/10  ·  " + state.totalWrong + " intento" + (state.totalWrong === 1 ? "" : "s") + " fallido" + (state.totalWrong === 1 ? "" : "s") + " en total";
+    return;
+  }
+  state.stepWrong = 0;
+  const prev = state.revealed[state.revealed.length - 1];
+  const correct = state.values[state.step];
+  const distractors = makeDistractors(prev, correct);
+  const options = [correct, ...distractors].sort(() => Math.random() - 0.5);
+  document.getElementById("status").textContent = "Paso t" + (state.step + 1) + " de 5 · ¿cuánto queda sin absorber?";
+  options.forEach((val) => {
+    const btn = document.createElement("button");
+    btn.className = "optbtn";
+    btn.textContent = val;
+    btn.addEventListener("click", () => selectOption(val, correct, btn));
+    container.appendChild(btn);
+  });
+}
+
+function selectOption(val, correct, btn) {
+  const buttons = document.getElementById("opts").querySelectorAll("button");
+  const color = state.type === "cero" ? "#0F6E56" : "#3C3489";
+  if (val === correct) {
+    buttons.forEach(b => b.classList.add("opt-dis"));
+    btn.classList.remove("opt-dis");
+    btn.classList.add("opt-ok");
+    const points = 2 - 0.5 * state.stepWrong;
+    state.totalScore += points;
+    if (state.stepWrong === 0) state.firstTryCount++;
+    setTimeout(() => {
+      state.revealed.push(val);
+      plotPoint(state.step + 1, val, color);
+      state.step++;
+      updateScoreline();
+      renderOptions();
+    }, 500);
+  } else {
+    btn.classList.add("opt-bad", "opt-dis");
+    state.stepWrong++;
+    state.totalWrong++;
+    updateScoreline();
+  }
+}
+
+document.getElementById("newBtn").addEventListener("click", () => { generate(); render(); });
+
+generate();
+render();
+</script>
+</body>
+</html>
