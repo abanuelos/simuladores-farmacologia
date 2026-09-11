@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad: Volumen de distribución</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 720px;
+    margin: 2rem auto;
+    padding: 0 1.25rem;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    line-height: 1.6;
+  }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 14px; color: #555555; margin-bottom: 1.5rem; }
+  #progress { font-size: 13px; color: #555555; margin-bottom: 0.5rem; }
+  #card { margin-bottom: 1rem; }
+  #card .name { font-size: 18px; font-weight: 500; color: #1A1A1A; }
+  #card .fact { font-size: 14px; color: #555555; margin-top: 2px; }
+  #opts { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #C9C7BE;
+    background: #FFFFFF;
+    cursor: pointer;
+  }
+  button:hover { background: #F7F8FA; }
+  .optbtn { min-width: 140px; }
+  .opt-ok { border-color: #1D9E75 !important; background: #E1F5EE !important; color: #085041 !important; }
+  .opt-bad { border-color: #E24B4A !important; background: #FCEBEB !important; color: #A32D2D !important; }
+  .opt-dis { opacity: 0.55; pointer-events: none; }
+  #feedback { font-size: 14px; min-height: 20px; margin-bottom: 0.75rem; }
+  #finalgrade { font-size: 16px; font-weight: 500; display: none; margin-bottom: 0.75rem; }
+  #summary { display: none; margin-bottom: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #E1E4E8; }
+  th { color: #555555; font-weight: 500; }
+  #newBtn { margin-top: 0.25rem; }
+</style>
+</head>
+<body>
+
+<h1>Volumen de distribución: ¿en qué líquido corporal?</h1>
+<p class="subtitle">Farmacología Básica · Grupo 5PM6 · Elige el compartimento más probable para cada fármaco</p>
+
+<div id="progress"></div>
+<div id="card"></div>
+<div id="opts"></div>
+<div id="feedback"></div>
+<div id="finalgrade"></div>
+<div id="summary"></div>
+
+<button id="nextBtn" style="display:none;">Siguiente</button>
+<button id="newBtn">&#8635; Nuevos 5 fármacos</button>
+
+<script>
+const FIXED = { name: "Cloroquina", vd: 14000, pb: 55, correct: "Líquido intracelular", note: "Su Vd real supera por mucho el agua corporal total (~42 L): en realidad indica fijación tisular masiva (incluida la retina), no solo distribución en agua. De las tres opciones, es la menos incorrecta." };
+const POOL = [
+  { name: "Warfarina", vd: 10, pb: 99, correct: "Plasma", note: "Muy unida a proteínas plasmáticas (~99%), casi no sale del plasma." },
+  { name: "Heparina", vd: 4, pb: 80, correct: "Plasma", note: "Molécula grande y cargada, con alta unión inespecífica a proteínas; prácticamente confinada al compartimento vascular." },
+  { name: "Ácido valproico", vd: 10.5, pb: 90, correct: "Plasma", note: "Alta unión a proteínas plasmáticas (~90%) limita su salida del plasma." },
+  { name: "Gentamicina", vd: 17.5, pb: 5, correct: "Intersticio", note: "Poca fijación a proteínas, pero es hidrofílica: no cruza membranas celulares, se queda en el líquido extracelular." },
+  { name: "Manitol", vd: 17.5, pb: 0, correct: "Intersticio", note: "No se une a proteínas; se usa precisamente porque queda confinado al espacio extracelular." },
+  { name: "Ampicilina", vd: 20, pb: 20, correct: "Intersticio", note: "Baja unión a proteínas; antibiótico hidrofílico que se distribuye en el agua extracelular." },
+  { name: "Amikacina", vd: 17.5, pb: 5, correct: "Intersticio", note: "Aminoglucósido hidrofílico con baja fijación a proteínas, limitado al líquido extracelular." },
+  { name: "Etanol", vd: 42, pb: 0, correct: "Líquido intracelular", note: "No se une a proteínas; pequeño y liposoluble, se distribuye en toda el agua corporal, incluida la intracelular." },
+  { name: "Fenitoína", vd: 46, pb: 90, correct: "Líquido intracelular", note: "A pesar de su alta unión a proteínas, es suficientemente liposoluble para acceder también al compartimento intracelular." },
+  { name: "Litio", vd: 56, pb: 0, correct: "Líquido intracelular", note: "No se une a proteínas; ion pequeño que se distribuye en el agua corporal total, incluidas las células." },
+];
+const OPTIONS = ["Plasma", "Intersticio", "Líquido intracelular"];
+
+let quiz = [];
+let idx = 0;
+let score = 0;
+let answers = [];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function start() {
+  const others = shuffle(POOL).slice(0, 4);
+  quiz = shuffle([FIXED, ...others]);
+  idx = 0;
+  score = 0;
+  answers = [];
+  document.getElementById("finalgrade").style.display = "none";
+  document.getElementById("summary").style.display = "none";
+  document.getElementById("nextBtn").style.display = "none";
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const item = quiz[idx];
+  document.getElementById("progress").textContent = "Fármaco " + (idx + 1) + " de 5  ·  Aciertos: " + score;
+  document.getElementById("card").innerHTML =
+    "<div class='name'>" + item.name + "</div>" +
+    "<div class='fact'>Volumen de distribución (Vd): " + item.vd.toLocaleString("es-MX") + " L (adulto de 70 kg)</div>" +
+    "<div class='fact'>Fijación a proteínas plasmáticas: " + item.pb + "%</div>";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("nextBtn").style.display = "none";
+  const opts = document.getElementById("opts");
+  opts.innerHTML = "";
+  OPTIONS.forEach((label) => {
+    const btn = document.createElement("button");
+    btn.className = "optbtn";
+    btn.textContent = label;
+    btn.addEventListener("click", () => selectOption(label, item, btn));
+    opts.appendChild(btn);
+  });
+}
+
+function selectOption(label, item, btn) {
+  const buttons = document.getElementById("opts").querySelectorAll("button");
+  buttons.forEach((b) => b.classList.add("opt-dis"));
+  const fb = document.getElementById("feedback");
+  const isCorrect = label === item.correct;
+  if (isCorrect) {
+    btn.classList.add("opt-ok");
+    score++;
+    fb.style.color = "#085041";
+    fb.textContent = "Correcto. " + item.note;
+  } else {
+    btn.classList.add("opt-bad");
+    buttons.forEach((b) => { if (b.textContent === item.correct) b.classList.add("opt-ok"); });
+    fb.style.color = "#A32D2D";
+    fb.textContent = "No exactamente. La respuesta correcta es " + item.correct + ". " + item.note;
+  }
+  answers.push({ name: item.name, vd: item.vd, pb: item.pb, chosen: label, correct: item.correct, isCorrect });
+  document.getElementById("progress").textContent = "Fármaco " + (idx + 1) + " de 5  ·  Aciertos: " + score;
+  document.getElementById("nextBtn").style.display = "inline-block";
+}
+
+function next() {
+  idx++;
+  if (idx >= quiz.length) {
+    document.getElementById("card").innerHTML = "";
+    document.getElementById("opts").innerHTML = "";
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("nextBtn").style.display = "none";
+    document.getElementById("progress").textContent = "Actividad completa";
+    const fg = document.getElementById("finalgrade");
+    fg.style.display = "block";
+    fg.textContent = "Calificación: " + score + "/5 correctas";
+    const rows = answers.map((a) => (
+      "<tr>" +
+      "<td>" + a.name + "</td>" +
+      "<td style='color:" + (a.isCorrect ? "#085041" : "#A32D2D") + "'>" + a.chosen + "</td>" +
+      "<td>" + a.correct + "</td>" +
+      "<td>" + (a.isCorrect ? "&#10003;" : "&#10007;") + "</td>" +
+      "</tr>"
+    )).join("");
+    document.getElementById("summary").innerHTML =
+      "<table><thead><tr><th>Fármaco</th><th>Tu respuesta</th><th>Respuesta correcta</th><th></th></tr></thead><tbody>" + rows + "</tbody></table>";
+    document.getElementById("summary").style.display = "block";
+    return;
+  }
+  renderQuestion();
+}
+
+document.getElementById("nextBtn").addEventListener("click", next);
+document.getElementById("newBtn").addEventListener("click", start);
+
+start();
+</script>
+</body>
+</html>
