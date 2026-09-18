@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad: Vida media y eliminación al 99%</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 760px;
+    margin: 2rem auto;
+    padding: 0 1.25rem;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    line-height: 1.6;
+  }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 14px; color: #555555; margin-bottom: 1.5rem; }
+  #progress { font-size: 13px; color: #555555; margin-bottom: 0.5rem; }
+  #problem { font-size: 15px; margin-bottom: 1rem; }
+  #q1 { margin-bottom: 1rem; }
+  #q1 > div { font-size: 14px; margin-bottom: 8px; }
+  #q1opts { display: flex; gap: 10px; flex-wrap: wrap; }
+  #q2 { margin-bottom: 1rem; display: none; }
+  #q2 > div { font-size: 14px; margin-bottom: 8px; }
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #C9C7BE;
+    background: #FFFFFF;
+    cursor: pointer;
+  }
+  button:hover { background: #F7F8FA; }
+  input[type=number] {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid #C9C7BE;
+    width: 100px;
+  }
+  .opt-ok { border-color: #1D9E75 !important; background: #E1F5EE !important; color: #085041 !important; }
+  .opt-bad { border-color: #E24B4A !important; background: #FCEBEB !important; color: #A32D2D !important; }
+  .opt-dis { opacity: 0.5; pointer-events: none; }
+  #feedback { font-size: 14px; min-height: 20px; margin-bottom: 0.75rem; }
+  #curveTitle { font-size: 13px; color: #555555; display: none; margin-bottom: 4px; }
+  #curveWrap { display: none; margin-bottom: 0.75rem; }
+  #nextBtn { display: none; margin-bottom: 0.75rem; }
+  #summary { display: none; margin-bottom: 0.75rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #E1E4E8; }
+  th { color: #555555; font-weight: 500; }
+  #finalgrade { font-size: 16px; font-weight: 500; color: #1A1A1A; display: none; margin-bottom: 0.75rem; }
+  .ts { font-size: 12px; fill: #555555; font-family: inherit; }
+  .th { font-size: 13px; fill: #1A1A1A; font-family: inherit; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<h1>Vida media y eliminación al 99%</h1>
+<p class="subtitle">Farmacología Básica · Grupo 5PM6 · ¿A cuántas vidas medias y horas se elimina un fármaco oral?</p>
+
+<div id="progress"></div>
+<div id="problem"></div>
+
+<div id="q1">
+  <div>¿Después de cuántas vidas medias se considera eliminado ~99% del fármaco?</div>
+  <div id="q1opts"></div>
+</div>
+
+<div id="q2">
+  <div>¿A cuántas horas equivale eso con esta vida media?</div>
+  <div style="display:flex; gap:10px; align-items:center;">
+    <input type="number" id="hoursInput" step="any">
+    <button id="checkHours">Verificar</button>
+  </div>
+</div>
+
+<div id="feedback"></div>
+
+<div id="curveTitle">Concentración plasmática</div>
+<div id="curveWrap">
+  <svg id="curveSvg" width="100%" viewBox="0 0 680 340" role="img"></svg>
+</div>
+
+<button id="nextBtn">Siguiente caso</button>
+
+<div id="summary"></div>
+<div id="finalgrade"></div>
+
+<button id="newBtn">&#8635; Repetir actividad</button>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+let t12, roundNum, totalScore, q1Done, q2Done, q1Attempts, q2Attempts, results;
+
+function startActivity() {
+  roundNum = 1;
+  totalScore = 0;
+  results = [];
+  document.getElementById("summary").style.display = "none";
+  document.getElementById("finalgrade").style.display = "none";
+  document.getElementById("nextBtn").style.display = "none";
+  startRound();
+}
+
+function startRound() {
+  t12 = Math.floor(Math.random() * 24) + 1;
+  q1Done = false;
+  q2Done = false;
+  q1Attempts = 0;
+  q2Attempts = 0;
+  document.getElementById("progress").textContent = "Caso " + roundNum + " de 2";
+  document.getElementById("problem").innerHTML =
+    "Un fármaco se administra por <strong>vía oral</strong>. Su vida media de eliminación es <strong>t½ = " + t12 + " h</strong>.";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("curveWrap").style.display = "none";
+  document.getElementById("curveTitle").style.display = "none";
+  document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("q1").style.display = "block";
+  document.getElementById("q2").style.display = "none";
+  document.getElementById("hoursInput").value = "";
+  document.getElementById("hoursInput").disabled = false;
+  document.getElementById("checkHours").disabled = false;
+  const opts = document.getElementById("q1opts");
+  opts.innerHTML = "";
+  [4, 5, 6, 7, 10].forEach((n) => {
+    const btn = document.createElement("button");
+    btn.textContent = n + " vidas medias";
+    btn.addEventListener("click", () => checkQ1(n, btn));
+    opts.appendChild(btn);
+  });
+}
+
+function checkQ1(n, btn) {
+  if (q1Done) return;
+  const buttons = document.getElementById("q1opts").querySelectorAll("button");
+  if (n === 7) {
+    buttons.forEach((b) => b.classList.add("opt-dis"));
+    btn.classList.add("opt-ok");
+    q1Done = true;
+    const pts = q1Attempts === 0 ? 2 : q1Attempts === 1 ? 1.5 : 1;
+    totalScore += pts;
+    document.getElementById("feedback").innerHTML =
+      "<span style='color:#085041'>Correcto.</span> Tras 7 vidas medias queda (1/2)^7 &asymp; 0.78% del fármaco, es decir, ~99.2% eliminado.";
+    document.getElementById("q2").style.display = "block";
+  } else {
+    q1Attempts++;
+    btn.classList.add("opt-bad", "opt-dis");
+  }
+}
+
+function checkQ2() {
+  if (q2Done) return;
+  const val = parseFloat(document.getElementById("hoursInput").value);
+  const fb = document.getElementById("feedback");
+  if (isNaN(val)) {
+    fb.style.color = "#A32D2D";
+    fb.textContent = "Ingresa un número de horas antes de verificar.";
+    return;
+  }
+  const expected = 7 * t12;
+  const ok = Math.abs(val - expected) < 0.01;
+  if (ok) {
+    q2Done = true;
+    const pts = q2Attempts === 0 ? 2 : q2Attempts === 1 ? 1.5 : 1;
+    totalScore += pts;
+    fb.style.color = "#085041";
+    fb.textContent = "Correcto: 7 × " + t12 + " h = " + expected + " h.";
+    document.getElementById("checkHours").disabled = true;
+    document.getElementById("hoursInput").disabled = true;
+    try {
+      showCurve();
+    } catch (e) {
+      fb.textContent += " (No se pudo dibujar la gráfica: " + e.message + ")";
+    }
+    results.push({ t12: t12, hours: expected });
+    document.getElementById("nextBtn").style.display = "inline-block";
+    document.getElementById("nextBtn").textContent = roundNum < 2 ? "Siguiente caso" : "Ver resumen";
+  } else {
+    q2Attempts++;
+    fb.style.color = "#A32D2D";
+    fb.textContent = "No es correcto, intenta de nuevo (recuerda: 7 × t½).";
+  }
+}
+
+function goNext() {
+  if (roundNum < 2) {
+    roundNum++;
+    startRound();
+  } else {
+    finishActivity();
+  }
+}
+
+function finishActivity() {
+  document.getElementById("q1").style.display = "none";
+  document.getElementById("q2").style.display = "none";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("progress").textContent = "Actividad completa";
+  const rows = results.map((r, i) => (
+    "<tr><td>Caso " + (i + 1) + "</td><td>" + r.t12 + " h</td><td>7 × " + r.t12 + " = " + r.hours + " h</td><td>~99%</td></tr>"
+  )).join("");
+  document.getElementById("summary").innerHTML =
+    "<table><thead><tr><th>Caso</th><th>t½</th><th>Tiempo a 7 vidas medias</th><th>% eliminado</th></tr></thead><tbody>" + rows + "</tbody></table>" +
+    "<div style='margin-top:8px; font-size:13px; color:#555555;'>Aunque las horas cambian con cada t½, el número de vidas medias necesario (7) es siempre el mismo.</div>";
+  document.getElementById("summary").style.display = "block";
+  const fg = document.getElementById("finalgrade");
+  fg.style.display = "block";
+  fg.textContent = "Calificación total: " + totalScore.toFixed(1) + "/8";
+}
+
+function mk(tag, attrs) {
+  const el = document.createElementNS(NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function showCurve() {
+  const ke = Math.log(2) / t12;
+  const ka = 5 * ke;
+  const tmax = 8 * t12;
+  const n = 240;
+  const pts = [];
+  let maxC = 0;
+  for (let i = 0; i <= n; i++) {
+    const t = (tmax * i) / n;
+    const c = Math.exp(-ke * t) - Math.exp(-ka * t);
+    pts.push([t, c]);
+    if (c > maxC) maxC = c;
+  }
+  const ox = 50, oy = 260, aw = 600, ah = 210;
+  const svg = document.getElementById("curveSvg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const xFor = (t) => ox + (t / tmax) * aw;
+  const yFor = (c) => oy - (c / maxC) * (ah - 15);
+
+  for (let frac = 0.25; frac <= 1; frac += 0.25) {
+    const gy = yFor(maxC * frac);
+    svg.appendChild(mk("line", { x1: ox, y1: gy, x2: ox + aw, y2: gy, stroke: "#E1E4E8", "stroke-width": "1" }));
+  }
+
+  for (let k = 0; k <= 8; k++) {
+    const tx = xFor(k * t12);
+    svg.appendChild(mk("line", { x1: tx, y1: oy, x2: tx, y2: oy + 6, stroke: "#C9C7BE", "stroke-width": "1" }));
+    const lbl = mk("text", { x: tx, y: oy + 22, class: "ts", "text-anchor": "middle" });
+    lbl.textContent = k * t12;
+    svg.appendChild(lbl);
+  }
+
+  svg.appendChild(mk("line", { x1: ox, y1: oy, x2: ox + aw, y2: oy, stroke: "#C9C7BE", "stroke-width": "1.5" }));
+  svg.appendChild(mk("line", { x1: ox, y1: oy, x2: ox, y2: oy - ah, stroke: "#C9C7BE", "stroke-width": "1.5" }));
+
+  let dArea = "M " + xFor(0) + " " + oy;
+  pts.forEach((pt) => { dArea += " L " + xFor(pt[0]) + " " + yFor(pt[1]); });
+  dArea += " L " + xFor(tmax) + " " + oy + " Z";
+  svg.appendChild(mk("path", { d: dArea, fill: "#534AB7", "fill-opacity": "0.12", stroke: "none" }));
+
+  let d = "M " + xFor(0) + " " + yFor(pts[0][1]);
+  for (let i = 1; i < pts.length; i++) d += " L " + xFor(pts[i][0]) + " " + yFor(pts[i][1]);
+  svg.appendChild(mk("path", { d: d, fill: "none", stroke: "#534AB7", "stroke-width": "2.5" }));
+
+  let tPeak = 0, cPeak = 0;
+  pts.forEach((pt) => { if (pt[1] > cPeak) { cPeak = pt[1]; tPeak = pt[0]; } });
+  svg.appendChild(mk("circle", { cx: xFor(tPeak), cy: yFor(cPeak), r: 4, fill: "#534AB7" }));
+  const cmaxLbl = mk("text", { x: xFor(tPeak), y: yFor(cPeak) - 10, class: "th", "text-anchor": "middle" });
+  cmaxLbl.textContent = "Cmax";
+  svg.appendChild(cmaxLbl);
+
+  for (let k = 1; k <= 8; k++) {
+    const tk = k * t12;
+    const idx = Math.min(Math.round((tk / tmax) * n), pts.length - 1);
+    const ck = pts[idx][1];
+    svg.appendChild(mk("circle", { cx: xFor(tk), cy: yFor(ck), r: 3, fill: k === 7 ? "#993C1D" : "#C9C7BE" }));
+  }
+
+  const markX = xFor(7 * t12);
+  svg.appendChild(mk("line", { x1: markX, y1: oy, x2: markX, y2: oy - ah, stroke: "#993C1D", "stroke-width": "1.5", "stroke-dasharray": "4 3" }));
+
+  const l1 = mk("text", { x: markX, y: oy - ah - 22, class: "th", "text-anchor": "middle" });
+  l1.textContent = "7 × t½ = " + (7 * t12) + " h";
+  svg.appendChild(l1);
+  const l2 = mk("text", { x: markX, y: oy - ah - 6, class: "ts", "text-anchor": "middle" });
+  l2.textContent = "~99% eliminado";
+  svg.appendChild(l2);
+
+  const xl = mk("text", { x: ox + aw, y: oy + 42, class: "ts", "text-anchor": "end" });
+  xl.textContent = "Tiempo (h)";
+  svg.appendChild(xl);
+
+  document.getElementById("curveTitle").style.display = "block";
+  document.getElementById("curveWrap").style.display = "block";
+}
+
+document.getElementById("checkHours").addEventListener("click", checkQ2);
+document.getElementById("nextBtn").addEventListener("click", goNext);
+document.getElementById("newBtn").addEventListener("click", startActivity);
+
+startActivity();
+</script>
+</body>
+</html>
