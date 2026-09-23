@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen de práctica — Unidad I</title>
+<style>
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 820px;
+    margin: 2rem auto;
+    padding: 0 1.25rem 3rem;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    line-height: 1.6;
+  }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 14px; color: #555555; margin-bottom: 1rem; }
+  #nameRow { margin-bottom: 1rem; }
+  #nameRow label { font-size: 14px; margin-right: 8px; }
+  #nameInput { font-family: inherit; font-size: 14px; padding: 7px 10px; border-radius: 8px; border: 1px solid #C9C7BE; width: 260px; }
+  #scorebar {
+    position: sticky; top: 0; background: #FFFFFF; padding: 10px 0; border-bottom: 1px solid #E1E4E8;
+    display: flex; justify-content: space-between; align-items: center; z-index: 10; margin-bottom: 1.5rem;
+  }
+  #scoreText { font-size: 15px; font-weight: 500; }
+  button {
+    font-family: inherit; font-size: 14px; padding: 9px 18px; border-radius: 8px;
+    border: 1px solid #C9C7BE; background: #0B2545; color: #FFFFFF; cursor: pointer;
+  }
+  button:hover { background: #133866; }
+  button.secondary { background: #FFFFFF; color: #1A1A1A; }
+  button.secondary:hover { background: #F7F8FA; }
+  .qcard {
+    border: 1px solid #E1E4E8; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; background: #FFFFFF;
+  }
+  .qcard.correct { border-color: #1D9E75; background: #E1F5EE; }
+  .qcard.incorrect { border-color: #E24B4A; background: #FCEBEB; }
+  .qnum { font-size: 13px; color: #555555; margin-bottom: 4px; }
+  .qtext { font-size: 15px; font-weight: 500; margin-bottom: 10px; }
+  .opt { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 14px; cursor: pointer; }
+  .opt input { margin-top: 3px; }
+  .opt.rightAnswer { color: #085041; font-weight: 500; }
+  .opt.wrongChosen { color: #A32D2D; text-decoration: line-through; }
+  #finalArea { text-align: center; margin: 1.5rem 0; display: none; }
+  #finalGrade { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  #bottomBtnWrap { text-align: center; margin: 1.5rem 0; }
+  .unanswered { border-left: 3px solid #C9A227; }
+  #tokenArea { display: none; margin: 1.5rem 0; padding: 16px; border: 1px solid #E1E4E8; border-radius: 10px; background: #F7F8FA; }
+  #tokenArea h3 { font-size: 15px; margin-bottom: 8px; }
+  #tokenText { width: 100%; height: 100px; font-family: Consolas, monospace; font-size: 12px; padding: 8px; box-sizing: border-box; }
+  #tokenNote { font-size: 12px; color: #555555; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Examen de práctica</h1>
+<p class="subtitle">Farmacología Básica · Grupo 5PM6 · Unidad I — Farmacocinética · 50 de 100 reactivos posibles, aleatorios</p>
+
+<div id="nameRow">
+  <label for="nameInput">Nombre completo:</label>
+  <input type="text" id="nameInput" placeholder="Escribe tu nombre para el token">
+</div>
+
+<div id="scorebar">
+  <span id="scoreText">Sin calificar</span>
+  <button class="secondary" id="shuffleBtn">&#8635; Nuevo examen (rebaraja)</button>
+</div>
+
+<div id="quizArea"></div>
+
+<div id="bottomBtnWrap">
+  <button id="submitBtn">Calificar examen</button>
+</div>
+
+<div id="finalArea">
+  <div id="finalGrade"></div>
+</div>
+
+<div id="tokenArea">
+  <h3>Token para enviar al profesor</h3>
+  <textarea id="tokenText" readonly></textarea>
+  <div id="tokenNote">Copia este texto y envíalo al profesor (Classroom, correo, etc.). Solo él puede leer lo que contiene.</div>
+  <button class="secondary" id="copyBtn" style="margin-top:8px;">Copiar token</button>
+</div>
+
+<script>
+const PUB_KEY_B64 = "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAhw9P1dHlzNh8jf0LRjxBMZhBmCF2g0qbjdDiNisQZJDFgy2uAUkaQaaJHwUzzJ3TEPNfYFJjJIOvWsefd+MQ/iDu+qThFOox0MEQfv8YcO+beYXLfDz74V/dPDlq0Xzgql42nsHvTRXH3tTLqiwKawo7YsjA5z4qIUS+MQRVhGAyJKtbZkMgdyLkIPgey3vz17tOIyyzYeAGxcvbV87jWa2CllkkY5kfoKT3nEWsXEsQp2R4rKaOPvXUKG0VXQbqF1YXTGzuTMpV7nZuRY+lHA/9VN6V6kE3YpX/scZY27MSG64btSws3VgBCvAmIPB8MsNkAv1u5Kf2V5enwtecFZVoUjRmKnSAQL91VMS+9MhVlHjylLao+Zc9wbJnz8ekHfoLslGReDhiAAkYkFzIy+keK94fvQLiB9Ooz4H3daAGMKux2qiRCJiczEyc9ae6vAGWNl5H6T1Csq/voWfvO0IuzxnZZuPK0UmHHFejExhQLn3ClhUHb9MNIfSBSQR9AgMBAAE";
+const QUESTIONS_PER_EXAM = 50;
+const QUESTIONS = [["¿Cuál de las siguientes definiciones corresponde a \"medicamento\"?", ["Sustancia química que interactúa con el organismo modificando una función biológica", "Fármaco formulado y presentado para su administración con fines terapéuticos", "Sustancia con acción sobre el SNC capaz de generar dependencia", "Sustancia inerte usada para dar forma a una tableta", "Sustancia sin actividad farmacológica que actúa por expectativa"], 1], ["¿Qué caracteriza a una \"droga\"?", ["Sustancia sin actividad farmacológica intrínseca", "Sustancia con acción sobre el sistema nervioso central, capaz de generar dependencia", "Sustancia inerte que da forma a una tableta", "Sinónimo exacto de medicamento", "Sustancia utilizada exclusivamente en investigación"], 1], ["El agua utilizada para disolver un jarabe es un ejemplo de:", ["Excipiente", "Vehículo", "Fármaco", "Metabolito", "Placebo"], 1], ["¿Cuál de las siguientes vías de administración requiere un proceso de absorción antes de llegar a la circulación sistémica?", ["Intravenosa", "Intramuscular", "Oral", "Intradérmica", "Subcutánea"], 2], ["Una ventaja de la vía rectal de administración es:", ["Evita el efecto de primer paso hepático de forma parcial y es útil si hay vómito", "Es la vía más rápida de todas", "No requiere disolución del fármaco", "Es la única vía pediátrica", "Elimina cualquier variabilidad de absorción"], 0], ["La disolución, como parte de la liberación de un fármaco, se refiere a:", ["El paso del fármaco disuelto a la sangre", "El paso del fármaco sólido a la fase líquida en los fluidos biológicos", "La fragmentación de la tableta en gránulos", "La eliminación renal del fármaco", "La unión del fármaco a proteínas"], 1], ["Un recubrimiento entérico está diseñado para:", ["Liberar el fármaco inmediatamente en el estómago", "Retardar la liberación hasta llegar a un sitio específico del tracto digestivo", "Aumentar la velocidad de disolución gástrica", "Evitar la absorción del fármaco por completo", "Prolongar la vida media de eliminación"], 1], ["La cinética de absorción de orden cero se caracteriza por ser:", ["Proporcional a la concentración de fármaco disponible", "Un mecanismo saturable, de velocidad constante", "Exclusiva de fármacos administrados por vía intravenosa", "Dependiente únicamente del pH plasmático", "Nunca observada en la práctica clínica"], 1], ["¿Cuál de las siguientes cinéticas de absorción es saturable, ocurriendo cuando la capacidad de absorción llega a su límite?", ["Primer orden", "Orden cero", "Segundo orden", "Cinética exponencial pura", "Ninguna cinética es saturable"], 1], ["Según la Ley de Fick, la velocidad de difusión pasiva es inversamente proporcional a:", ["El área de superficie", "La diferencia de concentración", "El espesor de la membrana", "El coeficiente de difusión", "Ninguna de las anteriores"], 2], ["En la membrana celular, el colesterol tiene principalmente la función de:", ["Formar la barrera hidrofóbica central", "Regular la fluidez y estabilidad de la membrana", "Actuar como transportador activo", "Servir como receptor hormonal exclusivo", "Sintetizar ATP"], 1], ["¿Cuál de los siguientes mecanismos de transporte SÍ requiere gasto de energía (ATP)?", ["Difusión simple", "Filtración", "Ósmosis", "Transporte activo secundario", "Difusión facilitada"], 3], ["La difusión facilitada se caracteriza por:", ["Requerir gasto directo de ATP", "Utilizar una proteína transportadora específica y ser saturable", "No requerir ningún tipo de proteína", "Ocurrir en contra del gradiente de concentración", "Ser exclusiva de iones"], 1], ["La forma NO ionizada de un fármaco, en comparación con su forma ionizada, es:", ["Menos liposoluble y se absorbe peor", "Más liposoluble y se absorbe mejor", "Igualmente absorbida en cualquier caso", "Incapaz de atravesar cualquier membrana", "Solo relevante para la excreción"], 1], ["Si la constante de velocidad de absorción (ka) de un fármaco es muy grande, esto indica que su vida media de absorción es:", ["Muy larga", "Muy corta", "Igual a cero", "Independiente de ka", "Igual a la vida media de eliminación"], 1], ["¿Cuál de las siguientes variables NO forma parte de la fórmula de la dosis de carga?", ["Volumen de distribución", "Concentración plasmática deseada", "Biodisponibilidad", "Intervalo de dosificación (τ)", "Ninguna de las anteriores está ausente"], 3], ["En la fórmula de la dosis de mantenimiento, la variable τ representa:", ["La biodisponibilidad del fármaco", "El intervalo de dosificación", "El volumen de distribución", "El aclaramiento total", "La vida media de absorción"], 1], ["¿Qué estrategia permite alcanzar el estado estable de forma inmediata, sin esperar varias vidas medias?", ["Administrar solo dosis de mantenimiento", "Administrar una dosis de carga", "Duplicar el intervalo de dosificación", "Reducir la biodisponibilidad", "Ninguna estrategia lo permite"], 1], ["La biodisponibilidad oral de un fármaco tiende a reducirse principalmente por:", ["La filtración glomerular", "El efecto de primer paso hepático", "La unión a proteínas plasmáticas", "El volumen de distribución", "La vida media de eliminación"], 1], ["Un fármaco con biodisponibilidad oral cercana al 100% sugiere que:", ["Tiene un metabolismo de primer paso hepático mínimo", "Se administra exclusivamente por vía intravenosa", "No se absorbe en el tracto gastrointestinal", "Tiene un Vd extremadamente alto", "Es completamente metabolizado antes de absorberse"], 0], ["Un fármaco con fijación hística muy alta tiende a tener:", ["Un volumen de distribución aparente bajo", "Un volumen de distribución aparente alto", "Biodisponibilidad del 0%", "Excreción exclusivamente pulmonar", "Cinética de orden cero obligada"], 1], ["La alfa-1 glicoproteína ácida se une preferentemente a fármacos:", ["Ácidos", "Básicos", "Neutros exclusivamente", "Muy hidrosolubles únicamente", "De bajo peso molecular únicamente"], 1], ["En un paciente con hipoalbuminemia severa, la fracción libre de un fármaco muy unido a proteínas tiende a:", ["Disminuir, reduciendo el riesgo de toxicidad", "Aumentar, incrementando el riesgo de toxicidad", "Permanecer sin cambios", "Volverse indetectable", "Convertirse en metabolito activo"], 1], ["Un fármaco con un volumen de distribución (Vd) similar al volumen plasmático sugiere que:", ["Se distribuye ampliamente en tejidos", "Permanece principalmente confinado al plasma", "Es altamente liposoluble", "Cruza fácilmente todas las barreras biológicas", "Tiene un Vd mayor al peso corporal"], 1], ["¿Qué tipo de fármacos atraviesan con mayor facilidad la barrera hematoencefálica?", ["Muy hidrosolubles y de gran tamaño", "Muy liposolubles y de bajo peso molecular", "Altamente ionizados a pH fisiológico", "Unidos en un 100% a proteínas plasmáticas", "Ninguno la atraviesa con facilidad"], 1], ["¿Qué tipo de fármacos pasan con mayor facilidad a la leche materna a través de la barrera mamaria?", ["Muy hidrosolubles y ácidos", "Liposolubles y básicos", "De gran tamaño molecular exclusivamente", "Solo los administrados por vía intravenosa", "Ninguno pasa a la leche materna"], 1], ["Si un fármaco muy liposoluble no pudiera metabolizarse, la principal consecuencia sería:", ["Se excretaría rápidamente sin cambios", "Tendería a acumularse, al no poder excretarse eficientemente", "Se volvería automáticamente inactivo", "Aumentaría su biodisponibilidad oral", "No tendría ningún efecto en el organismo"], 1], ["Además del hígado, ¿qué otro órgano contribuye de forma relevante al metabolismo presistémico (parte del efecto de primer paso)?", ["El riñón", "El intestino (enterocitos)", "El pulmón", "El bazo", "La piel"], 1], ["¿Cuál de las siguientes NO es una reacción típica de Fase I?", ["Oxidación", "Reducción", "Hidrólisis", "Glucuronidación", "Todas son de Fase I"], 3], ["¿Cuál isoenzima del citocromo P450 participa en el metabolismo de la mayor proporción de fármacos (~50%)?", ["CYP1A2", "CYP2D6", "CYP2C9", "CYP3A4", "CYP2E1"], 3], ["¿Cuál de las siguientes es una reacción de Fase II del metabolismo?", ["Hidroxilación", "Sulfatación", "Reducción", "Hidrólisis", "Desalquilación oxidativa"], 1], ["¿Cuál de los siguientes es un ejemplo clásico de profármaco que requiere biotransformación para volverse activo?", ["Paracetamol", "Codeína (se convierte en morfina)", "Digoxina", "Litio", "Manitol"], 1], ["¿Qué puede ocurrir si un antibiótico altera la flora intestinal en un paciente que depende del ciclo enterohepático de otro fármaco?", ["Aumenta la eficacia del otro fármaco", "Puede reducir la eficacia del otro fármaco, al interrumpir su reabsorción", "No tiene ningún efecto clínico", "Acelera la excreción biliar exclusivamente", "Convierte al fármaco en tóxico de forma automática"], 1], ["¿Cuál de los siguientes es un ejemplo clásico de inductor enzimático?", ["Ketoconazol", "Carbamazepina", "Eritromicina", "Jugo de toronja", "Cimetidina"], 1], ["¿Cuál de los siguientes es un ejemplo clásico de inhibidor enzimático?", ["Rifampicina", "Carbamazepina", "Jugo de toronja", "Fenobarbital", "Alcohol crónico"], 2], ["La vía pulmonar de excreción es especialmente relevante para:", ["Antibióticos betalactámicos", "Anestésicos generales gaseosos y alcohol volátil", "Fármacos muy unidos a proteínas", "Metabolitos glucuronidados", "Fármacos de alto peso molecular"], 1], ["¿Qué fracción de un fármaco NO puede filtrarse libremente en el glomérulo?", ["La fracción libre", "La fracción unida a proteínas plasmáticas", "La fracción hidrosoluble", "La fracción de bajo peso molecular", "Toda la dosis se filtra sin excepción"], 1], ["La reabsorción tubular renal se caracteriza por:", ["Requerir siempre transportadores activos con gasto de ATP", "Permitir que el fármaco no ionizado y liposoluble regrese a la sangre", "Ocurrir exclusivamente en el glomérulo", "Ser independiente del pH urinario", "Aplicarse solo a fármacos ionizados"], 1], ["Acidificar la orina favorece la excreción de:", ["Ácidos débiles", "Bases débiles", "Fármacos neutros exclusivamente", "Fármacos muy liposolubles", "Ninguna sustancia en particular"], 1], ["Que la mayoría de los fármacos sigan cinética de eliminación de primer orden implica que:", ["Se elimina una cantidad fija por unidad de tiempo", "La velocidad de eliminación es proporcional a la concentración plasmática presente", "Nunca se puede calcular su vida media", "Su eliminación es independiente de la dosis administrada en todo momento", "Requieren siempre dosis de carga"], 1], ["Si la constante de velocidad de eliminación (ke) de un fármaco aumenta, su vida media de eliminación:", ["Aumenta proporcionalmente", "Disminuye", "Permanece igual", "Se vuelve indefinida", "Depende únicamente del Vd"], 1], ["El aclaramiento (Cl) se expresa típicamente en unidades de:", ["mg/L", "L/h (volumen por unidad de tiempo)", "horas exclusivamente", "mg (cantidad total)", "Sin unidades, es adimensional"], 1], ["Si se conocen ke y Cl, el volumen de distribución (Vd) puede calcularse como:", ["Vd = ke × Cl", "Vd = Cl / ke", "Vd = ke / Cl", "Vd = 0.693 × Cl", "Vd = Cl × t½"], 1], ["Si en un paciente con insuficiencia renal NO se ajusta la dosis de un fármaco de eliminación renal, lo más probable es que ocurra:", ["Subdosificación con pérdida de efecto", "Acumulación del fármaco y mayor riesgo de toxicidad", "Ningún cambio clínicamente relevante", "Aumento de la biodisponibilidad oral", "Reducción espontánea del Vd"], 1], ["Además del etanol, ¿qué otro fármaco puede mostrar cinética de eliminación de orden cero a dosis altas?", ["Amoxicilina", "Fenitoína", "Furosemida", "Diazepam", "Paracetamol a dosis terapéuticas"], 1], ["Además de la alta unión a proteínas plasmáticas, ¿qué otra característica puede explicar un Vd bajo en un fármaco?", ["Ser muy liposoluble", "Tener un gran tamaño molecular", "Cruzar fácilmente la barrera hematoencefálica", "Tener una vida media extremadamente larga", "Ser un ion pequeño"], 1], ["La fenitoína es un ejemplo de fármaco con:", ["Muy baja unión a proteínas plasmáticas", "Unión a proteínas plasmáticas de aproximadamente 90%", "Vd extremadamente alto (>100 L/kg)", "Excreción exclusivamente biliar", "Cinética de absorción de orden cero"], 1], ["El litio, un ion pequeño usado como estabilizador del ánimo, se distribuye principalmente en:", ["El líquido extracelular exclusivamente", "El agua corporal total, incluido el líquido intracelular", "El tejido adiposo", "El plasma exclusivamente", "Ningún compartimento hídrico"], 1], ["¿Por qué el volumen de distribución (Vd) de un fármaco puede ser mayor que el peso corporal del paciente?", ["Porque siempre hay un error de medición", "Porque es un volumen aparente que refleja fijación extensa a tejidos, no un volumen anatómico real", "Porque el paciente tiene más agua corporal de la esperada", "Porque el fármaco se administra en exceso", "Porque el Vd nunca puede superar el peso corporal"], 1], ["Después de aproximadamente 4-5 vidas medias de administración repetida a intervalos fijos, un fármaco alcanza:", ["La eliminación completa", "El estado estable (steady state)", "La dosis de carga ideal", "El efecto de primer paso máximo", "La saturación de todas las enzimas metabolizadoras"], 1], ["¿Cuál es la principal diferencia entre un fármaco y una droga?", ["El fármaco no tiene efecto biológico", "La droga actúa sobre el SNC y puede generar dependencia, mientras que el fármaco no necesariamente", "No existe diferencia, son sinónimos", "La droga siempre se usa con fines terapéuticos", "El fármaco solo se administra por vía intravenosa"], 1], ["Las cápsulas y grageas se clasifican como formas farmacéuticas:", ["Líquidas", "Sólidas", "Semisólidas", "Gaseosas", "Ninguna de las anteriores"], 1], ["¿Cuál de las siguientes es considerada una vía \"inmediata\" de administración?", ["Rectal", "Subcutánea", "Oral", "Tópica", "Inhalatoria"], 1], ["Un colorante añadido a una tableta para diferenciarla visualmente es un ejemplo de:", ["Fármaco", "Vehículo", "Excipiente", "Metabolito", "Placebo"], 2], ["Una cápsula diseñada para liberar su contenido en momentos programados sigue un patrón de liberación:", ["Inmediata", "Retardada", "Prolongada", "Pulsátil", "Ninguna de las anteriores"], 3], ["En una gráfica de concentración plasmática contra tiempo, la cinética de orden cero se representa como:", ["Una curva exponencial descendente", "Una línea recta descendente", "Una línea horizontal constante", "Una curva ascendente", "Una parábola"], 1], ["En una gráfica de concentración plasmática contra tiempo, la cinética de primer orden se representa como:", ["Una línea recta descendente", "Una curva exponencial descendente", "Una línea horizontal", "Una curva ascendente indefinida", "Ninguna de las anteriores"], 1], ["En la Ley de Fick, la variable \"A\" representa:", ["El coeficiente de difusión", "El área de superficie de absorción", "La diferencia de concentración", "El espesor de la membrana", "La afinidad del fármaco"], 1], ["Las cabezas hidrofílicas de los fosfolípidos de la membrana celular se orientan hacia:", ["El interior de la bicapa", "El exterior, en contacto con medios acuosos", "No tienen orientación definida", "Solo hacia el citoplasma", "Solo hacia el espacio extracelular"], 1], ["La ósmosis es un ejemplo de:", ["Transporte activo primario", "Transporte pasivo", "Endocitosis", "Transporte activo secundario", "Exocitosis"], 1], ["La endocitosis es especialmente relevante para el transporte de:", ["Iones pequeños", "Macromoléculas", "Gases", "Fármacos muy liposolubles de bajo peso molecular", "Ninguna de las anteriores"], 1], ["¿Cuál de los siguientes NO es un factor fisicoquímico que modifique la absorción de un fármaco?", ["Liposolubilidad", "Grado de ionización", "Tamaño molecular", "Nombre comercial del fármaco", "pH del medio"], 3], ["La vida media de absorción se define como el tiempo necesario para que:", ["Se elimine el 50% del fármaco", "Se absorba el 50% de la dosis administrada", "Se alcance el estado estable", "Se metabolice completamente el fármaco", "Se una el 50% del fármaco a proteínas"], 1], ["La dosis de carga es especialmente útil en situaciones donde:", ["Se requiere efecto terapéutico inmediato", "El paciente tiene función renal normal exclusivamente", "Solo se usa en administración oral", "Se busca evitar cualquier efecto del fármaco", "El fármaco tiene Vd igual a cero"], 0], ["El propósito principal de la dosis de mantenimiento es:", ["Alcanzar rápidamente la Cp deseada por primera vez", "Reponer la cantidad de fármaco eliminada, manteniendo la Cp en rango terapéutico", "Reducir permanentemente el Vd del fármaco", "Eliminar el fármaco del organismo", "Sustituir a la dosis de carga siempre"], 1], ["En el estado estable, la cantidad de fármaco que entra al organismo es:", ["Mayor que la cantidad eliminada", "Menor que la cantidad eliminada", "Igual a la cantidad eliminada", "Independiente de la eliminación", "Cero"], 2], ["La letra \"F\" en farmacocinética representa:", ["El flujo sanguíneo hepático", "La biodisponibilidad", "La filtración glomerular", "La fracción libre del fármaco", "La frecuencia de dosificación"], 1], ["El efecto de primer paso hepático es más relevante para la vía de administración:", ["Intravenosa", "Oral", "Intramuscular", "Subcutánea", "Inhalatoria"], 1], ["Las tetraciclinas se fijan preferentemente a:", ["Tejido adiposo", "Hueso y dientes en desarrollo", "Tejido nervioso", "Músculo esquelético exclusivamente", "Piel"], 1], ["¿Cuál de los siguientes fármacos se caracteriza por una muy alta unión a la albúmina plasmática?", ["Litio", "Etanol", "Warfarina", "Manitol", "Gentamicina"], 2], ["Cuando dos fármacos compiten por el mismo sitio de unión en la albúmina, el desplazamiento de uno de ellos puede provocar:", ["Disminución de su efecto farmacológico", "Aumento de su fracción libre y riesgo de toxicidad", "Ningún cambio clínico relevante", "Aumento automático de su metabolismo", "Reducción de su volumen de distribución"], 1], ["Un fármaco con Vd de 500 L/kg en un humano promedio indica que:", ["Se distribuye exclusivamente en el plasma", "Está masivamente secuestrado en tejidos, más allá de cualquier compartimento hídrico real", "No se absorbe en absoluto", "Tiene biodisponibilidad del 100%", "Sigue cinética de orden cero obligatoriamente"], 1], ["La función principal de la barrera hematoencefálica es:", ["Facilitar el paso de cualquier fármaco al SNC", "Proteger al sistema nervioso central de sustancias circulantes", "Filtrar la sangre antes de llegar al riñón", "Metabolizar fármacos antes de su absorción", "Excretar fármacos hacia el líquido cefalorraquídeo"], 1], ["La estructura de la piel que actúa como principal barrera para la absorción de fármacos tópicos es:", ["La dermis", "El estrato córneo", "El tejido subcutáneo", "Las glándulas sudoríparas", "Los folículos pilosos exclusivamente"], 1], ["Convertir un fármaco liposoluble en un metabolito hidrosoluble facilita principalmente:", ["Su absorción oral", "Su excreción renal", "Su unión a proteínas plasmáticas", "Su distribución al SNC", "Su almacenamiento en tejido adiposo"], 1], ["Además del hígado, ¿en qué otro sitio pueden ocurrir reacciones de biotransformación de fármacos?", ["Exclusivamente en el corazón", "Plasma (esterasas plasmáticas)", "Exclusivamente en el hueso", "Exclusivamente en el tejido adiposo", "Ningún otro sitio es posible"], 1], ["A diferencia de la Fase II, las reacciones de Fase I:", ["Siempre requieren conjugación con una molécula endógena", "Introducen o exponen un grupo funcional reactivo en la molécula", "Nunca involucran al citocromo P450", "Producen siempre metabolitos inactivos", "Ocurren exclusivamente en el riñón"], 1], ["Las enzimas del citocromo P450 se localizan principalmente en:", ["El núcleo celular", "El retículo endoplásmico liso de los hepatocitos", "Las mitocondrias exclusivamente", "El aparato de Golgi", "La membrana plasmática externa"], 1], ["La glucuronidación consiste en la conjugación del fármaco con:", ["Ácido acético", "Ácido glucurónico", "Glutatión", "Glicina", "Sulfato"], 1], ["El metabolito tóxico NAPQI se genera durante el metabolismo de:", ["Ibuprofeno", "Paracetamol", "Amoxicilina", "Diazepam", "Warfarina"], 1], ["El ciclo enterohepático es clínicamente relevante porque puede:", ["Reducir la vida media del fármaco", "Prolongar la duración de acción del fármaco", "Eliminar el fármaco de forma inmediata", "Evitar cualquier metabolismo hepático", "Aumentar la excreción pulmonar"], 1], ["El uso crónico de alcohol puede actuar como:", ["Inhibidor enzimático exclusivamente", "Inductor del metabolismo hepático de otros fármacos", "Bloqueador de la absorción intestinal", "Sustituto de la dosis de mantenimiento", "Agente sin efecto sobre el CYP450"], 1], ["Si un paciente toma un inhibidor enzimático junto con un fármaco de índice terapéutico estrecho, el riesgo principal es:", ["Subdosificación", "Toxicidad por acumulación del fármaco", "Ningún riesgo clínico relevante", "Aumento de la excreción renal", "Reducción del Vd"], 1], ["¿Cuál de las siguientes NO es una vía de excreción de fármacos?", ["Biliar", "Pulmonar", "Sudor", "Renal", "Todas son vías de excreción válidas"], 4], ["La filtración glomerular es un proceso:", ["Activo, que requiere ATP", "Pasivo, limitado a la fracción libre del fármaco", "Exclusivo de fármacos muy liposolubles", "Que ocurre en el túbulo distal", "Independiente del tamaño molecular"], 1], ["La secreción tubular activa permite la eliminación de fármacos:", ["Solo si están completamente libres de unión a proteínas", "Incluso cuando están unidos a proteínas plasmáticas, mediante transportadores específicos", "Únicamente por difusión pasiva", "Solo en dirección de reabsorción", "Exclusivamente en el glomérulo"], 1], ["Acidificar la orina favorece la excreción de bases débiles porque:", ["Aumenta su forma no ionizada, reduciendo su reabsorción", "Aumenta su forma ionizada, reduciendo su reabsorción", "No tiene ningún efecto sobre su excreción", "Las convierte en ácidos débiles", "Bloquea la filtración glomerular"], 1], ["La mayoría de los antibióticos y analgésicos comunes siguen una cinética de eliminación de:", ["Orden cero", "Primer orden", "Orden mixto obligado", "Segundo orden", "Ninguna cinética definida"], 1], ["Si dos fármacos tienen el mismo Vd pero el fármaco A tiene mayor aclaramiento que el fármaco B, el fármaco A tendrá:", ["Una vida media de eliminación más larga", "Una vida media de eliminación más corta", "La misma vida media que B", "Un Vd distinto automáticamente", "Biodisponibilidad menor"], 1], ["El aclaramiento total de un fármaco corresponde a la suma de:", ["Solo el aclaramiento renal", "El aclaramiento hepático, renal y de otras vías de eliminación", "Solo el aclaramiento hepático", "El volumen de distribución y la biodisponibilidad", "La dosis de carga y de mantenimiento"], 1], ["En un paciente con insuficiencia hepática severa, el metabolismo de fármacos que dependen del hígado para su eliminación generalmente:", ["Aumenta, requiriendo mayor dosis", "Disminuye, requiriendo ajuste de dosis", "No se modifica", "Se vuelve impredecible sin relación con la función hepática", "Mejora la eficacia del fármaco"], 1], ["La razón por la que el etanol sigue cinética de eliminación de orden cero es:", ["Su alta unión a proteínas plasmáticas", "La saturación de la enzima alcohol deshidrogenasa", "Su bajo volumen de distribución", "Su excreción exclusivamente pulmonar", "Su alta liposolubilidad"], 1], ["El bajo volumen de distribución de la warfarina se explica principalmente por:", ["Su bajo peso molecular", "Su muy alta unión a proteínas plasmáticas", "Su alta liposolubilidad", "Su rápida metabolización", "Su vía de administración intravenosa exclusiva"], 1], ["El volumen de distribución muy alto de la digoxina se debe principalmente a:", ["Su baja unión a proteínas plasmáticas", "Su alta afinidad y fijación al músculo esquelético y cardiaco", "Su metabolismo hepático extenso", "Su excreción pulmonar", "Su administración exclusivamente tópica"], 1], ["El volumen de distribución (Vd) se expresa habitualmente en unidades de:", ["mg/h", "L o L/kg", "horas", "mg/L", "Sin unidades"], 1], ["En una gráfica de concentración plasmática durante la administración repetida de un fármaco, el estado estable se reconoce porque:", ["La concentración sigue aumentando indefinidamente", "Los picos y valles de concentración se vuelven consistentes entre dosis", "La concentración cae a cero entre dosis", "Solo ocurre tras la primera dosis", "Es indistinguible de la fase de absorción inicial"], 1], ["Después de 7 vidas medias de eliminación, la fracción de fármaco que aún permanece en el organismo es aproximadamente:", ["50%", "25%", "Menos del 1%", "10%", "0% exacto"], 2], ["En un paciente con insuficiencia renal, una estrategia válida para ajustar la dosis de un fármaco de eliminación renal es:", ["Aumentar la dosis sin modificar el intervalo", "Prolongar el intervalo de dosificación (τ) o reducir la dosis", "Cambiar exclusivamente la vía de administración", "Administrar siempre una dosis de carga adicional", "Ignorar el ajuste si el fármaco tiene buena tolerancia"], 1], ["La farmacocinética se diferencia de la farmacodinamia en que la primera estudia:", ["Qué efecto tiene el fármaco sobre el organismo", "Qué le hace el organismo al fármaco (su recorrido: LADME)", "Los mecanismos moleculares de acción del fármaco", "Las interacciones fármaco-receptor exclusivamente", "Los efectos adversos del fármaco"], 1], ["El acrónimo LADME representa, en orden, los procesos de:", ["Liberación, Absorción, Distribución, Metabolismo, Excreción", "Liberación, Acción, Distribución, Metabolismo, Eliminación", "Localización, Absorción, Difusión, Metabolismo, Excreción", "Liberación, Absorción, Dosis, Metabolismo, Excreción", "Ligando, Absorción, Distribución, Metabolismo, Excreción"], 0]];
+let examOrder = [];
+
+function shuffleArr(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildExam() {
+  const allIndices = QUESTIONS.map((_, i) => i);
+  const qIndexOrder = shuffleArr(allIndices).slice(0, QUESTIONS_PER_EXAM);
+  examOrder = qIndexOrder.map((qi) => {
+    const q = QUESTIONS[qi];
+    const optIdxOrder = shuffleArr(q[1].map((_, i) => i));
+    const options = optIdxOrder.map((oi) => q[1][oi]);
+    const correctPos = optIdxOrder.indexOf(q[2]);
+    return { origIndex: qi, text: q[0], options: options, optOrigOrder: optIdxOrder, correct: correctPos };
+  });
+  render();
+  document.getElementById("scoreText").textContent = "Sin calificar";
+  document.getElementById("finalArea").style.display = "none";
+  document.getElementById("tokenArea").style.display = "none";
+  document.getElementById("submitBtn").style.display = "inline-block";
+  window.scrollTo(0, 0);
+}
+
+function render() {
+  const area = document.getElementById("quizArea");
+  area.innerHTML = "";
+  examOrder.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "qcard";
+    card.id = "q" + qi;
+    const num = document.createElement("div");
+    num.className = "qnum";
+    num.textContent = "Pregunta " + (qi + 1) + " de " + examOrder.length;
+    card.appendChild(num);
+    const txt = document.createElement("div");
+    txt.className = "qtext";
+    txt.textContent = q.text;
+    card.appendChild(txt);
+    q.options.forEach((opt, oi) => {
+      const label = document.createElement("label");
+      label.className = "opt";
+      label.id = "q" + qi + "_o" + oi;
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "q" + qi;
+      input.value = oi;
+      label.appendChild(input);
+      const span = document.createElement("span");
+      span.textContent = opt;
+      label.appendChild(span);
+      card.appendChild(label);
+    });
+    area.appendChild(card);
+  });
+}
+
+function bufferToBase64(buf) {
+  let binary = "";
+  const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function base64ToBuffer(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+async function generateToken(score, total, ansChars) {
+  const ansStr = ansChars.join("");
+  const name = document.getElementById("nameInput").value.trim().slice(0, 40) || "(sin nombre)";
+  const payload = JSON.stringify({
+    t: new Date().toISOString(),
+    n: name,
+    s: score,
+    o: total,
+    a: ansStr,
+  });
+  try {
+    const pubKey = await crypto.subtle.importKey(
+      "spki",
+      base64ToBuffer(PUB_KEY_B64),
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      false,
+      ["encrypt"]
+    );
+    const data = new TextEncoder().encode(payload);
+    const cipher = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, pubKey, data);
+    const tokenB64 = bufferToBase64(cipher);
+    document.getElementById("tokenText").value = tokenB64;
+    document.getElementById("tokenArea").style.display = "block";
+  } catch (e) {
+    document.getElementById("tokenNote").textContent =
+      "No se pudo generar el token en este navegador/origen (" + e.message + "). Esta función requiere que la página esté servida por HTTPS (por ejemplo, GitHub Pages), no abierta como archivo local.";
+    document.getElementById("tokenArea").style.display = "block";
+  }
+}
+
+function gradeExam() {
+  let score = 0;
+  let unanswered = 0;
+  const ansChars = new Array(QUESTIONS.length).fill(".");
+  examOrder.forEach((q, qi) => {
+    const selected = document.querySelector("input[name='q" + qi + "']:checked");
+    const card = document.getElementById("q" + qi);
+    if (!selected) {
+      unanswered++;
+      ansChars[q.origIndex] = "X";
+      card.classList.add("unanswered");
+      const correctLabel = document.getElementById("q" + qi + "_o" + q.correct);
+      correctLabel.classList.add("rightAnswer");
+      return;
+    }
+    const chosen = parseInt(selected.value, 10);
+    ansChars[q.origIndex] = String(q.optOrigOrder[chosen]);
+    const correctLabel = document.getElementById("q" + qi + "_o" + q.correct);
+    correctLabel.classList.add("rightAnswer");
+    if (chosen === q.correct) {
+      score++;
+      card.classList.add("correct");
+    } else {
+      card.classList.add("incorrect");
+      const chosenLabel = document.getElementById("q" + qi + "_o" + chosen);
+      chosenLabel.classList.add("wrongChosen");
+    }
+    card.querySelectorAll("input").forEach((inp) => { inp.disabled = true; });
+  });
+  const pct = ((score / examOrder.length) * 100).toFixed(0);
+  document.getElementById("scoreText").textContent =
+    "Calificación: " + score + "/" + examOrder.length + " (" + pct + "%)" + (unanswered ? "  ·  " + unanswered + " sin responder" : "");
+  document.getElementById("submitBtn").style.display = "none";
+  const fg = document.getElementById("finalArea");
+  fg.style.display = "block";
+  document.getElementById("finalGrade").textContent = "Resultado final: " + score + "/" + examOrder.length + " (" + pct + "%)";
+  generateToken(score, examOrder.length, ansChars);
+}
+
+document.getElementById("submitBtn").addEventListener("click", gradeExam);
+document.getElementById("shuffleBtn").addEventListener("click", buildExam);
+document.getElementById("copyBtn").addEventListener("click", () => {
+  const ta = document.getElementById("tokenText");
+  ta.select();
+  document.execCommand("copy");
+});
+
+buildExam();
+</script>
+</body>
+</html>
