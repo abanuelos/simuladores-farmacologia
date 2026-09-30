@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador — Farmacocinética del Etanol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-900:#10131A;
+    --ink-800:#1A1E27;
+    --ink-750:#20242F;
+    --border:#2C313F;
+    --amber:#D99A3D;
+    --amber-soft: rgba(217,154,61,0.16);
+    --teal:#4FB8A8;
+    --teal-soft: rgba(79,184,168,0.14);
+    --coral:#E2604F;
+    --coral-soft: rgba(226,96,79,0.16);
+    --violet:#8E7CC3;
+    --paper:#EDE8DD;
+    --muted:#8A8F9C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink-900);
+    color:var(--paper);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:26px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--amber);}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:30px;margin:8px 0 6px;font-weight:600;}
+  .subtitle{color:var(--muted);font-size:13.5px;max-width:680px;line-height:1.5;}
+  .course-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  .intro-note{background:var(--ink-800);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:26px;font-size:13.5px;line-height:1.6;}
+  .intro-note b{color:var(--amber);}
+  .intro-note .zero-first{color:var(--teal);font-weight:600;}
+
+  .sim-grid{display:grid;grid-template-columns:296px 1fr;gap:22px;align-items:start;}
+  @media (max-width:900px){.sim-grid{grid-template-columns:1fr;}}
+
+  .patients-col{display:flex;flex-direction:column;gap:12px;}
+  .patient-card{background:var(--ink-800);border:1px solid var(--border);border-left:4px solid var(--accent,var(--amber));border-radius:10px;padding:13px 15px;}
+  .pname-row{display:flex;justify-content:space-between;align-items:center;}
+  .pname{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;}
+  .remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;}
+  .remove-btn:hover{color:var(--coral);}
+  label.small{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-top:9px;margin-bottom:4px;}
+  .toggle-btns{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+  .toggle-btns button{flex:1;background:transparent;border:none;color:var(--muted);font-size:11.5px;padding:6px 6px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .toggle-btns button.active{background:var(--amber-soft);color:var(--amber);font-weight:600;}
+  input[type=number]{width:100%;background:var(--ink-900);border:1px solid var(--border);color:var(--paper);border-radius:6px;padding:6px 8px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  input[type=number]:focus{outline:2px solid var(--amber);outline-offset:1px;}
+  .hint{font-size:10.5px;color:var(--muted);margin-top:4px;}
+  .add-patient{background:var(--ink-800);border:1px dashed var(--border);color:var(--muted);border-radius:10px;padding:11px;text-align:center;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .add-patient:hover:not(:disabled){color:var(--amber);border-color:var(--amber);}
+  .add-patient:disabled{opacity:.4;cursor:not-allowed;}
+
+  .chart-col{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:18px 20px 20px;}
+  .chart-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;flex-wrap:wrap;gap:6px;}
+  .chart-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;}
+  .chart-sub{font-size:11.5px;color:var(--muted);}
+  svg.chart{width:100%;height:auto;display:block;}
+
+  .scrubber-row{display:flex;align-items:center;gap:12px;margin-top:12px;}
+  .play-btn{background:var(--amber);color:var(--ink-900);border:none;border-radius:50%;width:32px;height:32px;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  input[type=range]{flex:1;accent-color:var(--amber);}
+  .time-readout{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--amber);width:56px;text-align:right;}
+
+  .readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .readout-card{background:var(--ink-900);border:1px solid var(--border);border-radius:8px;padding:10px 12px;border-top:3px solid var(--accent);}
+  .rc-name{font-size:11px;color:var(--muted);}
+  .rc-val{font-family:'IBM Plex Mono',monospace;font-size:19px;margin:2px 0;}
+  .rc-val small{font-size:11px;color:var(--muted);font-weight:400;}
+  .rc-phase{font-size:10.5px;color:var(--muted);}
+
+  .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:11.5px;color:var(--muted);}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+
+  .two-col-bottom{display:grid;grid-template-columns:1.05fr 1fr;gap:22px;margin-top:26px;}
+  @media (max-width:900px){.two-col-bottom{grid-template-columns:1fr;}}
+  .panel{background:var(--ink-800);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .panel h2{font-family:'Space Grotesk',sans-serif;font-size:15.5px;margin:0 0 6px;}
+  .panel .pdesc{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+  .panel ol{margin:0;padding-left:18px;font-size:13px;line-height:1.7;}
+  .panel ol li{margin-bottom:7px;}
+  .mini-chart-legend{display:flex;gap:16px;font-size:11.5px;color:var(--muted);margin-top:8px;}
+
+  .disclaimer{margin-top:24px;font-size:10.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Variabilidad biológica en la respuesta a fármacos</div>
+    <h1>Simulador — Farmacocinética del etanol</h1>
+    <p class="subtitle">Compara cómo el mismo consumo de alcohol produce curvas de alcoholemia muy distintas según sexo, peso, estado de ayuno y consumo crónico — y visualiza por qué la eliminación del etanol sigue cinética de orden cero.</p>
+    <div class="course-tag">Farmacología Básica · ENMH-IPN · Grupo 5PM6 · Periodo 2027/1</div>
+  </header>
+
+  <div class="intro-note">
+    La mayoría de los fármacos se eliminan con <b>cinética de orden uno</b> (la velocidad de eliminación es proporcional a la concentración). El etanol es distinto: a las concentraciones alcanzadas con el consumo habitual, la enzima <b>alcohol-deshidrogenasa (ADH)</b> ya está saturada, por lo que la eliminación ocurre a <span class="zero-first">velocidad constante — cinética de orden cero</span> (≈0.15–0.20 g/L/h). Por eso, a diferencia de un fármaco típico, la fase de eliminación en la gráfica es una <b>línea recta</b>, no una curva exponencial.
+  </div>
+
+  <div class="sim-grid">
+    <div>
+      <div class="patients-col" id="patientsCol"></div>
+      <button class="add-patient" id="addPatientBtn" style="margin-top:12px;width:100%;">+ Agregar paciente</button>
+    </div>
+
+    <div class="chart-col" id="chartColMain">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Alcoholemia (BAC) vs. tiempo</div>
+          <div class="chart-sub">g/dL — arrastra el control de tiempo o presiona reproducir</div>
+        </div>
+        <div class="legend-row" id="curveLegend"></div>
+      </div>
+      <div id="chartSvgWrap"></div>
+      <div class="scrubber-row">
+        <button class="play-btn" id="playBtn">▶</button>
+        <input type="range" id="scrubberRange" min="0" max="10" step="0.05" value="0">
+        <div class="time-readout" id="timeLabel">0.0 h</div>
+      </div>
+      <div class="readouts" id="readouts"></div>
+      <div class="legend-row">
+        <span><span class="legend-swatch" style="background:var(--amber-soft);border:1px solid var(--amber);"></span>0.04–0.08 g/dL · referencia legal típica (varía por legislación)</span>
+        <span><span class="legend-swatch" style="background:var(--coral-soft);border:1px solid var(--coral);"></span>&gt;0.08 g/dL · intoxicación evidente</span>
+        <span><span class="legend-swatch" style="background:var(--coral);"></span>0.30 g/dL · riesgo de estupor/coma</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col-bottom">
+    <div class="panel">
+      <h2>Orden cero vs. orden uno</h2>
+      <div class="pdesc">Misma concentración inicial relativa: compara la forma de la curva de eliminación del etanol contra la de un fármaco típico de orden uno.</div>
+      <div id="miniChartWrap"></div>
+      <div class="mini-chart-legend">
+        <span><span class="legend-swatch" style="background:var(--amber);"></span>Etanol (orden cero — línea recta)</span>
+        <span><span class="legend-swatch" style="background:var(--violet);"></span>Fármaco típico (orden uno — exponencial)</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Preguntas para discusión en clase</h2>
+      <div class="pdesc">Para participación o cierre de sesión.</div>
+      <ol>
+        <li>¿Por qué la eliminación del etanol es de orden cero a concentraciones habituales, y en qué condición podría comportarse como orden uno?</li>
+        <li>Con la misma dosis, ¿por qué el Paciente B (mujer, igual dosis) puede alcanzar una BAC pico distinta a la del Paciente A? Relaciónalo con el factor r de Widmark.</li>
+        <li>¿Qué cambia en la curva de un bebedor crónico y qué mecanismo enzimático lo explica (CYP2E1/MEOS)?</li>
+        <li>¿Cómo afecta el alimento en el estómago a la fase de absorción y por qué es clínicamente relevante?</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    Herramienta educativa con fines didácticos para la clase de Farmacología Básica. Modelo simplificado (absorción de orden uno + eliminación de orden cero, ecuación de Widmark). No debe usarse como referencia médico-legal, forense, ni para determinar aptitud para conducir o consumir alcohol.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const COLORS = ['#D99A3D','#4FB8A8','#E2604F','#8E7CC3'];
+  const NAMES  = ['Paciente A','Paciente B','Paciente C','Paciente D'];
+
+  let patients = [
+    {id:0, sex:'M', weight:70, dose:56, fasted:true,  chronic:false},
+    {id:1, sex:'F', weight:60, dose:56, fasted:false, chronic:false},
+    {id:2, sex:'M', weight:70, dose:56, fasted:true,  chronic:true}
+  ];
+  let nextId = 3;
+  let currentT = 0;
+  let playing = false;
+  let playTimer = null;
+
+  function colorForIdx(i){ return COLORS[i % COLORS.length]; }
+  function nameForIdx(i){ return NAMES[i % NAMES.length]; }
+
+  function paramsFor(p){
+    const r = p.sex === 'M' ? 0.68 : 0.55;
+    const Vd = r * p.weight;
+    const ka = p.fasted ? 3.5 : 1.3;
+    const beta = p.chronic ? 0.25 : 0.15;
+    return { doseG: p.dose, Vd: Vd, ka: ka, beta: beta };
+  }
+
+  function bacAtGL(t, params){
+    const tt = Math.max(t, 0);
+    const absorbed = params.doseG * (1 - Math.exp(-params.ka * tt));
+    const c = absorbed / params.Vd - params.beta * tt;
+    return Math.max(0, c);
+  }
+
+  function peakTime(params){
+    const ratio = (params.beta * params.Vd) / (params.doseG * params.ka);
+    if (ratio <= 0) return 0.01;
+    if (ratio >= 1) return 0;
+    return -Math.log(ratio) / params.ka;
+  }
+
+  function timeToZero(params){
+    const tp = Math.max(peakTime(params), 0.01);
+    let t = tp;
+    const step = 0.02;
+    let guard = 0;
+    while (bacAtGL(t, params) > 0.0008 && guard < 4000) {
+      t += step;
+      guard++;
+    }
+    return t;
+  }
+
+  function computeTMax(){
+    let m = 6;
+    patients.forEach(function(p){
+      const tz = timeToZero(paramsFor(p));
+      if (tz + 0.5 > m) m = tz + 0.5;
+    });
+    return Math.min(Math.max(m, 6), 16);
+  }
+
+  function computeYMax(){
+    let maxC = 0.09;
+    patients.forEach(function(p){
+      const params = paramsFor(p);
+      const tp = peakTime(params);
+      const c = bacAtGL(tp, params) / 10;
+      if (c > maxC) maxC = c;
+    });
+    return maxC * 1.3;
+  }
+
+  function fmt(n, d){ return Number(n).toFixed(d); }
+
+  // ---------- Patient cards ----------
+  function renderPatientCards(){
+    const col = document.getElementById('patientsCol');
+    col.innerHTML = patients.map(function(p, idx){
+      const color = colorForIdx(idx);
+      const drinksApprox = fmt(p.dose / 14, 1);
+      return (
+        '<div class="patient-card" style="--accent:' + color + '">' +
+          '<div class="pname-row">' +
+            '<span class="pname" style="color:' + color + '">' + nameForIdx(idx) + '</span>' +
+            (patients.length > 1 ? '<button class="remove-btn" data-remove="' + p.id + '" aria-label="Quitar paciente">✕</button>' : '') +
+          '</div>' +
+
+          '<label class="small">Sexo</label>' +
+          '<div class="toggle-btns">' +
+            '<button data-field="sex" data-val="M" data-id="' + p.id + '" class="' + (p.sex==='M'?'active':'') + '">Hombre</button>' +
+            '<button data-field="sex" data-val="F" data-id="' + p.id + '" class="' + (p.sex==='F'?'active':'') + '">Mujer</button>' +
+          '</div>' +
+
+          '<label class="small">Peso (kg)</label>' +
+          '<input type="number" min="40" max="130" step="1" value="' + p.weight + '" data-field="weight" data-id="' + p.id + '">' +
+
+          '<label class="small">Etanol consumido (g)</label>' +
+          '<input type="number" min="7" max="150" step="7" value="' + p.dose + '" data-field="dose" data-id="' + p.id + '">' +
+          '<div class="hint">≈ ' + drinksApprox + ' bebidas estándar (14 g c/u)</div>' +
+
+          '<label class="small">Estómago</label>' +
+          '<div class="toggle-btns">' +
+            '<button data-field="fasted" data-val="true" data-id="' + p.id + '" class="' + (p.fasted?'active':'') + '">Ayuno</button>' +
+            '<button data-field="fasted" data-val="false" data-id="' + p.id + '" class="' + (!p.fasted?'active':'') + '">Con alimento</button>' +
+          '</div>' +
+
+          '<label class="small">Tipo de bebedor</label>' +
+          '<div class="toggle-btns">' +
+            '<button data-field="chronic" data-val="false" data-id="' + p.id + '" class="' + (!p.chronic?'active':'') + '">Ocasional</button>' +
+            '<button data-field="chronic" data-val="true" data-id="' + p.id + '" class="' + (p.chronic?'active':'') + '">Crónico</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    col.querySelectorAll('[data-remove]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = Number(btn.getAttribute('data-remove'));
+        patients = patients.filter(function(p){ return p.id !== id; });
+        fullRender();
+      });
+    });
+    col.querySelectorAll('input[type=number]').forEach(function(inp){
+      inp.addEventListener('input', function(){
+        const id = Number(inp.getAttribute('data-id'));
+        const field = inp.getAttribute('data-field');
+        const p = patients.find(function(pp){ return pp.id === id; });
+        if (!p) return;
+        let v = parseFloat(inp.value);
+        if (isNaN(v)) return;
+        p[field] = v;
+        fullRender();
+      });
+    });
+    col.querySelectorAll('.toggle-btns button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        const id = Number(btn.getAttribute('data-id'));
+        const field = btn.getAttribute('data-field');
+        const raw = btn.getAttribute('data-val');
+        const val = (raw === 'true') ? true : (raw === 'false') ? false : raw;
+        const p = patients.find(function(pp){ return pp.id === id; });
+        if (!p) return;
+        p[field] = val;
+        fullRender();
+      });
+    });
+
+    document.getElementById('addPatientBtn').disabled = patients.length >= 4;
+  }
+
+  // ---------- Main chart ----------
+  const W = 760, H = 340, M = { left: 50, right: 22, top: 16, bottom: 32 };
+  const plotW = W - M.left - M.right;
+  const plotH = H - M.top - M.bottom;
+
+  function buildMainChart(tMax, yMax){
+    function xs(t){ return M.left + (t / tMax) * plotW; }
+    function ys(v){ return M.top + plotH - (v / yMax) * plotH; }
+
+    let svg = '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+    // reference bands
+    if (yMax > 0.04) {
+      const bandTop = ys(Math.min(0.08, yMax));
+      const bandBot = ys(0.04);
+      svg += '<rect x="' + M.left + '" y="' + bandTop + '" width="' + plotW + '" height="' + (bandBot - bandTop) + '" fill="var(--amber-soft)"></rect>';
+    }
+    if (yMax > 0.08) {
+      const bandTop = ys(yMax);
+      const bandBot = ys(0.08);
+      svg += '<rect x="' + M.left + '" y="' + bandTop + '" width="' + plotW + '" height="' + (bandBot - bandTop) + '" fill="var(--coral-soft)"></rect>';
+    }
+
+    // grid — vertical (time)
+    const tStep = tMax <= 8 ? 1 : (tMax <= 14 ? 2 : 3);
+    for (let t = 0; t <= tMax + 0.001; t += tStep) {
+      const gx = xs(t);
+      svg += '<line x1="' + gx + '" y1="' + M.top + '" x2="' + gx + '" y2="' + (M.top+plotH) + '" stroke="var(--border)" stroke-width="1"></line>';
+      svg += '<text x="' + gx + '" y="' + (M.top+plotH+16) + '" fill="var(--muted)" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono, monospace">' + Math.round(t) + 'h</text>';
+    }
+    // grid — horizontal (concentration)
+    const yStep = yMax <= 0.15 ? 0.02 : (yMax <= 0.3 ? 0.05 : 0.1);
+    for (let v = 0; v <= yMax + 0.0001; v += yStep) {
+      const gy = ys(v);
+      svg += '<line x1="' + M.left + '" y1="' + gy + '" x2="' + (M.left+plotW) + '" y2="' + gy + '" stroke="var(--border)" stroke-width="1"></line>';
+      svg += '<text x="' + (M.left-6) + '" y="' + (gy+3) + '" fill="var(--muted)" font-size="9.5" text-anchor="end" font-family="IBM Plex Mono, monospace">' + fmt(v,2) + '</text>';
+    }
+
+    // reference dashed lines
+    [0.04, 0.08, 0.30].forEach(function(ref){
+      if (ref <= yMax * 1.02) {
+        const gy = ys(ref);
+        svg += '<line x1="' + M.left + '" y1="' + gy + '" x2="' + (M.left+plotW) + '" y2="' + gy + '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"></line>';
+      }
+    });
+
+    // patient curves
+    patients.forEach(function(p, idx){
+      const params = paramsFor(p);
+      const color = colorForIdx(idx);
+      let d = '';
+      const n = 140;
+      for (let i = 0; i <= n; i++) {
+        const t = (tMax * i) / n;
+        const c = bacAtGL(t, params) / 10;
+        const px = xs(t), py = ys(Math.min(c, yMax));
+        d += (i === 0 ? 'M' : 'L') + px.toFixed(2) + ',' + py.toFixed(2) + ' ';
+      }
+      svg += '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.2"></path>';
+    });
+
+    // scrub line + dots
+    const scrubX = xs(Math.min(currentT, tMax));
+    svg += '<line x1="' + scrubX + '" y1="' + M.top + '" x2="' + scrubX + '" y2="' + (M.top+plotH) + '" stroke="var(--paper)" stroke-width="1" stroke-dasharray="2,3" opacity="0.55"></line>';
+    patients.forEach(function(p, idx){
+      const params = paramsFor(p);
+      const color = colorForIdx(idx);
+      const c = bacAtGL(currentT, params) / 10;
+      const py = ys(Math.min(c, yMax));
+      svg += '<circle cx="' + scrubX + '" cy="' + py + '" r="4.5" fill="' + color + '" stroke="var(--ink-900)" stroke-width="1.5"></circle>';
+    });
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function buildMiniChart(){
+    const w = 320, h = 190, m = { left: 34, right: 12, top: 12, bottom: 26 };
+    const pw = w - m.left - m.right, ph = h - m.top - m.bottom;
+    function xs(t){ return m.left + (t/8) * pw; }
+    function ys(v){ return m.top + ph - v*ph; }
+    let svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">';
+    // axes
+    svg += '<line x1="' + m.left + '" y1="' + m.top + '" x2="' + m.left + '" y2="' + (m.top+ph) + '" stroke="var(--border)"></line>';
+    svg += '<line x1="' + m.left + '" y1="' + (m.top+ph) + '" x2="' + (m.left+pw) + '" y2="' + (m.top+ph) + '" stroke="var(--border)"></line>';
+    svg += '<text x="' + (m.left+pw/2) + '" y="' + (h-4) + '" fill="var(--muted)" font-size="9.5" text-anchor="middle">Tiempo (u.a.)</text>';
+    svg += '<text x="10" y="' + (m.top+ph/2) + '" fill="var(--muted)" font-size="9.5" text-anchor="middle" transform="rotate(-90 10 ' + (m.top+ph/2) + ')">Conc. relativa</text>';
+    // zero order (linear)
+    let dz = '';
+    for (let i = 0; i <= 40; i++) {
+      const t = 8*i/40;
+      const v = Math.max(0, 1 - 0.125*t);
+      dz += (i===0?'M':'L') + xs(t).toFixed(2) + ',' + ys(v).toFixed(2) + ' ';
+    }
+    svg += '<path d="' + dz + '" fill="none" stroke="var(--amber)" stroke-width="2.2"></path>';
+    // first order (exponential)
+    let df = '';
+    for (let i = 0; i <= 40; i++) {
+      const t = 8*i/40;
+      const v = Math.exp(-0.5*t);
+      df += (i===0?'M':'L') + xs(t).toFixed(2) + ',' + ys(v).toFixed(2) + ' ';
+    }
+    svg += '<path d="' + df + '" fill="none" stroke="var(--violet)" stroke-width="2.2" stroke-dasharray="5,3"></path>';
+    svg += '</svg>';
+    return svg;
+  }
+
+  // ---------- Readouts & legend ----------
+  function renderReadouts(){
+    const el = document.getElementById('readouts');
+    el.innerHTML = patients.map(function(p, idx){
+      const color = colorForIdx(idx);
+      const params = paramsFor(p);
+      const cgl = bacAtGL(currentT, params);
+      const cgdl = cgl / 10;
+      const tp = peakTime(params);
+      let phase = 'Eliminado';
+      if (cgl > 0.0008) {
+        phase = currentT <= tp ? 'Absorción' : 'Eliminación (orden cero)';
+      }
+      return (
+        '<div class="readout-card" style="--accent:' + color + '">' +
+          '<div class="rc-name" style="color:' + color + '">' + nameForIdx(idx) + '</div>' +
+          '<div class="rc-val">' + fmt(cgdl,3) + ' <small>g/dL</small></div>' +
+          '<div class="rc-phase">' + phase + '</div>' +
+        '</div>'
+      );
+    }).join('');
+
+    const legend = document.getElementById('curveLegend');
+    legend.innerHTML = patients.map(function(p, idx){
+      const color = colorForIdx(idx);
+      return '<span><span class="legend-swatch" style="background:' + color + '"></span>' + nameForIdx(idx) + '</span>';
+    }).join('');
+  }
+
+  // ---------- Orchestration ----------
+  let tMax = 10, yMax = 0.15;
+
+  function updateChartOnly(){
+    document.getElementById('chartSvgWrap').innerHTML = buildMainChart(tMax, yMax);
+    document.getElementById('timeLabel').textContent = fmt(currentT,1) + ' h';
+    renderReadouts();
+  }
+
+  function fullRender(){
+    tMax = computeTMax();
+    yMax = computeYMax();
+    if (currentT > tMax) currentT = tMax;
+    renderPatientCards();
+    const scrub = document.getElementById('scrubberRange');
+    scrub.max = tMax;
+    scrub.value = currentT;
+    document.getElementById('miniChartWrap').innerHTML = buildMiniChart();
+    updateChartOnly();
+  }
+
+  document.getElementById('addPatientBtn').addEventListener('click', function(){
+    if (patients.length >= 4) return;
+    patients.push({ id: nextId++, sex: 'M', weight: 70, dose: 56, fasted: true, chronic: false });
+    fullRender();
+  });
+
+  const scrubberEl = document.getElementById('scrubberRange');
+  scrubberEl.addEventListener('input', function(){
+    currentT = parseFloat(scrubberEl.value);
+    updateChartOnly();
+  });
+
+  document.getElementById('playBtn').addEventListener('click', function(){
+    const btn = document.getElementById('playBtn');
+    if (playing) {
+      playing = false;
+      clearInterval(playTimer);
+      btn.textContent = '▶';
+      return;
+    }
+    playing = true;
+    btn.textContent = '❚❚';
+    if (currentT >= tMax) currentT = 0;
+    playTimer = setInterval(function(){
+      currentT += tMax / 220;
+      if (currentT >= tMax) {
+        currentT = tMax;
+        playing = false;
+        clearInterval(playTimer);
+        btn.textContent = '▶';
+      }
+      scrubberEl.value = currentT;
+      updateChartOnly();
+    }, 40);
+  });
+
+  fullRender();
+})();
+</script>
+</body>
+</html>
