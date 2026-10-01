@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clasifica: tipo de enlace fármaco-receptor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F5F0;
+    --surface:#FFFFFF;
+    --border:#DCD8CC;
+    --ink:#20242E;
+    --muted:#6B7178;
+    --amber:#B8721F;
+    --coral:#C8452F;
+    --coral-soft:#FBE6E1;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 64px;}
+  header.top{border-bottom:2px solid var(--border);padding-bottom:18px;margin-bottom:22px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;font-size:11.5px;color:var(--amber);font-weight:600;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:27px;margin:8px 0 6px;font-weight:700;color:var(--ink);}
+  .subtitle{color:var(--muted);font-size:14px;max-width:700px;line-height:1.55;}
+  .course-tag{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  .intro-note{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--amber);border-radius:10px;padding:14px 18px;margin-bottom:22px;font-size:13.5px;line-height:1.6;}
+  .intro-note b{color:var(--amber);}
+
+  .status-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;}
+  .status-chip{font-family:'IBM Plex Mono',monospace;font-size:12.5px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 14px;color:var(--ink);}
+  .status-chip b{color:var(--amber);}
+  .reset-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;cursor:pointer;color:var(--ink);}
+  .reset-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .pool-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:18px;}
+  .pool-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  #poolArea{display:flex;flex-wrap:wrap;gap:10px;min-height:52px;}
+  .empty-pool{color:var(--muted);font-size:13px;font-style:italic;padding:8px 0;}
+
+  .chip{background:var(--surface);border:2px solid var(--border);border-radius:9px;padding:10px 14px;font-size:13px;line-height:1.4;cursor:grab;user-select:none;max-width:290px;transition:border-color .15s ease, box-shadow .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  .chip:active{cursor:grabbing;}
+  .chip:hover{border-color:var(--amber);}
+  .chip.selected{border-color:#5F4A96;box-shadow:0 0 0 3px rgba(95,74,150,0.15);}
+  .chip.shake{animation:shake .4s ease;border-color:var(--coral);}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+
+  .zones-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .zone{border-radius:12px;padding:14px;min-height:170px;border:2px dashed var(--zb,var(--border));background:var(--zs,var(--surface));}
+  .zone.dragover{border-style:solid;}
+  .zone-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14.5px;margin-bottom:3px;color:var(--zc,var(--ink));}
+  .zone-sub{font-size:10.5px;color:var(--muted);margin-bottom:10px;}
+  .placed-list{display:flex;flex-direction:column;gap:7px;}
+  .placed-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.35;display:flex;align-items:flex-start;gap:6px;}
+  .placed-chip .check{font-weight:700;color:var(--zc,var(--ink));flex-shrink:0;}
+
+  .feedback-bar{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:13px;min-height:20px;}
+  .feedback-bar.ok{background:#E1F3EF;color:#1F7A6C;border:1px solid #9AD4C7;}
+  .feedback-bar.bad{background:var(--coral-soft);color:var(--coral);border:1px solid #EDBCB0;}
+  .feedback-bar.neutral{background:transparent;color:var(--muted);}
+
+  .completion{margin-top:20px;background:var(--surface);border:2px solid #9AD4C7;border-radius:12px;padding:22px;text-align:center;}
+  .completion .big{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#1F7A6C;}
+  .completion .sub{color:var(--muted);font-size:13px;margin-top:6px;}
+
+  .legend-strip{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px;font-size:11.5px;color:var(--muted);}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+
+  .hint-panel{margin-top:22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Farmacodinamia — Interacción fármaco-receptor</div>
+    <h1>Clasifica: ¿qué tipo de enlace predomina?</h1>
+    <p class="subtitle">Para cada ejemplo de interacción fármaco-receptor, arrastra la tarjeta a la columna del tipo de enlace que predomina. También puedes tocar la tarjeta y luego tocar la columna.</p>
+    <div class="course-tag">Farmacología Básica · ENMH-IPN · Grupo 5PM6 · Periodo 2027/1</div>
+  </header>
+
+  <div class="intro-note">
+    La unión entre un fármaco y su receptor puede involucrar distintos tipos de enlace químico, que varían en fuerza, especificidad y reversibilidad. Identificar cuál predomina en cada caso ayuda a predecir la duración del efecto y si este puede revertirse farmacológicamente.
+    <br><br>
+    <b>Nota:</b> las fuerzas de Van der Waals y las interacciones hidrofóbicas se agrupan aquí en una sola categoría — ambas son uniones débiles, no covalentes y relacionadas con la lipofilia de la molécula, por lo que distinguirlas tajantemente aporta poco valor didáctico.
+  </div>
+
+  <div class="status-row">
+    <div class="status-chip">Colocados correctamente: <b id="correctCount">0</b>/10</div>
+    <div class="status-chip">Intentos fallidos: <span id="wrongCount">0</span></div>
+    <button class="reset-btn" id="resetBtn">↻ Reiniciar</button>
+  </div>
+
+  <div class="pool-panel">
+    <div class="pool-title">Ejemplos por clasificar</div>
+    <div id="poolArea"></div>
+  </div>
+
+  <div class="zones-grid" id="zonesGrid"></div>
+
+  <div class="feedback-bar neutral" id="feedbackBar">Selecciona o arrastra un ejemplo para comenzar.</div>
+
+  <div class="completion hidden" id="completionPanel">
+    <div class="big">🎉 ¡Clasificación completa!</div>
+    <div class="sub" id="completionSub"></div>
+  </div>
+
+  <div class="hint-panel">
+    <b>Tip para proyectar:</b> los estudiantes pueden pasar al frente y arrastrar con el mouse, o tocar un ejemplo y luego tocar la columna si el equipo tiene pantalla táctil. Al cerrar, discutan en grupo cualquier ejemplo en el que hubo desacuerdo.
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const COLORS = {
+    coral:  { c:'#C8452F', s:'#FBE6E1', b:'#EDBCB0' },
+    amber:  { c:'#B8721F', s:'#FBEEDC', b:'#E7C48F' },
+    teal:   { c:'#1F7A6C', s:'#E1F3EF', b:'#9AD4C7' },
+    violet: { c:'#5F4A96', s:'#EFE9F7', b:'#C9BBE8' },
+    steel:  { c:'#2566A0', s:'#E3EEF7', b:'#A9CBE4' }
+  };
+
+  const ZONES = [
+    { key:'covalente',    label:'Enlace covalente',               color:'coral'  },
+    { key:'ionico',       label:'Enlace iónico (electrostático)', color:'amber' },
+    { key:'hidrogeno',    label:'Puente de hidrógeno',            color:'teal'  },
+    { key:'debiles',      label:'Van der Waals / hidrofóbicas (fuerzas débiles)', color:'violet' }
+  ];
+
+  const FACTORS = [
+    { key:'f1', label:'Organofosforados que fosforilan la acetilcolinesterasa', correct:'covalente',
+      explain:'Fosforilan de forma covalente e irreversible el sitio activo de la enzima; el efecto solo revierte al sintetizarse nueva enzima.' },
+    { key:'f2', label:'Aspirina que acetila la ciclooxigenasa (COX)', correct:'covalente',
+      explain:'La aspirina acetila covalentemente un residuo de serina de la COX, inactivándola de forma irreversible.' },
+    { key:'f3', label:'Acetilcolina (catión amonio cuaternario) con el receptor nicotínico', correct:'ionico',
+      explain:'El grupo amonio cuaternario, cargado positivamente, forma un enlace electrostático con residuos aniónicos del receptor.' },
+    { key:'f4', label:'Forma protonada de un anestésico local con el canal de sodio', correct:'ionico',
+      explain:'La forma catiónica (protonada) interactúa electrostáticamente con el sitio receptor dentro del canal.' },
+    { key:'f5', label:'Antagonista reversible típico (ej. propranolol) con su receptor', correct:'hidrogeno',
+      explain:'La mayoría de las interacciones reversibles y específicas dependen de puentes de hidrógeno entre grupos funcionales complementarios.' },
+    { key:'f6', label:'Grupos –OH/–NH del fármaco con residuos específicos del receptor', correct:'hidrogeno',
+      explain:'Los grupos hidroxilo y amino forman puentes de hidrógeno que aportan selectividad sin unión irreversible.' },
+    { key:'f7', label:'Anestésico general inhalado (ej. halotano) con canales iónicos del SNC', correct:'debiles',
+      explain:'Es una molécula pequeña y poco específica; su efecto depende de fuerzas débiles (Van der Waals / hidrofóbicas) distribuidas sobre una superficie amplia.' },
+    { key:'f8', label:'Fármaco lipofílico de baja especificidad acumulado en membranas', correct:'debiles',
+      explain:'Sin grupos funcionales que formen enlaces fuertes, el efecto depende de fuerzas débiles acumuladas, favorecidas por su lipofilia.' },
+    { key:'f9', label:'Hormona esteroide (ej. cortisol) con su receptor intracelular', correct:'debiles',
+      explain:'La estructura esteroide, muy liposoluble, se inserta en un bolsillo hidrofóbico del receptor mediante fuerzas débiles no covalentes.' },
+    { key:'f10', label:'Barbitúrico alojado en el receptor GABA-A', correct:'debiles',
+      explain:'Los barbitúricos, muy liposolubles, se alojan en un bolsillo hidrofóbico del receptor mediante fuerzas débiles (Van der Waals / hidrofóbicas) para modular su actividad.' }
+  ];
+
+  let poolKeys = [];
+  let placed = {}; // key -> zone
+  let selectedKey = null;
+  let wrongCount = 0;
+  let draggingKey = null;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function factorByKey(k){ return FACTORS.find(function(f){ return f.key === k; }); }
+  function zoneByKey(k){ return ZONES.find(function(z){ return z.key === k; }); }
+
+  function renderZonesSkeleton(){
+    const grid = document.getElementById('zonesGrid');
+    grid.innerHTML = ZONES.map(function(z){
+      const col = COLORS[z.color];
+      return (
+        '<div class="zone" id="zone-' + z.key + '" data-zone="' + z.key + '" style="--zc:' + col.c + ';--zs:' + col.s + ';--zb:' + col.b + '">' +
+          '<div class="zone-title">' + z.label + '</div>' +
+          '<div class="zone-sub">Suelta o toca aquí</div>' +
+          '<div class="placed-list" id="list-' + z.key + '"></div>' +
+        '</div>'
+      );
+    }).join('');
+
+    const legend = document.getElementById('legendStrip');
+  }
+
+  function init(){
+    poolKeys = shuffle(FACTORS.map(function(f){ return f.key; }));
+    placed = {};
+    selectedKey = null;
+    wrongCount = 0;
+    document.getElementById('completionPanel').classList.add('hidden');
+    setFeedback('Selecciona o arrastra un ejemplo para comenzar.', 'neutral');
+    renderZonesSkeleton();
+    render();
+  }
+
+  function setFeedback(text, kind){
+    const el = document.getElementById('feedbackBar');
+    el.textContent = text;
+    el.className = 'feedback-bar ' + kind;
+  }
+
+  function render(){
+    document.getElementById('correctCount').textContent = Object.keys(placed).length;
+    document.getElementById('wrongCount').textContent = wrongCount;
+
+    const pool = document.getElementById('poolArea');
+    if (poolKeys.length === 0) {
+      pool.innerHTML = '<div class="empty-pool">Todos los ejemplos han sido clasificados.</div>';
+    } else {
+      pool.innerHTML = poolKeys.map(function(k){
+        const f = factorByKey(k);
+        const sel = (k === selectedKey) ? ' selected' : '';
+        return '<div class="chip' + sel + '" draggable="true" data-key="' + k + '">' + f.label + '</div>';
+      }).join('');
+    }
+
+    ZONES.forEach(function(z){
+      const listEl = document.getElementById('list-' + z.key);
+      const keys = Object.keys(placed).filter(function(k){ return placed[k] === z.key; });
+      listEl.innerHTML = keys.map(function(k){
+        const f = factorByKey(k);
+        return '<div class="placed-chip"><span class="check">✓</span>' + f.label + '</div>';
+      }).join('');
+    });
+
+    attachHandlers();
+  }
+
+  function attachHandlers(){
+    document.querySelectorAll('.chip').forEach(function(chip){
+      chip.addEventListener('dragstart', function(e){
+        draggingKey = chip.getAttribute('data-key');
+        e.dataTransfer.setData('text/plain', draggingKey);
+      });
+      chip.addEventListener('click', function(){
+        const k = chip.getAttribute('data-key');
+        selectedKey = (selectedKey === k) ? null : k;
+        render();
+      });
+    });
+
+    ZONES.forEach(function(z){
+      const zoneEl = document.getElementById('zone-' + z.key);
+      zoneEl.addEventListener('dragover', function(e){
+        e.preventDefault();
+        zoneEl.classList.add('dragover');
+      });
+      zoneEl.addEventListener('dragleave', function(){
+        zoneEl.classList.remove('dragover');
+      });
+      zoneEl.addEventListener('drop', function(e){
+        e.preventDefault();
+        zoneEl.classList.remove('dragover');
+        const k = e.dataTransfer.getData('text/plain') || draggingKey;
+        if (k) attemptPlace(k, z.key);
+        draggingKey = null;
+      });
+      zoneEl.addEventListener('click', function(e){
+        if (e.target.closest('.placed-chip')) return;
+        if (selectedKey) {
+          attemptPlace(selectedKey, z.key);
+          selectedKey = null;
+        }
+      });
+    });
+  }
+
+  function attemptPlace(key, zoneKey){
+    const f = factorByKey(key);
+    if (!f) return;
+    if (f.correct === zoneKey) {
+      placed[key] = zoneKey;
+      poolKeys = poolKeys.filter(function(k){ return k !== key; });
+      setFeedback('✓ Correcto — ' + f.explain, 'ok');
+      selectedKey = null;
+      render();
+      if (poolKeys.length === 0) showCompletion();
+    } else {
+      wrongCount++;
+      setFeedback('✕ No es correcto — ' + f.explain, 'bad');
+      const chipEl = document.querySelector('.chip[data-key="' + key + '"]');
+      if (chipEl) {
+        chipEl.classList.add('shake');
+        setTimeout(function(){ chipEl.classList.remove('shake'); }, 400);
+      }
+      document.getElementById('wrongCount').textContent = wrongCount;
+    }
+  }
+
+  function showCompletion(){
+    const panel = document.getElementById('completionPanel');
+    panel.classList.remove('hidden');
+    document.getElementById('completionSub').textContent =
+      wrongCount === 0
+        ? 'Clasificaste los 10 ejemplos sin errores.'
+        : 'Clasificaste los 10 ejemplos con ' + wrongCount + ' intento(s) fallido(s).';
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', init);
+
+  init();
+})();
+</script>
+</body>
+</html>
