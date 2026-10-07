@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Potencia o eficacia · Actividad Sesión 17</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.12);
+    --s1: #2a78d6;
+    --s2: #eb6834;
+    --good: #006300;
+    --good-bg: #e8f3e8;
+    --bad: #b02f2f;
+    --bad-bg: #fbeaea;
+    --accent: #0b2545;
+    --on-accent: #ffffff;
+    --gold: #a07d10;
+    --track: #cde2fb;
+    --fill: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255,255,255,0.12);
+      --s1: #3987e5;
+      --s2: #d95926;
+      --good: #4cc24c;
+      --good-bg: #14301a;
+      --bad: #f08a8a;
+      --bad-bg: #3a1c1c;
+      --accent: #86b6ef;
+      --on-accent: #0d1b2e;
+      --gold: #e0b93a;
+      --track: #1c3552;
+      --fill: #3987e5;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.55; font-size: 16px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 28px 16px 56px; }
+  .kicker { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--ink2); margin: 0 0 20px; max-width: 62ch; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; }
+  .steps { margin: 8px 0 18px; padding-left: 20px; color: var(--ink2); }
+  .steps li { margin: 4px 0; }
+  .btn {
+    font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+    background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 11px 20px;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .opt:focus-visible, .ghost:focus-visible, summary:focus-visible { outline: 3px solid var(--s1); outline-offset: 2px; }
+  .ghost { font: inherit; font-size: 13px; background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+  .status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 8px; flex-wrap: wrap; }
+  .status strong { color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-bottom: 16px; }
+  .bar > i { display: block; height: 100%; background: var(--fill); width: 0; transition: width .3s; }
+  .case-title { font-size: 18px; font-weight: 700; margin: 0 0 4px; }
+  .case-ctx { color: var(--ink2); margin: 0; }
+  .case-note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0 0 8px; font-size: 14px; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .key { display: inline-block; width: 22px; height: 0; border-top: 3px solid; border-radius: 2px; }
+  .chart-wrap { position: relative; }
+  svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  svg text { font-family: inherit; }
+  .tick { font-size: 12px; fill: var(--muted); }
+  .axis-title { font-size: 12.5px; fill: var(--ink2); }
+  .c1 { stroke: var(--s1); fill: none; } .c2 { stroke: var(--s2); fill: none; }
+  .f1 { fill: var(--s1); } .f2 { fill: var(--s2); }
+  .ann { font-size: 12.5px; fill: var(--ink); font-weight: 600; }
+  .ann2 { font-size: 12px; fill: var(--ink2); }
+  .tip {
+    position: absolute; pointer-events: none; display: none; min-width: 150px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.14); font-size: 13px; z-index: 5;
+  }
+  .tip .t-dose { color: var(--ink2); margin-bottom: 4px; }
+  .tip .t-row { display: flex; align-items: center; gap: 8px; }
+  .tip .t-row b { font-size: 15px; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--ink2); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--grid); }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--ink2); font-weight: 600; }
+  .q { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+  .q:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+  .q h3 { font-size: 16px; margin: 0 0 10px; line-height: 1.4; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt {
+    font: inherit; font-size: 15px; cursor: pointer; text-align: left;
+    background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 8px; padding: 9px 14px;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; }
+  .opt.right { border-color: var(--good); background: var(--good-bg); }
+  .opt.right::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+  .fb { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14.5px; }
+  .fb.ok { background: var(--good-bg); }
+  .fb.no { background: var(--bad-bg); }
+  .fb b.v { display: block; margin-bottom: 2px; }
+  .fb.ok b.v { color: var(--good); } .fb.no b.v { color: var(--bad); }
+  .hint { font-size: 13.5px; color: var(--ink2); margin: 6px 0 0; }
+  .nextrow { margin-top: 18px; text-align: right; }
+  .hero { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.02em; margin: 4px 0; }
+  .meter { margin: 10px 0; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .rule { border-left: 3px solid var(--gold); padding-left: 12px; margin: 10px 0; color: var(--ink2); }
+  .rule b { color: var(--ink); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) {
+    h1 { font-size: 25px; }
+    .opt { width: 100%; }
+    .hero { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 17</p>
+  <h1>Potencia o eficacia</h1>
+  <p class="lead">Dos fármacos, una gráfica. ¿Cuál necesita menos dosis y cuál llega más lejos? Aprende a leer una curva dosis-respuesta sin confundir las dos propiedades.</p>
+
+  <section id="intro" class="card">
+    <h2>Cómo funciona</h2>
+    <ol class="steps">
+      <li>Cada caso muestra las curvas dosis-respuesta de dos fármacos, en escala logarítmica de dosis.</li>
+      <li>Respondes tres preguntas por caso: potencia, eficacia y una aplicación clínica.</li>
+      <li>Después de cada respuesta, la gráfica revela la EC50, el Emax o la meta del paciente, con la explicación.</li>
+    </ol>
+    <p class="case-note" style="margin:0 0 16px">10 casos · unos 10 minutos. Pasa el cursor (o el dedo) sobre la gráfica para leer los valores. Los casos con fármacos reales usan valores ilustrativos.</p>
+    <button class="btn" id="startBtn">Comenzar</button>
+  </section>
+
+  <section id="game" hidden>
+    <div class="status"><span id="stCase"></span><span id="stScore"></span></div>
+    <div class="bar" aria-hidden="true"><i id="pbar"></i></div>
+
+    <div class="card">
+      <p class="case-title" id="caseTitle"></p>
+      <p class="case-ctx" id="caseCtx"></p>
+    </div>
+
+    <div class="card">
+      <div class="legend" id="legend"></div>
+      <div class="chart-wrap" id="chartWrap">
+        <svg id="chart" viewBox="0 0 760 440" role="img" aria-label="Curvas dosis-respuesta de dos fármacos con la dosis en escala logarítmica"></svg>
+        <div class="tip" id="tip"></div>
+      </div>
+      <details>
+        <summary>Ver los datos en tabla</summary>
+        <table id="dataTable"></table>
+      </details>
+    </div>
+
+    <div class="card" id="qcard"></div>
+    <div class="nextrow" id="nextrow" hidden><button class="btn" id="nextBtn">Siguiente caso →</button></div>
+  </section>
+
+  <section id="results" hidden></section>
+
+  <footer>Modelo: E = Emax · D / (EC50 + D). Dosis en unidades relativas (u.r.). Los valores son ilustrativos y tienen fines didácticos. ENMH · IPN.</footer>
+</main>
+
+<script>
+/* ========== LÓGICA PURA ========== */
+const XMIN = -2, XMAX = 4;
+const EC_GRID = [0.3, 1, 3, 10, 30, 100];
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
+const effect = (d, emax, ec50) => emax * d / (ec50 + d);
+const fmt = (n) => Number(Number(n).toPrecision(3)).toString();
+const fmtRatio = (r) => (Math.abs(r - Math.round(r)) < 0.05 ? String(Math.round(r)) : r.toFixed(1));
+function rangeFive(a, b) { const out = []; for (let v = Math.ceil(a / 5) * 5; v <= b; v += 5) out.push(v); return out; }
+
+function ecPair(minRatio) {
+  for (;;) { const a = pick(EC_GRID), b = pick(EC_GRID); if (b / a >= minRatio) return [a, b]; }
+}
+
+function pickGoal(ea, eb) {
+  const lo = Math.min(ea, eb), hi = Math.max(ea, eb);
+  const opts = [];
+  if (hi - lo >= 15) opts.push('one');
+  if (lo >= 40) opts.push('both');
+  if (hi <= 90) opts.push('none');
+  const kind = pick(opts);
+  let X;
+  if (kind === 'one') X = pick(rangeFive(lo + 5, hi - 5));
+  else if (kind === 'both') X = pick(rangeFive(30, lo - 10));
+  else X = pick(rangeFive(hi + 5, 95));
+  return X;
+}
+
+function genGeneric(kind, n) {
+  let A, B;
+  if (kind === 'pot') { const [lo, hi] = ecPair(3); A = { ec50: lo, emax: 100 }; B = { ec50: hi, emax: 100 }; }
+  else if (kind === 'eff') { const e = pick(EC_GRID); A = { ec50: e, emax: 100 }; B = { ec50: e, emax: pick([30, 40, 50, 60, 70]) }; }
+  else if (kind === 'mix1') { const [lo, hi] = ecPair(3); A = { ec50: lo, emax: pick([40, 50, 60]) }; B = { ec50: hi, emax: 100 }; }
+  else if (kind === 'mix2') { const [lo, hi] = ecPair(3); A = { ec50: lo, emax: 100 }; B = { ec50: hi, emax: pick([50, 60, 70]) }; }
+  else { // partial2
+    const ea = pick([60, 70, 80]), eb = ea - pick([15, 20, 25]);
+    if (Math.random() < 0.5) { const [lo, hi] = ecPair(3); A = { ec50: lo, emax: ea }; B = { ec50: hi, emax: eb }; }
+    else { const [lo, hi] = ecPair(3); A = { ec50: hi, emax: ea }; B = { ec50: lo, emax: eb }; }
+  }
+  if (Math.random() < 0.5) { const t = A; A = B; B = t; }
+  A.label = 'Fármaco A'; A.short = 'A'; B.label = 'Fármaco B'; B.short = 'B';
+  return {
+    generic: true,
+    title: 'Caso ' + n + ': dos fármacos experimentales',
+    ctx: 'Dos fármacos actúan sobre el mismo receptor y producen el mismo efecto. Se probaron dosis crecientes de cada uno.',
+    drugs: [A, B], ask: ['pot', 'eff', 'goal'], goal: pickGoal(A.emax, B.emax)
+  };
+}
+
+const CLINICAL = [
+  { title: 'Analgesia en dolor intenso (I)', ctx: 'Fentanilo y morfina son agonistas del receptor opioide μ. Se compara su efecto analgésico.',
+    drugs: [ { label: 'Fentanilo', short: 'Fentanilo', ec50: 0.3, emax: 100 }, { label: 'Morfina', short: 'Morfina', ec50: 30, emax: 100 } ],
+    ask: ['pot', 'eff', 'goal'], goal: 80, effNote: 'Ambos son agonistas plenos del receptor μ, por eso comparten techo.' },
+  { title: 'Analgesia en dolor intenso (II)', ctx: 'Buprenorfina y morfina actúan sobre el receptor opioide μ. Se compara su efecto analgésico.',
+    drugs: [ { label: 'Buprenorfina', short: 'Buprenorfina', ec50: 1, emax: 60 }, { label: 'Morfina', short: 'Morfina', ec50: 30, emax: 100 } ],
+    ask: ['pot', 'eff', 'goal'], goal: 90, effNote: 'La buprenorfina es un agonista parcial del receptor μ.' },
+  { title: 'Dolor intenso: AINE u opioide', ctx: 'Se compara el efecto analgésico del ibuprofeno con el de la morfina en dolor intenso.',
+    drugs: [ { label: 'Ibuprofeno', short: 'Ibuprofeno', ec50: 60, emax: 45 }, { label: 'Morfina', short: 'Morfina', ec50: 2, emax: 100 } ],
+    ask: ['pot', 'eff', 'goal'], goal: 80, effNote: 'Los AINE tienen un techo analgésico: más dosis no produce más analgesia.' },
+  { title: 'Edema: dos diuréticos', ctx: 'Se compara el efecto natriurético máximo de la furosemida y de la hidroclorotiazida.',
+    drugs: [ { label: 'Furosemida', short: 'Furosemida', ec50: 10, emax: 100 }, { label: 'Hidroclorotiazida', short: 'Hidroclorotiazida', ec50: 8, emax: 35 } ],
+    ask: ['eff', 'goal'], goal: 70, effNote: 'La furosemida es un diurético «de techo alto»; la hidroclorotiazida, «de techo bajo».' }
+];
+
+function buildRounds() {
+  const generic = ['pot', 'eff'].concat(shuffle(['mix1', 'mix2', 'partial2', pick(['pot', 'eff', 'mix1', 'mix2'])]));
+  const g = generic.map((k, i) => ({ kind: k, i }));
+  const first = g.slice(0, 2), rest = g.slice(2);
+  const clin = CLINICAL.map((c) => JSON.parse(JSON.stringify(c)));
+  const mixed = shuffle(rest.map((x) => ({ g: x })).concat(clin.map((c) => ({ c: c }))));
+  const order = first.map((x) => ({ g: x })).concat(mixed);
+  return order.map((o, idx) => {
+    const n = idx + 1;
+    if (o.g) { const r = genGeneric(o.g.kind, n); r.n = n; return r; }
+    o.c.n = n; o.c.title = 'Caso ' + n + ': ' + o.c.title; return o.c;
+  });
+}
+
+function truth(r) {
+  const [a, b] = r.drugs;
+  const pot = Math.abs(Math.log10(a.ec50 / b.ec50)) < 0.05 ? 'eq' : (a.ec50 < b.ec50 ? 'A' : 'B');
+  const eff = Math.abs(a.emax - b.emax) < 1 ? 'eq' : (a.emax > b.emax ? 'A' : 'B');
+  const ra = a.emax > r.goal, rb = b.emax > r.goal;
+  const goal = ra && rb ? 'both' : ra ? 'A' : rb ? 'B' : 'none';
+  return { pot, eff, goal };
+}
+const doseFor = (d, X) => d.ec50 * X / (d.emax - X);
+function fmtDose(d) { return d > 10000 ? 'una dosis muy alta (> 10 000 u.r.)' : '≈ ' + fmt(d) + ' u.r.'; }
+
+function explain(r, q) {
+  const [a, b] = r.drugs; const t = truth(r);
+  if (q === 'pot') {
+    if (t.pot === 'eq') return 'Los dos tienen la misma EC50 (' + fmt(a.ec50) + ' u.r.): sus curvas están en la misma posición horizontal, así que tienen igual potencia (aunque difieran en eficacia).';
+    const w = t.pot === 'A' ? a : b, l = t.pot === 'A' ? b : a;
+    return w.label + ' es más potente: su EC50 es ' + fmt(w.ec50) + ' u.r. frente a ' + fmt(l.ec50) + ' u.r. de ' + l.label + '. Necesita ' + fmtRatio(l.ec50 / w.ec50) + ' veces menos dosis para llegar a la mitad de su propio efecto máximo. La potencia se lee en la posición horizontal de la curva.';
+  }
+  if (q === 'eff') {
+    if (t.eff === 'eq') return 'Los dos llegan al mismo techo (Emax = ' + a.emax + ' %), por eso tienen igual eficacia aunque necesiten dosis distintas. ' + (r.effNote || '');
+    const w = t.eff === 'A' ? a : b, l = t.eff === 'A' ? b : a;
+    return w.label + ' es más eficaz: su Emax es ' + w.emax + ' % frente a ' + l.emax + ' % de ' + l.label + '. ' + l.label + ' no pasa de ' + l.emax + ' % por mucho que se aumente la dosis. La eficacia se lee en la altura del techo. ' + (r.effNote || '');
+  }
+  const X = r.goal;
+  if (t.goal === 'both') return 'Ambos pueden superar ' + X + ' %: sus techos (' + a.emax + ' % y ' + b.emax + ' %) están por encima de la meta. La potencia solo cambia cuánta dosis hace falta: ' + fmtDose(doseFor(a, X)) + ' para ' + a.label + ' y ' + fmtDose(doseFor(b, X)) + ' para ' + b.label + '.';
+  if (t.goal === 'none') return 'Ninguno: los techos (' + a.emax + ' % y ' + b.emax + ' %) quedan por debajo de ' + X + ' %. Aumentar la dosis no ayuda; habría que cambiar de fármaco o combinar.';
+  const w = t.goal === 'A' ? a : b, l = t.goal === 'A' ? b : a;
+  return 'Solo ' + w.label + ': su techo es ' + w.emax + ' %, así que puede superar ' + X + ' % con ' + fmtDose(doseFor(w, X)).replace(/\.$/, '') + '. ' + l.label + ' no pasa de ' + l.emax + ' %, aunque se le dé más dosis. Aquí importa la eficacia, no la potencia.';
+}
+/* ========== FIN LÓGICA PURA ========== */
+
+/* ========== INTERFAZ ========== */
+const NS = 'http://www.w3.org/2000/svg';
+function S(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+const $ = (id) => document.getElementById(id);
+let VB = { w: 760, h: 440 }, M = { l: 60, r: 46, t: 28, b: 56 }, PW, PH;
+function setGeom() {
+  const narrow = (document.getElementById('chart').parentNode.clientWidth || window.innerWidth) < 520;
+  VB = narrow ? { w: 400, h: 400 } : { w: 760, h: 440 };
+  M = narrow ? { l: 44, r: 24, t: 26, b: 52 } : { l: 60, r: 46, t: 28, b: 56 };
+  PW = VB.w - M.l - M.r; PH = VB.h - M.t - M.b;
+}
+const px = (ld) => M.l + (ld - XMIN) / (XMAX - XMIN) * PW;
+const py = (e) => M.t + PH - (e / 100) * PH;
+const SER = ['1', '2'];
+
+let rounds = [], idx = 0, qi = 0, score = 0, answered = 0;
+let byQ = { pot: [0, 0], eff: [0, 0], goal: [0, 0] };
+let svg, curvesG, annG, hoverG, cross, dots, round;
+
+function start() {
+  rounds = buildRounds(); idx = 0; score = 0; answered = 0;
+  byQ = { pot: [0, 0], eff: [0, 0], goal: [0, 0] };
+  $('intro').hidden = true; $('results').hidden = true; $('game').hidden = false;
+  loadRound();
+}
+
+function loadRound() {
+  round = rounds[idx]; qi = 0;
+  $('stCase').innerHTML = ''; const s1 = document.createElement('span'); s1.innerHTML = 'Caso <strong>' + (idx + 1) + '</strong> de ' + rounds.length; $('stCase').appendChild(s1);
+  updateScore();
+  $('pbar').style.width = (idx / rounds.length * 100) + '%';
+  $('caseTitle').textContent = round.title; $('caseCtx').textContent = round.ctx;
+  buildLegend(); drawChart(); buildTable();
+  $('qcard').innerHTML = ''; $('nextrow').hidden = true;
+  showQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function updateScore() { $('stScore').textContent = answered ? 'Aciertos: ' + score + ' de ' + answered : 'Aciertos: 0'; }
+
+function buildLegend() {
+  const lg = $('legend'); lg.innerHTML = '';
+  round.drugs.forEach((d, i) => {
+    const sp = document.createElement('span');
+    const k = document.createElement('i'); k.className = 'key'; k.style.borderTopColor = 'var(--s' + SER[i] + ')';
+    const t = document.createElement('span'); t.textContent = round.generic ? d.label : d.label + ' (' + 'ABCD'[i] + ')';
+    sp.appendChild(k); sp.appendChild(t); lg.appendChild(sp);
+  });
+}
+
+function drawChart() {
+  setGeom();
+  svg = $('chart'); svg.innerHTML = ''; svg.setAttribute('viewBox', '0 0 ' + VB.w + ' ' + VB.h);
+  const grid = S('g', {}, svg);
+  for (let e = 0; e <= 100; e += 20) {
+    S('line', { x1: M.l, x2: M.l + PW, y1: py(e), y2: py(e), stroke: e === 0 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1 }, grid);
+    const t = S('text', { x: M.l - 10, y: py(e) + 4, 'text-anchor': 'end', class: 'tick' }, grid); t.textContent = VB.w < 500 ? String(e) : e + ' %';
+  }
+  for (let ld = XMIN; ld <= XMAX; ld++) {
+    const t = S('text', { x: px(ld), y: M.t + PH + 20, 'text-anchor': 'middle', class: 'tick' }, grid); t.textContent = String(Math.pow(10, ld));
+    S('line', { x1: px(ld), x2: px(ld), y1: M.t + PH, y2: M.t + PH + 4, stroke: 'var(--axis)' }, grid);
+  }
+  const xt = S('text', { x: M.l + PW / 2, y: VB.h - 10, 'text-anchor': 'middle', class: 'axis-title' }, grid); xt.textContent = 'Dosis (unidades relativas, escala logarítmica)';
+  const yt = S('text', { transform: 'translate(' + (VB.w < 500 ? 11 : 16) + ' ' + (M.t + PH / 2) + ') rotate(-90)', 'text-anchor': 'middle', class: 'axis-title' }, grid); yt.textContent = VB.w < 500 ? 'Efecto (% del máximo)' : 'Efecto (% del máximo posible)';
+  curvesG = S('g', {}, svg);
+  round.drugs.forEach((d, i) => {
+    let p = '';
+    for (let k = 0; k <= 200; k++) { const ld = XMIN + (XMAX - XMIN) * k / 200; const e = effect(Math.pow(10, ld), d.emax, d.ec50); p += (k ? 'L' : 'M') + px(ld).toFixed(1) + ' ' + py(e).toFixed(1); }
+    S('path', { d: p, class: 'c' + SER[i], 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, curvesG);
+  });
+  // etiquetas directas al final, solo si separan
+  const ends = round.drugs.map((d) => py(effect(Math.pow(10, XMAX), d.emax, d.ec50)));
+  if (Math.abs(ends[0] - ends[1]) >= 18) {
+    round.drugs.forEach((d, i) => { const t = S('text', { x: M.l + PW + 8, y: ends[i] + 4, class: 'ann' }, curvesG); t.textContent = round.generic ? d.short : d.short.slice(0, 1); });
+  }
+  annG = S('g', {}, svg);
+  hoverG = S('g', {}, svg);
+  cross = S('line', { y1: M.t, y2: M.t + PH, stroke: 'var(--muted)', 'stroke-width': 1, visibility: 'hidden' }, hoverG);
+  dots = round.drugs.map((d, i) => S('circle', { r: 4.5, class: 'f' + SER[i], stroke: 'var(--surface)', 'stroke-width': 2, visibility: 'hidden' }, hoverG));
+  const hit = S('rect', { x: M.l, y: M.t, width: PW, height: PH, fill: 'transparent' }, hoverG);
+  hit.addEventListener('pointermove', onMove); hit.addEventListener('pointerdown', onMove);
+  hit.addEventListener('pointerleave', hideTip); hit.addEventListener('pointercancel', hideTip);
+  svg.setAttribute('aria-label', 'Curvas dosis-respuesta de ' + round.drugs[0].label + ' y ' + round.drugs[1].label + ', con la dosis en escala logarítmica. Los valores están en la tabla inferior.');
+}
+
+function onMove(ev) {
+  const rect = svg.getBoundingClientRect();
+  const xv = Math.min(Math.max((ev.clientX - rect.left) / rect.width * VB.w, M.l), M.l + PW);
+  const ld = XMIN + (xv - M.l) / PW * (XMAX - XMIN), d = Math.pow(10, ld);
+  cross.setAttribute('x1', xv); cross.setAttribute('x2', xv); cross.setAttribute('visibility', 'visible');
+  const tip = $('tip'); tip.innerHTML = '';
+  const td = document.createElement('div'); td.className = 't-dose'; td.textContent = 'Dosis ' + fmt(d) + ' u.r.'; tip.appendChild(td);
+  round.drugs.forEach((dr, i) => {
+    const e = effect(d, dr.emax, dr.ec50);
+    dots[i].setAttribute('cx', xv); dots[i].setAttribute('cy', py(e)); dots[i].setAttribute('visibility', 'visible');
+    const row = document.createElement('div'); row.className = 't-row';
+    const k = document.createElement('i'); k.className = 'key'; k.style.borderTopColor = 'var(--s' + SER[i] + ')';
+    const v = document.createElement('b'); v.textContent = e.toFixed(1) + ' %';
+    const n = document.createElement('span'); n.textContent = dr.short; n.style.color = 'var(--ink2)';
+    row.appendChild(k); row.appendChild(v); row.appendChild(n); tip.appendChild(row);
+  });
+  tip.style.display = 'block';
+  const left = xv / VB.w * rect.width;
+  tip.style.left = (left > rect.width * 0.62 ? left - tip.offsetWidth - 14 : left + 14) + 'px';
+  tip.style.top = '14px';
+}
+function hideTip() {
+  $('tip').style.display = 'none'; cross.setAttribute('visibility', 'hidden'); dots.forEach((d) => d.setAttribute('visibility', 'hidden'));
+}
+
+function buildTable() {
+  const doses = [0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000];
+  const t = $('dataTable'); t.innerHTML = '';
+  const h = document.createElement('tr');
+  ['Dosis (u.r.)', round.drugs[0].label, round.drugs[1].label].forEach((x) => { const th = document.createElement('th'); th.textContent = x; h.appendChild(th); });
+  t.appendChild(h);
+  doses.forEach((d) => {
+    const tr = document.createElement('tr');
+    [String(d)].concat(round.drugs.map((dr) => effect(d, dr.emax, dr.ec50).toFixed(1) + ' %')).forEach((x) => { const td = document.createElement('td'); td.textContent = x; tr.appendChild(td); });
+    t.appendChild(tr);
+  });
+}
+
+/* --- revelaciones sobre la gráfica --- */
+function dot(x, y, i) { S('circle', { cx: x, cy: y, r: 5, class: 'f' + SER[i], stroke: 'var(--surface)', 'stroke-width': 2 }, annG); }
+function revealPot() {
+  round.drugs.forEach((d, i) => {
+    const x = px(Math.log10(d.ec50)), y = py(d.emax / 2);
+    S('line', { x1: x, x2: x, y1: y, y2: M.t + PH, class: 'c' + SER[i], 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, annG);
+    dot(x, y, i);
+    const t = S('text', { x: x, y: y - 11, 'text-anchor': 'middle', class: 'ann' }, annG); t.textContent = 'EC50 ' + d.short.slice(0, round.generic ? 1 : 3) + (round.generic ? '' : '.');
+  });
+}
+function revealEff() {
+  const [a, b] = round.drugs;
+  const same = Math.abs(a.emax - b.emax) < 1;
+  const list = same ? [{ d: a, i: 0, text: 'Emax = ' + a.emax + ' % (los dos)', neutral: true }] : round.drugs.map((d, i) => ({ d, i, text: d.short.slice(0, round.generic ? 1 : 12) + ': Emax ' + d.emax + ' %' }));
+  list.forEach((o) => {
+    const y = py(o.d.emax);
+    const ln = S('line', { x1: M.l, x2: M.l + PW, y1: y, y2: y, 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, annG);
+    if (o.neutral) ln.setAttribute('stroke', 'var(--ink2)'); else ln.setAttribute('class', 'c' + SER[o.i]);
+    const t = S('text', { x: M.l + PW - 4, y: y - 6, 'text-anchor': 'end', class: 'ann' }, annG); t.textContent = o.text;
+  });
+}
+function revealGoal() {
+  const X = round.goal, y = py(X);
+  S('line', { x1: M.l, x2: M.l + PW, y1: y, y2: y, stroke: 'var(--ink)', 'stroke-width': 1.5 }, annG);
+  const t = S('text', { x: M.l + 6, y: y - 7, class: 'ann' }, annG); t.textContent = (VB.w < 500 ? 'Meta: ' : 'Meta del paciente: ') + X + ' %';
+  round.drugs.forEach((d, i) => {
+    if (d.emax > X) {
+      const dd = doseFor(d, X);
+      if (dd <= Math.pow(10, XMAX)) {
+        const x = px(Math.log10(dd)); dot(x, y, i);
+        S('line', { x1: x, x2: x, y1: y, y2: M.t + PH, class: 'c' + SER[i], 'stroke-width': 1.5, 'stroke-dasharray': '4 3' }, annG);
+      }
+    }
+  });
+}
+const REVEAL = { pot: revealPot, eff: revealEff, goal: revealGoal };
+
+/* --- preguntas --- */
+const QTEXT = {
+  pot: () => '¿Qué fármaco es más potente?',
+  eff: () => '¿Qué fármaco es más eficaz?',
+  goal: () => 'El paciente necesita lograr al menos ' + round.goal + ' % del efecto máximo posible. ¿Qué fármaco puede conseguirlo si se aumenta la dosis lo necesario?'
+};
+const HINTS = {
+  pot: 'Compara la posición horizontal de las curvas: ¿cuál llega a la mitad de su propio efecto con menos dosis?',
+  eff: 'Mira hasta dónde sube cada curva en el eje vertical, sin importar cuánta dosis necesita para llegar.',
+  goal: 'Traza mentalmente una línea horizontal en la meta: ¿qué curvas llegan a cruzarla?'
+};
+function optionsFor(q) {
+  const [a, b] = round.drugs;
+  if (q === 'pot') return [['A', a.label], ['B', b.label], ['eq', 'Igual de potentes']];
+  if (q === 'eff') return [['A', a.label], ['B', b.label], ['eq', 'Igual de eficaces']];
+  return [['A', 'Solo ' + a.label], ['B', 'Solo ' + b.label], ['both', 'Ambos'], ['none', 'Ninguno']];
+}
+
+function showQuestion() {
+  const q = round.ask[qi];
+  const blk = document.createElement('div'); blk.className = 'q';
+  const h = document.createElement('h3'); h.textContent = (qi + 1) + '. ' + QTEXT[q](); blk.appendChild(h);
+  const ops = document.createElement('div'); ops.className = 'opts'; blk.appendChild(ops);
+  const fb = document.createElement('div'); fb.setAttribute('aria-live', 'polite'); blk.appendChild(fb);
+  const hintBtn = document.createElement('button'); hintBtn.className = 'ghost'; hintBtn.textContent = 'Ver pista'; blk.appendChild(hintBtn);
+  const hintP = document.createElement('p'); hintP.className = 'hint'; hintP.hidden = true; hintP.textContent = HINTS[q]; blk.appendChild(hintP);
+  hintBtn.addEventListener('click', () => { hintP.hidden = !hintP.hidden; hintBtn.textContent = hintP.hidden ? 'Ver pista' : 'Ocultar pista'; });
+  const btns = optionsFor(q).map(([val, label]) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.textContent = label; b.dataset.val = val; ops.appendChild(b);
+    b.addEventListener('click', () => answer(q, val, btns, fb, hintBtn, hintP));
+    return b;
+  });
+  $('qcard').appendChild(blk);
+  if (qi > 0) blk.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function answer(q, val, btns, fb, hintBtn, hintP) {
+  const ok = truth(round)[q] === val;
+  btns.forEach((b) => { b.disabled = true; if (b.dataset.val === truth(round)[q]) b.classList.add('right'); else if (b.dataset.val === val) b.classList.add('wrong'); });
+  hintBtn.hidden = true; hintP.hidden = true;
+  answered++; byQ[q][1]++; if (ok) { score++; byQ[q][0]++; }
+  updateScore();
+  fb.className = 'fb ' + (ok ? 'ok' : 'no');
+  const v = document.createElement('b'); v.className = 'v'; v.textContent = ok ? '✓ Correcto' : '✗ Revisa la gráfica';
+  const p = document.createElement('span'); p.textContent = explain(round, q);
+  fb.appendChild(v); fb.appendChild(p);
+  REVEAL[q]();
+  qi++;
+  if (qi < round.ask.length) showQuestion();
+  else {
+    const last = idx === rounds.length - 1;
+    $('nextBtn').textContent = last ? 'Ver resultados →' : 'Siguiente caso →';
+    $('nextrow').hidden = false; $('pbar').style.width = ((idx + 1) / rounds.length * 100) + '%';
+    $('nextrow').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function next() { idx++; if (idx >= rounds.length) showResults(); else loadRound(); }
+
+function showResults() {
+  $('game').hidden = true;
+  const r = $('results'); r.hidden = false; r.innerHTML = '';
+  const total = answered, pct = Math.round(score / total * 100);
+  const card = document.createElement('div'); card.className = 'card'; r.appendChild(card);
+  const h = document.createElement('h2'); h.textContent = 'Resultados'; card.appendChild(h);
+  const hero = document.createElement('div'); hero.className = 'hero'; hero.textContent = pct + ' %'; card.appendChild(hero);
+  const sub = document.createElement('p'); sub.className = 'lead'; sub.style.margin = '0 0 12px';
+  sub.textContent = score + ' aciertos de ' + total + ' preguntas. ' + (pct >= 90 ? 'Distingues muy bien potencia y eficacia.' : pct >= 70 ? 'Vas bien; repasa los casos donde más dudaste.' : 'Repasa la regla de abajo y vuelve a intentarlo con casos nuevos.');
+  card.appendChild(sub);
+  [['pot', 'Potencia (posición horizontal)'], ['eff', 'Eficacia (altura del techo)'], ['goal', 'Aplicación clínica (meta del paciente)']].forEach(([k, name]) => {
+    const [ok, n] = byQ[k]; const m = document.createElement('div'); m.className = 'meter';
+    const row = document.createElement('div'); row.className = 'row';
+    const a = document.createElement('span'); a.textContent = name; const b = document.createElement('span'); b.textContent = ok + ' de ' + n;
+    row.appendChild(a); row.appendChild(b); m.appendChild(row);
+    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.marginBottom = '0'; const fill = document.createElement('i'); fill.style.width = (n ? ok / n * 100 : 0) + '%'; bar.appendChild(fill); m.appendChild(bar);
+    card.appendChild(m);
+  });
+  const rule = document.createElement('div'); rule.className = 'rule';
+  const parts = [['Potencia', ' = qué tan a la izquierda está la curva (EC50 baja = menos dosis).'], ['Eficacia', ' = qué tan alto llega el techo (Emax).'], ['Más potente no significa más eficaz', ': el efecto máximo que necesita el paciente lo decide la eficacia.']];
+  parts.forEach(([b, t]) => { const p = document.createElement('p'); p.style.margin = '4px 0'; const bb = document.createElement('b'); bb.textContent = b; p.appendChild(bb); p.appendChild(document.createTextNode(t)); rule.appendChild(p); });
+  card.appendChild(rule);
+  const again = document.createElement('button'); again.className = 'btn'; again.textContent = 'Intentar con casos nuevos'; again.style.marginTop = '12px';
+  again.addEventListener('click', start); card.appendChild(again);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('startBtn').addEventListener('click', start);
+$('nextBtn').addEventListener('click', next);
+</script>
+</body>
+</html>
