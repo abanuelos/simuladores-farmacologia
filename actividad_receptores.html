@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Receptores: ¿ionotrópico o metabotrópico? · Actividad Sesión 20</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.12);
+    --s1: #2a78d6; --s2: #eb6834;
+    --good: #006300; --good-bg: #e8f3e8; --bad: #b02f2f; --bad-bg: #fbeaea;
+    --accent: #0b2545; --on-accent: #ffffff; --gold: #a07d10; --track: #cde2fb; --fill: #2a78d6;
+    --chip: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.12);
+      --s1: #3987e5; --s2: #d95926;
+      --good: #4cc24c; --good-bg: #14301a; --bad: #f08a8a; --bad-bg: #3a1c1c;
+      --accent: #86b6ef; --on-accent: #0d1b2e; --gold: #e0b93a; --track: #1c3552; --fill: #3987e5;
+      --chip: #262624;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; font-size: 16px; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 28px 16px 56px; }
+  .kicker { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--ink2); margin: 0 0 20px; max-width: 62ch; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; }
+  .steps { margin: 8px 0 18px; padding-left: 20px; color: var(--ink2); } .steps li { margin: 4px 0; }
+  .btn { font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 11px 20px; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .opt:focus-visible, .ghost:focus-visible, summary:focus-visible { outline: 3px solid var(--s1); outline-offset: 2px; }
+  .ghost { font: inherit; font-size: 13px; background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+  .status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 8px; flex-wrap: wrap; }
+  .status strong { color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-bottom: 16px; }
+  .bar > i { display: block; height: 100%; background: var(--fill); width: 0; transition: width .3s; }
+  .case-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+  .case-text { margin: 0; color: var(--ink); }
+  .clue { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--chip); color: var(--ink2); font-size: 14.5px; }
+  .clue b { color: var(--ink); }
+  .q { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+  .q:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+  .q h3 { font-size: 16px; margin: 0 0 10px; line-height: 1.4; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { font: inherit; font-size: 15px; cursor: pointer; text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 8px; padding: 10px 16px; }
+  .opt small { display: block; color: var(--muted); font-size: 12.5px; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; }
+  .opt.right { border-color: var(--good); background: var(--good-bg); }
+  .opt.right::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+  .fb { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14.5px; }
+  .fb.ok { background: var(--good-bg); } .fb.no { background: var(--bad-bg); }
+  .fb b.v { display: block; margin-bottom: 2px; } .fb.ok b.v { color: var(--good); } .fb.no b.v { color: var(--bad); }
+  .hint { font-size: 13.5px; color: var(--ink2); margin: 6px 0 0; }
+  .path { margin-top: 14px; }
+  .path .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 0 0 6px; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .flow span { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 13.5px; }
+  .flow i { font-style: normal; color: var(--muted); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 2px 8px; background: var(--track); color: var(--accent); margin-bottom: 8px; }
+  .nextrow { margin-top: 18px; text-align: right; }
+  .hero { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.02em; margin: 4px 0; }
+  .meter { margin: 10px 0; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .rule { border-left: 3px solid var(--gold); padding-left: 12px; margin: 14px 0; color: var(--ink2); }
+  .rule b { color: var(--ink); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink2); font-weight: 600; }
+  details { margin-top: 10px; } summary { cursor: pointer; font-size: 14px; color: var(--ink2); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) { h1 { font-size: 25px; } .opt { width: 100%; } .hero { font-size: 44px; } th, td { padding: 5px 4px; font-size: 13px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 20</p>
+  <h1>¿Ionotrópico o metabotrópico?</h1>
+  <p class="lead">Lee la respuesta que produce un fármaco e identifica si el receptor responsable es ionotrópico o metabotrópico.</p>
+
+  <section id="intro" class="card">
+    <h2>Cómo funciona</h2>
+    <ol class="steps">
+      <li>Cada caso describe un efecto o un fármaco y el dato que lo acompaña.</li>
+      <li>Primero eliges el tipo de receptor: ionotrópico o metabotrópico.</li>
+      <li>Al responder ves la ruta de señalización completa y la explicación (en los metabotrópicos, con su proteína G).</li>
+    </ol>
+    <details open>
+      <summary>Tabla de referencia</summary>
+      <table>
+        <thead><tr><th>Receptor</th><th>Señal</th><th>Rapidez</th></tr></thead>
+        <tbody>
+          <tr><td><b>Ionotrópico</b></td><td>Es un canal iónico: el ligando lo abre y pasan iones (Na⁺, Ca²⁺, Cl⁻)</td><td>Milisegundos</td></tr>
+          <tr><td><b>Metabotrópico</b></td><td>Receptor acoplado a proteína G (7 dominios transmembrana); actúa por segundos mensajeros (AMPc, IP₃)</td><td>Segundos</td></tr>
+        </tbody>
+      </table>
+    </details>
+    <p class="hint" style="margin:12px 0 16px">10 casos · unos 10 minutos. Tienes una pista opcional en cada caso. Hay casos trampa: el mismo neurotransmisor puede tener receptores de ambos tipos.</p>
+    <button class="btn" id="startBtn">Comenzar</button>
+  </section>
+
+  <section id="game" hidden>
+    <div class="status"><span id="stCase"></span><span id="stScore"></span></div>
+    <div class="bar" aria-hidden="true"><i id="pbar"></i></div>
+    <div class="card">
+      <p class="case-title" id="caseTitle"></p>
+      <p class="case-text" id="caseText"></p>
+      <p class="clue" id="caseClue"></p>
+    </div>
+    <div class="card" id="qcard"></div>
+    <div class="nextrow" id="nextrow" hidden><button class="btn" id="nextBtn">Siguiente caso →</button></div>
+  </section>
+
+  <section id="results" hidden></section>
+
+  <footer>Actividad didáctica de práctica. Los datos de señalización son simplificados. ENMH · IPN.</footer>
+</main>
+
+<script>
+/* ========== LÓGICA PURA ========== */
+function shuffle(a) { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
+
+// k: 'iono' | 'Gs' | 'Gi' | 'Gq'
+const CASES = [
+  /* ---- ionotrópicos ---- */
+  { id: 'rocuronio', k: 'iono', title: 'Relajante muscular en cirugía',
+    text: 'Un anestesiólogo administra rocuronio para relajar el músculo durante una cirugía. El fármaco impide la contracción en la placa neuromuscular.',
+    clue: 'La acetilcolina contrae el músculo en milisegundos y la señal es la entrada de Na⁺.',
+    rec: 'Receptor nicotínico muscular (Nm)',
+    path: ['Acetilcolina se une', 'Se abre el canal', 'Entra Na⁺', 'Despolariza la placa', 'Contracción'],
+    why: 'El receptor nicotínico es un canal iónico regulado por ligando: la señal es directa y dura milisegundos. El rocuronio lo bloquea y por eso relaja el músculo.' },
+  { id: 'diazepam', k: 'iono', title: 'Ansiedad aguda', trap: 'Trampa: GABA-B es metabotrópico',
+    text: 'Una paciente con crisis de ansiedad recibe diazepam y se sedan sus neuronas. El fármaco aumenta la frecuencia con la que se abre un canal por el que entra Cl⁻.',
+    clue: 'El efecto principal es la entrada de Cl⁻ a la neurona.',
+    rec: 'Receptor GABA-A',
+    path: ['GABA se une (la benzodiazepina lo potencia)', 'Se abre el canal de Cl⁻', 'Entra Cl⁻', 'Hiperpolariza', 'Menor excitabilidad'],
+    why: 'GABA-A es un canal de Cl⁻. Las benzodiazepinas son moduladores alostéricos que aumentan la frecuencia de apertura. No confundir con GABA-B, que es metabotrópico (Gi).' },
+  { id: 'ondansetron', k: 'iono', title: 'Náusea por quimioterapia',
+    text: 'Un paciente en quimioterapia recibe ondansetrón para evitar el vómito. El fármaco bloquea receptores de serotonina 5-HT3 en el área postrema y en el nervio vago.',
+    clue: 'El 5-HT3 es el único receptor de serotonina que forma un canal catiónico (Na⁺ y K⁺).',
+    rec: 'Receptor 5-HT3',
+    path: ['Serotonina se une', 'Se abre el canal catiónico', 'Entra Na⁺', 'Despolariza la neurona', 'Señal de vómito'],
+    why: 'Entre los receptores de serotonina, solo el 5-HT3 es ionotrópico. Todos los demás son metabotrópicos. El ondansetrón lo bloquea y corta la señal del vómito.' },
+  { id: 'ketamina', k: 'iono', title: 'Anestesia disociativa',
+    text: 'La ketamina produce anestesia disociativa. Su mecanismo es bloquear el poro del receptor NMDA de glutamato.',
+    clue: 'Por este receptor entran Na⁺ y Ca²⁺ cuando se abre el canal.',
+    rec: 'Receptor NMDA (glutamato)',
+    path: ['Glutamato se une', 'Se abre el canal', 'Entran Na⁺ y Ca²⁺', 'Despolariza (excitación)', 'La ketamina tapa el poro'],
+    why: 'El NMDA es un canal regulado por glutamato. La ketamina lo bloquea desde dentro del poro (bloqueo del canal) y reduce la excitación neuronal.' },
+  { id: 'nicotina', k: 'iono', title: 'Nicotina del cigarro',
+    text: 'La nicotina activa receptores de los ganglios autónomos y despolariza la neurona postganglionar casi de inmediato.',
+    clue: 'La despolarización aparece en milisegundos tras la unión.',
+    rec: 'Receptor nicotínico neuronal (Nn)',
+    path: ['Nicotina se une', 'Se abre el canal', 'Entra Na⁺', 'Despolariza el ganglio', 'Transmisión ganglionar'],
+    why: 'Los receptores nicotínicos, musculares o neuronales, son canales regulados por ligando. La velocidad en milisegundos es la pista clásica.' },
+  { id: 'fenobarbital', k: 'iono', title: 'Control de convulsiones',
+    text: 'El fenobarbital controla las convulsiones al prolongar la apertura de un canal de Cl⁻ en las neuronas.',
+    clue: 'A diferencia de las benzodiazepinas, aumenta la duración de cada apertura.',
+    rec: 'Receptor GABA-A',
+    path: ['GABA se une (el barbitúrico lo potencia)', 'El canal de Cl⁻ se abre más tiempo', 'Entra más Cl⁻', 'Hiperpolariza', 'Menos convulsiones'],
+    why: 'Barbitúricos y benzodiazepinas actúan sobre el mismo canal GABA-A, pero con efecto distinto sobre su apertura. A dosis altas los barbitúricos pueden abrir el canal sin GABA, lo que reduce su margen de seguridad.' },
+
+  /* ---- Gs ---- */
+  { id: 'salbutamol', k: 'Gs', title: 'Crisis asmática',
+    text: 'Una paciente con asma usa salbutamol. El fármaco relaja el músculo liso bronquial al activar receptores β2.',
+    clue: 'Dentro de la célula aumenta el AMPc.',
+    rec: 'Receptor β2 adrenérgico',
+    path: ['Salbutamol se une a β2', 'Se activa Gs', '↑ Adenilil ciclasa', '↑ AMPc', 'Broncodilatación'],
+    why: 'Los receptores β se acoplan a Gs, que estimula la adenilil ciclasa y aumenta el AMPc. En el bronquio, esa vía relaja el músculo liso.' },
+  { id: 'adrenalina', k: 'Gs', title: 'Adrenalina en el corazón',
+    text: 'La adrenalina aumenta la frecuencia y la fuerza de contracción del corazón al actuar sobre receptores β1.',
+    clue: 'La respuesta depende de un aumento de AMPc.',
+    rec: 'Receptor β1 adrenérgico',
+    path: ['Adrenalina se une a β1', 'Se activa Gs', '↑ AMPc', '↑ PKA y entrada de Ca²⁺', '↑ Frecuencia y contractilidad'],
+    why: 'β1 es un receptor Gs. El AMPc activa la proteína cinasa A, que aumenta la entrada de Ca²⁺ y la fuerza del latido.' },
+  { id: 'dopamina', k: 'Gs', title: 'Dopamina en vasos renales',
+    text: 'A dosis bajas, la dopamina dilata los vasos renales y mesentéricos al actuar sobre receptores D1.',
+    clue: 'Los receptores D1 aumentan el AMPc.',
+    rec: 'Receptor dopaminérgico D1',
+    path: ['Dopamina se une a D1', 'Se activa Gs', '↑ AMPc', 'Relaja el músculo liso vascular', 'Vasodilatación renal'],
+    why: 'La familia D1 (D1 y D5) se acopla a Gs. La familia D2 se acopla a Gi: un buen contraste para recordar.' },
+  { id: 'famotidina', k: 'Gs', title: 'Gastritis con exceso de ácido',
+    text: 'La famotidina disminuye la secreción de ácido gástrico al bloquear los receptores H2 de las células parietales.',
+    clue: 'La histamina, cuando se une a H2, eleva el AMPc en la célula parietal.',
+    rec: 'Receptor H2 de histamina',
+    path: ['Famotidina ocupa H2', 'Gs no se activa', '↓ AMPc', '↓ Bomba de protones', 'Menos ácido gástrico'],
+    why: 'H2 es un receptor Gs. Al bloquearlo, el AMPc baja y la célula secreta menos ácido. No confundir con H1, que es Gq.' },
+  { id: 'glucagon', k: 'Gs', title: 'Hipoglucemia grave',
+    text: 'El glucagón eleva la glucosa en sangre al activar la degradación de glucógeno en el hepatocito.',
+    clue: 'Su receptor eleva el AMPc en la célula hepática.',
+    rec: 'Receptor de glucagón',
+    path: ['Glucagón se une', 'Se activa Gs', '↑ AMPc', '↑ PKA', 'Glucogenólisis: sube la glucosa'],
+    why: 'El receptor de glucagón es acoplado a Gs. El AMPc activa la PKA, que activa la glucógeno fosforilasa.' },
+
+  /* ---- Gi ---- */
+  { id: 'morfina', k: 'Gi', title: 'Dolor intenso',
+    text: 'La morfina produce analgesia al actuar sobre receptores μ en neuronas del dolor. Dentro de la neurona baja el AMPc y se abren canales de K⁺.',
+    clue: 'Disminuye el AMPc.',
+    rec: 'Receptor opioide μ',
+    path: ['Morfina se une a μ', 'Se activa Gi', '↓ AMPc y se abre K⁺', 'Hiperpolariza la neurona', 'Analgesia'],
+    why: 'Los receptores opioides se acoplan a Gi: inhiben la adenilil ciclasa, y la subunidad βγ abre canales de K⁺ y cierra canales de Ca²⁺.' },
+  { id: 'm2', k: 'Gi', title: 'Frecuencia cardiaca en reposo',
+    text: 'La acetilcolina liberada por el nervio vago disminuye la frecuencia cardiaca al actuar en el nodo sinusal.',
+    clue: 'El receptor muscarínico del corazón es M2 y baja el AMPc.',
+    rec: 'Receptor muscarínico M2',
+    path: ['Acetilcolina se une a M2', 'Se activa Gi', '↓ AMPc y se abre K⁺', 'Hiperpolariza el nodo', 'Bradicardia'],
+    why: 'M2 se acopla a Gi, por eso el vago frena el corazón. Los receptores M1, M3 y M5 se acoplan a Gq.' },
+  { id: 'clonidina', k: 'Gi', title: 'Hipertensión resistente',
+    text: 'La clonidina disminuye la presión arterial al estimular receptores α2 presinápticos, lo que reduce la liberación de noradrenalina.',
+    clue: 'α2 disminuye el AMPc en la terminal nerviosa.',
+    rec: 'Receptor α2 adrenérgico',
+    path: ['Clonidina se une a α2', 'Se activa Gi', '↓ AMPc', '↓ Liberación de noradrenalina', 'Baja la presión arterial'],
+    why: 'α2 es Gi: funciona como freno de la liberación del propio neurotransmisor. α1 es Gq y β es Gs.' },
+  { id: 'haloperidol', k: 'Gi', title: 'Psicosis aguda',
+    text: 'El haloperidol reduce los síntomas positivos de la psicosis al bloquear los receptores D2 de dopamina.',
+    clue: 'Los receptores D2 disminuyen el AMPc cuando la dopamina los activa.',
+    rec: 'Receptor dopaminérgico D2',
+    path: ['Haloperidol ocupa D2', 'Gi no se activa', 'El AMPc no se frena', 'Menor efecto de la dopamina', 'Menos síntomas positivos'],
+    why: 'D2 es un receptor Gi. El haloperidol es antagonista: impide que la dopamina active la vía inhibidora.' },
+  { id: 'baclofeno', k: 'Gi', title: 'Espasticidad muscular', trap: 'Trampa: GABA-A es ionotrópico',
+    text: 'El baclofeno reduce la espasticidad al activar receptores GABA-B en la médula espinal. Sin embargo, su respuesta es más lenta que la del diazepam.',
+    clue: 'GABA-B baja el AMPc y abre canales de K⁺, con una respuesta en segundos.',
+    rec: 'Receptor GABA-B',
+    path: ['Baclofeno se une a GABA-B', 'Se activa Gi', '↓ AMPc y se abre K⁺', 'Hiperpolariza', 'Menos espasticidad'],
+    why: 'El GABA tiene dos receptores: GABA-A (canal de Cl⁻, ionotrópico) y GABA-B (metabotrópico, Gi). Por eso la respuesta del baclofeno es más lenta que la del diazepam.' },
+
+  /* ---- Gq ---- */
+  { id: 'fenilefrina', k: 'Gq', title: 'Descongestión nasal',
+    text: 'La fenilefrina contrae los vasos de la mucosa nasal al activar receptores α1 del músculo liso vascular.',
+    clue: 'La contracción depende de un aumento de Ca²⁺ intracelular mediado por IP₃.',
+    rec: 'Receptor α1 adrenérgico',
+    path: ['Fenilefrina se une a α1', 'Se activa Gq', '↑ Fosfolipasa C', '↑ IP₃ y DAG', '↑ Ca²⁺: vasoconstricción'],
+    why: 'α1 es Gq: la fosfolipasa C genera IP₃, que libera Ca²⁺ del retículo, y DAG, que activa la proteína cinasa C.' },
+  { id: 'pilocarpina', k: 'Gq', title: 'Boca seca (xerostomía)',
+    text: 'La pilocarpina aumenta la secreción de saliva al estimular receptores muscarínicos M3 de las glándulas salivales.',
+    clue: 'M3 aumenta el IP₃ y el Ca²⁺ en la célula glandular.',
+    rec: 'Receptor muscarínico M3',
+    path: ['Pilocarpina se une a M3', 'Se activa Gq', '↑ IP₃ y DAG', '↑ Ca²⁺', 'Secreción de saliva'],
+    why: 'M1, M3 y M5 se acoplan a Gq; M2 y M4, a Gi. Las glándulas, el músculo liso y el endotelio responden por M3.' },
+  { id: 'losartan', k: 'Gq', title: 'Hipertensión arterial',
+    text: 'El losartán baja la presión arterial al bloquear los receptores AT1 de la angiotensina II en los vasos.',
+    clue: 'La angiotensina II, al unirse a AT1, aumenta el Ca²⁺ intracelular.',
+    rec: 'Receptor AT1 de angiotensina II',
+    path: ['Losartán ocupa AT1', 'Gq no se activa', 'No sube el IP₃ ni el Ca²⁺', 'No hay vasoconstricción', 'Baja la presión'],
+    why: 'AT1 es un receptor Gq. Su bloqueo impide la vasoconstricción por IP₃ y Ca²⁺.' },
+  { id: 'loratadina', k: 'Gq', title: 'Rinitis alérgica',
+    text: 'La loratadina alivia el escurrimiento nasal y la comezón al bloquear los receptores H1 de histamina.',
+    clue: 'La histamina, en H1, activa la fosfolipasa C.',
+    rec: 'Receptor H1 de histamina',
+    path: ['Loratadina ocupa H1', 'Gq no se activa', 'No sube el IP₃ ni el Ca²⁺', 'Menor respuesta a la histamina', 'Menos síntomas de alergia'],
+    why: 'H1 es Gq (y H2 es Gs). Ese par se usa mucho en examen: H1 alergia, H2 ácido gástrico.' },
+  { id: 'oxitocina', k: 'Gq', title: 'Inducción del parto',
+    text: 'La oxitocina provoca contracciones del útero al actuar sobre su receptor en el músculo liso uterino.',
+    clue: 'La contracción se debe a un aumento del Ca²⁺ intracelular por la vía de IP₃.',
+    rec: 'Receptor de oxitocina',
+    path: ['Oxitocina se une', 'Se activa Gq', '↑ IP₃ y DAG', '↑ Ca²⁺', 'Contracción uterina'],
+    why: 'El receptor de oxitocina es acoplado a Gq. El aumento de Ca²⁺ activa la contracción del músculo liso.' },
+  { id: 'oxibutinina', k: 'Gq', title: 'Vejiga hiperactiva',
+    text: 'La oxibutinina disminuye las urgencias urinarias al bloquear receptores muscarínicos M3 del músculo detrusor.',
+    clue: 'El receptor M3 contrae el músculo liso al subir el Ca²⁺ por IP₃.',
+    rec: 'Receptor muscarínico M3',
+    path: ['Oxibutinina ocupa M3', 'Gq no se activa', 'No sube el IP₃ ni el Ca²⁺', 'El detrusor se relaja', 'Menos urgencia'],
+    why: 'M3 es Gq y contrae el detrusor. Los antimuscarínicos lo bloquean y relajan la vejiga.' }
+];
+
+const BY_K = (k) => CASES.filter((c) => c.k === k);
+function buildRounds() {
+  const take = (arr, n) => shuffle(arr).slice(0, n);
+  const meta = CASES.filter((c) => c.k !== 'iono');
+  const picked = [].concat(take(BY_K('iono'), 5), take(BY_K('Gs'), 2), take(BY_K('Gi'), 1), take(BY_K('Gq'), 1));
+  const rest = meta.filter((c) => picked.indexOf(c) < 0);
+  picked.push(shuffle(rest)[0]);
+  return shuffle(picked);
+}
+const familyOf = (c) => (c.k === 'iono' ? 'iono' : 'meta');
+const questionsFor = (c) => ['fam'];
+const answerFor = (c, q) => (q === 'fam' ? familyOf(c) : c.k);
+const CAT_LABEL = { iono: 'Ionotrópicos', meta: 'Metabotrópicos' };
+function explain(c, q, given) {
+  return 'Es un receptor ' + (familyOf(c) === 'iono' ? 'ionotrópico' : 'metabotrópico') + ': ' + c.rec + '. ' + c.why;
+}
+/* ========== FIN LÓGICA PURA ========== */
+
+/* ========== INTERFAZ ========== */
+const $ = (id) => document.getElementById(id);
+let rounds = [], idx = 0, qi = 0, qs = [], score = 0, answered = 0, caseOk = true, res = [];
+let byCat = {};
+
+function start() {
+  rounds = buildRounds(); idx = 0; score = 0; answered = 0; res = [];
+  byCat = { iono: [0, 0], meta: [0, 0] };
+  $('intro').hidden = true; $('results').hidden = true; $('game').hidden = false;
+  loadRound();
+}
+
+function loadRound() {
+  const c = rounds[idx]; qi = 0; qs = questionsFor(c); caseOk = true;
+  $('stCase').textContent = ''; const s1 = document.createElement('span'); s1.append('Caso '); const st = document.createElement('strong'); st.textContent = String(idx + 1); s1.append(st); s1.append(' de ' + rounds.length); $('stCase').appendChild(s1);
+  updateScore();
+  $('pbar').style.width = (idx / rounds.length * 100) + '%';
+  $('caseTitle').textContent = c.title;
+  $('caseText').textContent = c.text;
+  const clue = $('caseClue'); clue.textContent = ''; clue.hidden = true;
+  const cb = document.createElement('b'); cb.textContent = 'Dato adicional: '; clue.appendChild(cb); clue.appendChild(document.createTextNode(c.clue));
+  $('qcard').textContent = ''; $('nextrow').hidden = true;
+  showQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function updateScore() { $('stScore').textContent = answered ? 'Aciertos: ' + score + ' de ' + answered : 'Aciertos: 0'; }
+
+function showQuestion() {
+  const c = rounds[idx], q = qs[qi];
+  const blk = document.createElement('div'); blk.className = 'q';
+  const h = document.createElement('h3');
+  h.textContent = (qi + 1) + '. ' + '¿Qué tipo de receptor produce esta respuesta?';
+  blk.appendChild(h);
+  const ops = document.createElement('div'); ops.className = 'opts'; blk.appendChild(ops);
+  const fb = document.createElement('div'); fb.setAttribute('aria-live', 'polite'); blk.appendChild(fb);
+  const hintBtn = document.createElement('button'); hintBtn.className = 'ghost'; hintBtn.textContent = 'Ver pista'; blk.appendChild(hintBtn);
+  const hintP = document.createElement('p'); hintP.className = 'hint'; hintP.hidden = true; blk.appendChild(hintP);
+  const clue = $('caseClue');
+  hintP.textContent = 'Fíjate en la rapidez de la respuesta y en si interviene un segundo mensajero (AMPc, IP₃).';
+  hintBtn.addEventListener('click', () => {
+    const open = hintP.hidden; hintP.hidden = !open; clue.hidden = !open;
+    hintBtn.textContent = open ? 'Ocultar pista' : 'Ver pista';
+  });
+  const opts = [['iono', 'Ionotrópico', 'canal iónico'], ['meta', 'Metabotrópico', 'proteína G']];
+  const btns = opts.map(([val, label, sub]) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.dataset.val = val;
+    b.appendChild(document.createTextNode(label));
+    if (sub) { const sm = document.createElement('small'); sm.textContent = sub; b.appendChild(sm); }
+    ops.appendChild(b);
+    b.addEventListener('click', () => answer(q, val, btns, fb, hintBtn, hintP));
+    return b;
+  });
+  $('qcard').appendChild(blk);
+  if (qi > 0) blk.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function answer(q, val, btns, fb, hintBtn, hintP) {
+  const c = rounds[idx], truth = answerFor(c, q), ok = truth === val;
+  btns.forEach((b) => { b.disabled = true; if (b.dataset.val === truth) b.classList.add('right'); else if (b.dataset.val === val) b.classList.add('wrong'); });
+  hintBtn.hidden = true; hintP.hidden = true;
+  answered++; if (ok) score++; else caseOk = false;
+  updateScore();
+  fb.className = 'fb ' + (ok ? 'ok' : 'no');
+  const v = document.createElement('b'); v.className = 'v'; v.textContent = ok ? '✓ Correcto' : '✗ No es esa';
+  const p = document.createElement('span'); p.textContent = explain(c, q, val);
+  fb.appendChild(v); fb.appendChild(p);
+  qi++;
+  if (qi < qs.length) { showQuestion(); return; }
+  finishCase();
+}
+
+function finishCase() {
+  const c = rounds[idx];
+  const ck = familyOf(c); byCat[ck][1]++; if (caseOk) byCat[ck][0]++;
+  $('caseClue').hidden = false;
+  const pathBox = document.createElement('div'); pathBox.className = 'path';
+  if (c.trap) { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = c.trap; pathBox.appendChild(tg); }
+  const lbl = document.createElement('p'); lbl.className = 'lbl'; lbl.textContent = 'Ruta de señalización · ' + c.rec; pathBox.appendChild(lbl);
+  const flow = document.createElement('div'); flow.className = 'flow';
+  c.path.forEach((st, i) => {
+    if (i) { const ar = document.createElement('i'); ar.textContent = '→'; flow.appendChild(ar); }
+    const sp = document.createElement('span'); sp.textContent = st; flow.appendChild(sp);
+  });
+  pathBox.appendChild(flow);
+  $('qcard').appendChild(pathBox);
+  const last = idx === rounds.length - 1;
+  $('nextBtn').textContent = last ? 'Ver resultados →' : 'Siguiente caso →';
+  $('nextrow').hidden = false;
+  $('pbar').style.width = ((idx + 1) / rounds.length * 100) + '%';
+  $('nextrow').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function next() { idx++; if (idx >= rounds.length) showResults(); else loadRound(); }
+
+function showResults() {
+  $('game').hidden = true;
+  const r = $('results'); r.hidden = false; r.textContent = '';
+  const pct = Math.round(score / answered * 100);
+  const card = document.createElement('div'); card.className = 'card'; r.appendChild(card);
+  const h = document.createElement('h2'); h.textContent = 'Resultados'; card.appendChild(h);
+  const hero = document.createElement('div'); hero.className = 'hero'; hero.textContent = pct + ' %'; card.appendChild(hero);
+  const sub = document.createElement('p'); sub.className = 'lead'; sub.style.margin = '0 0 12px';
+  sub.textContent = score + ' aciertos de ' + answered + ' casos. ' + (pct >= 90 ? 'Dominas la clasificación de receptores.' : pct >= 70 ? 'Vas bien; repasa las categorías con menos aciertos.' : 'Repasa la regla de abajo y vuelve a intentarlo con casos nuevos.');
+  card.appendChild(sub);
+  ['iono', 'meta'].forEach((k) => {
+    const [ok, n] = byCat[k]; if (!n) return;
+    const m = document.createElement('div'); m.className = 'meter';
+    const row = document.createElement('div'); row.className = 'row';
+    const a = document.createElement('span'); a.textContent = CAT_LABEL[k]; const b = document.createElement('span'); b.textContent = ok + ' de ' + n + (n === 1 ? ' caso' : ' casos');
+    row.appendChild(a); row.appendChild(b); m.appendChild(row);
+    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.marginBottom = '0'; const fill = document.createElement('i'); fill.style.width = (ok / n * 100) + '%'; bar.appendChild(fill); m.appendChild(bar);
+    card.appendChild(m);
+  });
+  const rule = document.createElement('div'); rule.className = 'rule';
+  [['Ionotrópico', ': es un canal; respuesta en milisegundos (nicotínico, GABA-A, NMDA, 5-HT3).'],
+   ['Metabotrópico', ': receptor con proteína G; respuesta en segundos (β, muscarínicos, opioides, H1, H2, GABA-B).']].forEach(([bt, t]) => {
+    const p = document.createElement('p'); p.style.margin = '4px 0'; const bb = document.createElement('b'); bb.textContent = bt; p.appendChild(bb); p.appendChild(document.createTextNode(t)); rule.appendChild(p);
+  });
+  card.appendChild(rule);
+  const again = document.createElement('button'); again.className = 'btn'; again.textContent = 'Intentar con casos nuevos'; again.style.marginTop = '12px';
+  again.addEventListener('click', start); card.appendChild(again);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+$('startBtn').addEventListener('click', start);
+$('nextBtn').addEventListener('click', next);
+</script>
+</body>
+</html>
