@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Atínale al receptor · Actividad grupal</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.12);
+    --s1: #2a78d6; --s2: #eb6834;
+    --good: #006300; --good-bg: #e8f3e8; --bad: #b02f2f; --bad-bg: #fbeaea;
+    --accent: #0b2545; --on-accent: #ffffff; --gold: #a07d10; --track: #cde2fb; --fill: #2a78d6;
+    --chip: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.12);
+      --s1: #3987e5; --s2: #d95926;
+      --good: #4cc24c; --good-bg: #14301a; --bad: #f08a8a; --bad-bg: #3a1c1c;
+      --accent: #86b6ef; --on-accent: #0d1b2e; --gold: #e0b93a; --track: #1c3552; --fill: #3987e5;
+      --chip: #262624;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; font-size: 16px; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 28px 16px 56px; }
+  .kicker { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--ink2); margin: 0 0 20px; max-width: 62ch; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; }
+  .steps { margin: 8px 0 18px; padding-left: 20px; color: var(--ink2); } .steps li { margin: 4px 0; }
+  .btn { font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 11px 20px; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .opt:focus-visible, .ghost:focus-visible, summary:focus-visible { outline: 3px solid var(--s1); outline-offset: 2px; }
+  .ghost { font: inherit; font-size: 13px; background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+  .status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 8px; flex-wrap: wrap; }
+  .status strong { color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-bottom: 16px; }
+  .bar > i { display: block; height: 100%; background: var(--fill); width: 0; transition: width .3s; }
+  .case-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+  .case-text { margin: 0; color: var(--ink); }
+  .clue { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--chip); color: var(--ink2); font-size: 14.5px; }
+  .clue b { color: var(--ink); }
+  .q { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+  .q:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+  .q h3 { font-size: 16px; margin: 0 0 10px; line-height: 1.4; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { font: inherit; font-size: 15px; cursor: pointer; text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 8px; padding: 10px 16px; }
+  .opt small { display: block; color: var(--muted); font-size: 12.5px; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; }
+  .opt.right { border-color: var(--good); background: var(--good-bg); }
+  .opt.right::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+  .fb { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14.5px; }
+  .fb.ok { background: var(--good-bg); } .fb.no { background: var(--bad-bg); }
+  .fb b.v { display: block; margin-bottom: 2px; } .fb.ok b.v { color: var(--good); } .fb.no b.v { color: var(--bad); }
+  .hint { font-size: 13.5px; color: var(--ink2); margin: 6px 0 0; }
+  .path { margin-top: 14px; }
+  .path .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 0 0 6px; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .flow span { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 13.5px; }
+  .flow i { font-style: normal; color: var(--muted); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 2px 8px; background: var(--track); color: var(--accent); margin-bottom: 8px; }
+  .nextrow { margin-top: 18px; text-align: right; }
+  .hero { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.02em; margin: 4px 0; }
+  .meter { margin: 10px 0; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .rule { border-left: 3px solid var(--gold); padding-left: 12px; margin: 14px 0; color: var(--ink2); }
+  .rule b { color: var(--ink); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink2); font-weight: 600; }
+  details { margin-top: 10px; } summary { cursor: pointer; font-size: 14px; color: var(--ink2); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) { h1 { font-size: 25px; } .opt { width: 100%; } .hero { font-size: 44px; } th, td { padding: 5px 4px; font-size: 13px; } }
+
+  .teams { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .team { flex: 1 1 140px; background: var(--surface); border: 1px solid var(--border); border-left-width: 6px; border-radius: 10px; padding: 8px 12px; }
+  .team .n { font-size: 14px; font-weight: 700; display: flex; justify-content: space-between; gap: 6px; }
+  .team .sc { font-size: 30px; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; }
+  .team .adj { display: inline-flex; gap: 4px; }
+  .mini { font: inherit; font-size: 13px; cursor: pointer; background: var(--chip); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; line-height: 22px; }
+  .team.out { opacity: .55; }
+  .inputs { display: grid; gap: 8px; margin: 8px 0 16px; }
+  .inputs label { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+  .inputs input, .setup input { font: inherit; font-size: 16px; color: var(--ink); background: var(--page); border: 1.5px solid var(--axis); border-radius: 8px; padding: 8px 10px; }
+  .inputs input[type=number] { width: 110px; font-size: 22px; }
+  .setup .row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .setup .row input { flex: 1; }
+  .banner { background: var(--track); color: var(--accent); border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 700; margin-bottom: 12px; display: inline-block; }
+  .cl { list-style: none; margin: 8px 0 14px; padding: 0; display: grid; gap: 8px; }
+  .cl li { border: 1.5px dashed var(--axis); border-radius: 10px; padding: 12px 16px; font-size: 22px; color: var(--muted); }
+  .cl li.on { border: 1.5px solid var(--accent); border-style: solid; color: var(--ink); background: var(--surface); }
+  .cl li b { display: inline-block; min-width: 72px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+  .big { font-size: 26px; font-weight: 700; line-height: 1.3; margin: 6px 0 12px; }
+  .pts { font-size: 15px; color: var(--ink2); }
+  .pts strong { color: var(--ink); font-size: 20px; }
+  .tact { display: grid; gap: 8px; margin: 10px 0; }
+  .tact .r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tact .r span.nm { min-width: 160px; font-weight: 600; }
+  .btn.sec { background: var(--chip); color: var(--ink); border: 1px solid var(--border); }
+  .btn.good { background: var(--good); color: #fff; }
+  .btn.bad { background: var(--bad); color: #fff; }
+  .btn[disabled] { opacity: .4; cursor: default; }
+  .ans { border-left: 4px solid var(--good); }
+  .rank li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--grid); font-size: 20px; }
+  .rank { list-style: none; padding: 0; margin: 10px 0; }
+  .rank li:first-child { font-weight: 700; font-size: 26px; }
+  @media (max-width: 560px) { .team .sc { font-size: 24px; } .cl li { font-size: 18px; } .big { font-size: 21px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="kicker">Farmacología Básica · Grupo 5PM6 · Actividad grupal</p>
+  <h1>Atínale al receptor</h1>
+  <p class="lead">Concurso por equipos para repasar los cuatro tipos de receptores, con el contenido de las sesiones 20 y 21. El docente conduce el juego y proyecta la pantalla.</p>
+
+  <section id="setup" class="card setup">
+    <h2>Equipos</h2>
+    <div id="teamInputs"></div>
+    <div class="row"><button class="btn sec" id="addTeam">+ Agregar equipo</button><button class="btn sec" id="remTeam">− Quitar equipo</button></div>
+    <details open>
+      <summary>Cómo se juega</summary>
+      <ol class="steps">
+        <li><b>Identifica el tipo de receptor (8 rondas)</b>: se revelan pistas una por una y los equipos solo deben decir de qué tipo es el receptor: ionotrópico, metabotrópico, enzimático o intracelular. Cuantas menos pistas use el equipo que acierta, más puntos gana: 5, 4, 3 o 2. Un equipo que falla queda fuera de esa ronda.</li>
+        <li><b>Atínale al número (4 rondas)</b>: cada equipo apuesta un número; gana quien se acerque más <u>sin pasarse</u>. Exacto: 5 puntos. Más cercano sin pasarse: 3. Si todos se pasan, el más cercano gana 1.</li>
+        <li>La última ronda vale <b>doble</b>. Gana el equipo con más puntos.</li>
+      </ol>
+    </details>
+    <p style="margin:14px 0 0"><button class="btn" id="startBtn">Comenzar juego</button></p>
+  </section>
+
+  <section id="game" hidden>
+    <div class="teams" id="teams"></div>
+    <div id="round"></div>
+  </section>
+
+  <section id="final" hidden></section>
+  <footer>Actividad didáctica de práctica. Los datos son simplificados. ENMH · IPN.</footer>
+</main>
+<script>
+/* ========== DATOS Y LÓGICA PURA ========== */
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const FAMILIES = ['Ionotrópico', 'Metabotrópico', 'Enzimático', 'Intracelular'];
+const CLUE_ROUNDS = [
+  { id: 'nic', family: 'Ionotrópico', receptor: 'Receptor nicotínico',
+    clues: ['Se encuentra en la placa neuromuscular.', 'Su respuesta aparece en milisegundos.', 'Es un canal por el que entra Na⁺ y despolariza.', 'La acetilcolina lo activa y el rocuronio lo bloquea.'],
+    path: ['ACh se une', 'Se abre el canal', 'Entra Na⁺', 'Despolarización', 'Contracción muscular'],
+    why: 'El receptor y el canal son la misma proteína, por eso la respuesta es tan rápida.' },
+  { id: 'gabaa', family: 'Ionotrópico', receptor: 'Receptor GABA-A',
+    clues: ['Su ligando es el GABA.', 'Su respuesta aparece en milisegundos.', 'Es un canal por el que entra Cl⁻ e hiperpolariza.', 'Las benzodiazepinas modulan este canal.'],
+    path: ['GABA se une', 'Se abre el canal', 'Entra Cl⁻', 'Hiperpolarización', 'Inhibición neuronal'],
+    why: 'Es un canal regulado por ligando: inhibe a la neurona porque entra Cl⁻.' },
+  { id: '5ht3', family: 'Ionotrópico', receptor: 'Receptor 5-HT3 de serotonina',
+    clues: ['Participa en el reflejo del vómito.', 'Su respuesta aparece en milisegundos.', 'Es un canal por el que entra Na⁺ y despolariza.', 'El ondansetrón lo bloquea.'],
+    path: ['Serotonina se une', 'Se abre el canal', 'Entra Na⁺', 'Despolarización', 'Reflejo del vómito'],
+    why: 'Es el único receptor de serotonina que es un canal iónico; los demás son metabotrópicos.' },
+  { id: 'b2', family: 'Metabotrópico', receptor: 'Receptor β2 adrenérgico (Gs)',
+    clues: ['Tiene siete segmentos transmembrana.', 'Su efecto aparece en segundos.', 'Aumenta el AMPc.', 'El salbutamol lo activa y produce broncodilatación.'],
+    path: ['Salbutamol se une', 'Se activa Gs', '↑ Adenilil ciclasa', '↑ AMPc', 'Broncodilatación'],
+    why: 'Se acopla a una proteína G (Gs), que activa la adenilil ciclasa y aumenta el AMPc.' },
+  { id: 'mu', family: 'Metabotrópico', receptor: 'Receptor opioide μ (Gi)',
+    clues: ['Tiene siete segmentos transmembrana.', 'Su efecto aparece en segundos.', 'Disminuye el AMPc.', 'La morfina lo activa y produce analgesia.'],
+    path: ['Morfina se une', 'Se activa Gi', '↓ Adenilil ciclasa', '↓ AMPc', 'Analgesia'],
+    why: 'Se acopla a una proteína G (Gi), que inhibe la adenilil ciclasa y baja el AMPc.' },
+  { id: 'h1', family: 'Metabotrópico', receptor: 'Receptor H1 de histamina (Gq)',
+    clues: ['Tiene siete segmentos transmembrana.', 'Su efecto aparece en segundos.', 'Activa la fosfolipasa C y sube el calcio intracelular.', 'La loratadina lo bloquea y alivia la alergia.'],
+    path: ['Histamina se une', 'Se activa Gq', 'Fosfolipasa C', '↑ IP₃ y Ca²⁺', 'Síntomas de alergia'],
+    why: 'Se acopla a una proteína G (Gq): activa la fosfolipasa C, que produce IP₃ y DAG y eleva el calcio.' },
+  { id: 'ins', family: 'Enzimático', receptor: 'Receptor de insulina',
+    clues: ['Atraviesa la membrana una sola vez.', 'Su respuesta tarda de minutos a horas.', 'Se autofosforila en residuos de tirosina.', 'Su señal lleva al transportador GLUT4 a la membrana.'],
+    path: ['Insulina se une', 'Autofosforilación', 'IRS-1', 'PI3K y Akt', 'GLUT4 en la membrana'],
+    why: 'Tiene actividad de tirosina cinasa propia. La señal viaja por fosforilación en cadena.' },
+  { id: 'egfr', family: 'Enzimático', receptor: 'Receptor EGFR',
+    clues: ['Lo activa un factor de crecimiento.', 'Su respuesta tarda de minutos a horas.', 'Tiene actividad de tirosina cinasa.', 'El gefitinib y el erlotinib lo inhiben en el cáncer de pulmón.'],
+    path: ['EGF se une', 'Dimerización', 'Autofosforilación', 'Ras/MAPK', 'Crecimiento celular'],
+    why: 'Es un receptor con actividad de cinasa. Los fármacos terminados en -nib inhiben esa actividad.' },
+  { id: 'jak', family: 'Enzimático', receptor: 'Receptor de citocinas asociado a JAK',
+    clues: ['Responde a interferones e interleucinas.', 'Su respuesta tarda de minutos a horas.', 'No tiene actividad enzimática propia: recluta cinasas JAK.', 'El tofacitinib inhibe esta vía en la artritis reumatoide.'],
+    path: ['Citocina se une', 'Se reclutan JAK', 'Se fosforila STAT', 'Cambia la expresión génica', 'Respuesta inmune'],
+    why: 'Pertenece al grupo de receptores enzimáticos y afines: la enzima (JAK) está asociada al receptor.' },
+  { id: 'gr', family: 'Intracelular', receptor: 'Receptor de glucocorticoides',
+    clues: ['Su ligando atraviesa la membrana celular.', 'Su efecto tarda horas.', 'Está en el citoplasma unido a HSP90 y actúa sobre el ADN.', 'La prednisona y la dexametasona lo activan.'],
+    path: ['Cortisol cruza la membrana', 'Se une al receptor', 'Se libera HSP90', 'Entra al núcleo', 'Cambia la transcripción'],
+    why: 'El efecto requiere síntesis de proteínas nuevas, por eso tarda horas.' },
+  { id: 'er', family: 'Intracelular', receptor: 'Receptor de estrógenos',
+    clues: ['Su ligando es una hormona esteroidea.', 'Su efecto tarda horas.', 'Funciona como factor de transcripción.', 'El tamoxifeno lo modula en el cáncer de mama.'],
+    path: ['Estradiol cruza la membrana', 'Se une al receptor', 'Se libera HSP90', 'Entra al núcleo', 'Cambia la transcripción'],
+    why: 'Es un receptor intracelular tipo I: actúa en el núcleo como factor de transcripción.' },
+  { id: 'tr', family: 'Intracelular', receptor: 'Receptor de hormonas tiroideas',
+    clues: ['Su ligando es una hormona liposoluble que cruza la membrana.', 'Su efecto tarda horas.', 'Ya está en el núcleo y forma heterodímero con RXR.', 'La levotiroxina actúa por esta vía en el hipotiroidismo.'],
+    path: ['T3 cruza la membrana', 'Se une al receptor nuclear', 'Heterodímero con RXR', 'Se une al ADN', 'Cambia la transcripción'],
+    why: 'Es un receptor intracelular tipo II: ya está en el núcleo y regula la transcripción.' },
+];
+
+const BID_ROUNDS = [
+  { id: 'tm', q: '¿Cuántos segmentos transmembrana tiene un receptor metabotrópico?', answer: 7, why: 'Los receptores acoplados a proteína G cruzan siete veces la membrana.' },
+  { id: 'fam', q: '¿Cuántos tipos de receptores estudiamos en la clasificación?', answer: 4, why: 'Ionotrópicos, metabotrópicos, enzimáticos e intracelulares.' },
+  { id: 'g', q: '¿Cuántos tipos de proteína G vimos (Gs, Gi, Gq…)?', answer: 3, why: 'Gs, Gi y Gq.' },
+  { id: 'gstep', q: '¿Cuántos pasos tiene el ciclo de activación de la proteína G que vimos en clase?', answer: 5, why: 'Unión, cambio de forma, intercambio de GDP por GTP, disociación y apagado.' },
+  { id: 'ins', q: '¿Cuántas subunidades tiene el receptor de insulina (α2β2)?', answer: 4, why: 'Dos subunidades α y dos β.' },
+  { id: 'enz', q: '¿Cuántos subtipos de receptores enzimáticos vimos en la diapositiva de subtipos?', answer: 4, why: 'Tirosina cinasa, asociados a JAK, guanilil ciclasa de membrana y serina/treonina cinasa.' },
+  { id: 'zn', q: '¿Cuántos dedos de zinc tiene el dominio que se une al ADN en un receptor intracelular?', answer: 2, why: 'Dos dedos de zinc reconocen el elemento de respuesta hormonal.' },
+  { id: 'nuc', q: '¿Cuántos pasos tiene el mecanismo de acción de un receptor intracelular, de la hormona al gen?', answer: 6, why: 'Cruza la membrana, se une al receptor, libera HSP90, entra al núcleo, se une al ADN y cambia la transcripción.' },
+];
+
+const CLUE_POINTS = [5, 4, 3, 2];
+const pointsForClues = (k) => CLUE_POINTS[Math.max(0, Math.min(CLUE_POINTS.length, k) - 1)];
+
+function buildRounds() {
+  const c0 = [].concat.apply([], FAMILIES.map((f) => shuffle(CLUE_ROUNDS.filter((x) => x.family === f)).slice(0, 2))), b = shuffle(BID_ROUNDS).slice(0, 4), c = shuffle(c0);
+  const out = [];
+  for (let i = 0; i < 4; i++) { out.push({ t: 'clue', d: c[2 * i] }); out.push({ t: 'clue', d: c[2 * i + 1] }); out.push({ t: 'bid', d: b[i] }); }
+  // reordena: clue, clue, bid, ... la última ronda es de apuesta y vale doble
+  out.forEach((r, i) => { r.mult = i === out.length - 1 ? 2 : 1; });
+  return out;
+}
+
+/* bids: [{team, val|null}] -> [{team, val, label, pts}] */
+function scoreBids(bids, answer) {
+  const valid = bids.filter((b) => b.val !== null && !isNaN(b.val));
+  const under = valid.filter((b) => b.val <= answer);
+  let winners = [], pts = 0, mode = '';
+  const exact = valid.filter((b) => b.val === answer);
+  if (exact.length) { winners = exact; pts = 5; mode = 'exact'; }
+  else if (under.length) { const best = Math.max.apply(null, under.map((b) => b.val)); winners = under.filter((b) => b.val === best); pts = 3; mode = 'under'; }
+  else if (valid.length) { const best = Math.min.apply(null, valid.map((b) => Math.abs(b.val - answer))); winners = valid.filter((b) => Math.abs(b.val - answer) === best); pts = 1; mode = 'allover'; }
+  return bids.map((b) => {
+    if (b.val === null || isNaN(b.val)) return { team: b.team, val: null, label: 'Sin apuesta', pts: 0 };
+    const w = winners.some((x) => x.team === b.team);
+    let label = b.val > answer ? 'Se pasó' : 'No fue el más cercano';
+    if (w) label = mode === 'exact' ? 'Exacto' : mode === 'under' ? 'Más cercano sin pasarse' : 'Todos se pasaron: el más cercano';
+    return { team: b.team, val: b.val, label, pts: w ? pts : 0 };
+  });
+}
+function ranking(teams) {
+  const s = teams.map((t, i) => ({ i, name: t.name, score: t.score })).sort((a, b) => b.score - a.score);
+  let pos = 0, prev = null;
+  s.forEach((t, k) => { if (t.score !== prev) pos = k + 1; t.pos = pos; prev = t.score; });
+  return s;
+}
+/* ========== FIN LÓGICA PURA ========== */
+
+/* ========== INTERFAZ ========== */
+const $ = (id) => document.getElementById(id);
+const COLORS = ['#2a78d6', '#eb6834', '#2f9e5b', '#8a56c9', '#c9a227', '#d6457a'];
+let teams = [], rounds = [], ri = 0, S = null;
+let setupNames = ['Equipo 1', 'Equipo 2', 'Equipo 3', 'Equipo 4'];
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+function btn(text, cls, fn) { const b = el('button', 'btn ' + (cls || ''), text); b.addEventListener('click', fn); return b; }
+
+function renderSetup() {
+  const box = $('teamInputs'); box.textContent = '';
+  setupNames.forEach((n, i) => {
+    const row = el('div', 'row'); const sw = el('span'); sw.style.cssText = 'width:10px;height:28px;border-radius:3px;background:' + COLORS[i % COLORS.length];
+    const inp = document.createElement('input'); inp.value = n; inp.maxLength = 28; inp.setAttribute('aria-label', 'Nombre del equipo ' + (i + 1));
+    inp.addEventListener('input', () => { setupNames[i] = inp.value; });
+    row.appendChild(sw); row.appendChild(inp); box.appendChild(row);
+  });
+  $('addTeam').disabled = setupNames.length >= 6; $('remTeam').disabled = setupNames.length <= 2;
+}
+$('addTeam').addEventListener('click', () => { if (setupNames.length < 6) { setupNames.push('Equipo ' + (setupNames.length + 1)); renderSetup(); } });
+$('remTeam').addEventListener('click', () => { if (setupNames.length > 2) { setupNames.pop(); renderSetup(); } });
+
+function start() {
+  teams = setupNames.map((n, i) => ({ name: (n || '').trim() || 'Equipo ' + (i + 1), score: 0 }));
+  rounds = buildRounds(); ri = 0;
+  $('setup').hidden = true; $('final').hidden = true; $('game').hidden = false;
+  loadRound();
+}
+$('startBtn').addEventListener('click', start);
+
+function renderTeams() {
+  const box = $('teams'); box.textContent = '';
+  teams.forEach((t, i) => {
+    const d = el('div', 'team' + (S && S.out && S.out.has(i) ? ' out' : '')); d.style.borderLeftColor = COLORS[i % COLORS.length];
+    const n = el('div', 'n'); n.appendChild(el('span', '', t.name));
+    const adj = el('span', 'adj');
+    [['−', -1], ['+', 1]].forEach(([s, v]) => { const m = el('button', 'mini', s); m.setAttribute('aria-label', (v < 0 ? 'Restar' : 'Sumar') + ' 1 punto a ' + t.name); m.addEventListener('click', () => { t.score += v; renderTeams(); }); adj.appendChild(m); });
+    n.appendChild(adj); d.appendChild(n); d.appendChild(el('div', 'sc', String(t.score)));
+    box.appendChild(d);
+  });
+}
+
+function loadRound() {
+  const r = rounds[ri];
+  S = { k: 1, out: new Set(), winner: -1, shown: false };
+  renderTeams(); renderRound();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function header(r, label) {
+  const box = el('div');
+  const st = el('div', 'status'); const a = el('span'); a.append('Ronda '); const s = el('strong', '', String(ri + 1)); a.appendChild(s); a.append(' de ' + rounds.length + ' · ' + label); st.appendChild(a);
+  box.appendChild(st);
+  const bar = el('div', 'bar'); const i = document.createElement('i'); i.style.width = (ri / rounds.length * 100) + '%'; bar.appendChild(i); box.appendChild(bar);
+  if (r.mult > 1) box.appendChild(el('div', 'banner', 'Ronda final: puntos dobles'));
+  return box;
+}
+
+function nextControls(parent) {
+  const row = el('div', 'nextrow'); const last = ri === rounds.length - 1;
+  row.appendChild(btn(last ? 'Ver resultados →' : 'Siguiente ronda →', '', () => { if (last) showFinal(); else { ri++; loadRound(); } }));
+  parent.appendChild(row);
+}
+
+function renderRound() {
+  const r = rounds[ri], box = $('round'); box.textContent = '';
+  const card = el('div', 'card'); box.appendChild(card);
+  if (r.t === 'clue') renderClue(r, card); else renderBid(r, card);
+}
+
+function renderClue(r, card) {
+  const d = r.d, m = r.mult;
+  card.appendChild(header(r, 'Identifica el tipo de receptor'));
+  card.appendChild(el('p', 'big', S.shown ? 'Es un receptor ' + d.family.toLowerCase() : '¿Qué tipo de receptor es?'));
+  const opts = el('div', 'flow'); opts.style.marginBottom = '10px';
+  FAMILIES.forEach((f) => { const sp = el('span', '', f); if (S.shown && f === d.family) sp.style.cssText = 'border-color:var(--good);background:var(--good-bg);font-weight:700'; opts.appendChild(sp); });
+  card.appendChild(opts);
+  const ul = el('ul', 'cl');
+  d.clues.forEach((c, i) => {
+    const li = el('li', i < S.k || S.shown ? 'on' : ''); li.appendChild(el('b', '', 'Pista ' + (i + 1)));
+    li.appendChild(document.createTextNode(i < S.k || S.shown ? c : 'Oculta'));
+    ul.appendChild(li);
+  });
+  card.appendChild(ul);
+  if (!S.shown) {
+    const now = pointsForClues(S.k) * m;
+    const p = el('p', 'pts'); p.append('Vale ahora '); p.appendChild(el('strong', '', now + ' pts')); p.append(' si acierta con ' + S.k + (S.k === 1 ? ' pista.' : ' pistas.')); card.appendChild(p);
+    const ctl = el('div', 'tact');
+    teams.forEach((t, i) => {
+      const row = el('div', 'r'); row.appendChild(el('span', 'nm', t.name));
+      const out = S.out.has(i);
+      const ok = btn('✓ Acertó', 'good', () => { t.score += now; S.winner = i; S.shown = true; renderTeams(); renderRound(); });
+      const no = btn('✗ Falló', 'sec', () => { S.out.add(i); renderTeams(); if (S.out.size === teams.length) { S.shown = true; } renderRound(); });
+      ok.disabled = out; no.disabled = out;
+      row.appendChild(ok); row.appendChild(no); if (out) row.appendChild(el('span', 'pts', 'Fuera de esta ronda')); ctl.appendChild(row);
+    });
+    card.appendChild(ctl);
+    const row = el('div', 'tact'); const r2 = el('div', 'r');
+    const rev = btn(S.k < d.clues.length ? 'Revelar pista ' + (S.k + 1) : 'No hay más pistas', 'sec', () => { S.k++; renderRound(); }); rev.disabled = S.k >= d.clues.length;
+    r2.appendChild(rev); r2.appendChild(btn('Mostrar respuesta sin puntos', 'sec', () => { S.shown = true; renderRound(); })); row.appendChild(r2); card.appendChild(row);
+    return;
+  }
+  // respuesta mostrada
+  const ans = el('div', 'card ans'); ans.style.marginTop = '14px';
+  ans.appendChild(el('p', 'case-title', d.family + ' · ' + d.receptor));
+  ans.appendChild(el('p', 'case-text', d.why));
+  const path = el('div', 'path'); path.appendChild(el('p', 'lbl', 'Ruta de señalización'));
+  const flow = el('div', 'flow'); d.path.forEach((s, i) => { if (i) flow.appendChild(el('i', '', '→')); flow.appendChild(el('span', '', s)); });
+  path.appendChild(flow); ans.appendChild(path); card.appendChild(ans);
+  if (S.winner < 0) card.appendChild(el('p', 'pts', 'Nadie obtuvo puntos en esta ronda.'));
+  nextControls(card);
+}
+
+function renderBid(r, card) {
+  const d = r.d, m = r.mult;
+  card.appendChild(header(r, 'Atínale al número'));
+  card.appendChild(el('p', 'big', d.q));
+  card.appendChild(el('p', 'pts', 'Gana el que se acerque más sin pasarse. Exacto: ' + 5 * m + ' pts. Más cercano sin pasarse: ' + 3 * m + ' pts. Si todos se pasan, el más cercano gana ' + 1 * m + '.'));
+  if (!S.shown) {
+    const inputs = el('div', 'inputs'); const refs = [];
+    teams.forEach((t, i) => {
+      const lab = el('label'); lab.appendChild(el('span', '', t.name)); lab.firstChild.style.minWidth = '160px';
+      const inp = document.createElement('input'); inp.type = 'number'; inp.min = '0'; inp.max = '99'; inp.step = '1'; inp.inputMode = 'numeric';
+      lab.appendChild(inp); inputs.appendChild(lab); refs.push(inp);
+    });
+    card.appendChild(inputs);
+    card.appendChild(btn('Revelar respuesta', '', () => {
+      const bids = refs.map((x, i) => ({ team: i, val: x.value === '' ? null : parseInt(x.value, 10) }));
+      S.res = scoreBids(bids, d.answer); S.res.forEach((x) => { teams[x.team].score += x.pts * m; }); S.m = m;
+      S.shown = true; renderTeams(); renderRound();
+    }));
+    return;
+  }
+  const ans = el('div', 'card ans'); ans.style.marginTop = '14px';
+  ans.appendChild(el('p', 'big', 'Respuesta: ' + d.answer)); ans.appendChild(el('p', 'case-text', d.why));
+  const tb = document.createElement('table'); const hd = document.createElement('tr');
+  ['Equipo', 'Apuesta', 'Resultado', 'Puntos'].forEach((h) => hd.appendChild(el('th', '', h))); tb.appendChild(hd);
+  S.res.forEach((x) => { const tr = document.createElement('tr'); [teams[x.team].name, x.val === null ? '—' : String(x.val), x.label, x.pts ? '+' + x.pts * S.m : '0'].forEach((v) => tr.appendChild(el('td', '', v))); tb.appendChild(tr); });
+  ans.appendChild(tb); card.appendChild(ans);
+  nextControls(card);
+}
+
+function showFinal() {
+  $('game').hidden = true; const f = $('final'); f.hidden = false; f.textContent = '';
+  const card = el('div', 'card'); f.appendChild(card);
+  card.appendChild(el('h2', '', 'Resultado final'));
+  const rk = ranking(teams); const ul = el('ol', 'rank');
+  rk.forEach((t) => { const li = el('li'); li.appendChild(el('span', '', t.pos + '.º  ' + t.name)); li.appendChild(el('span', '', t.score + ' pts')); ul.appendChild(li); });
+  card.appendChild(ul);
+  const top = rk.filter((t) => t.pos === 1);
+  card.appendChild(el('p', 'lead', top.length > 1 ? 'Empate en el primer lugar: ' + top.map((t) => t.name).join(' y ') + '.' : 'Ganador: ' + top[0].name + '.'));
+  const rule = el('div', 'rule'); rule.appendChild(el('b', '', 'Para recordar: ')); rule.appendChild(document.createTextNode('el tiempo de respuesta ayuda a clasificar. Ionotrópico: milisegundos. Metabotrópico: segundos. Enzimático: minutos a horas. Intracelular: horas.'));
+  card.appendChild(rule);
+  const again = btn('Jugar de nuevo', '', () => { f.hidden = true; $('setup').hidden = false; renderSetup(); window.scrollTo({ top: 0 }); }); card.appendChild(again);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+renderSetup();
+
+</script>
+</body>
+</html>
