@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Arma la vía de señalización · Actividad individual</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.12);
+    --s1: #2a78d6; --s2: #eb6834;
+    --good: #006300; --good-bg: #e8f3e8; --bad: #b02f2f; --bad-bg: #fbeaea;
+    --accent: #0b2545; --on-accent: #ffffff; --gold: #a07d10; --track: #cde2fb; --fill: #2a78d6;
+    --chip: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.12);
+      --s1: #3987e5; --s2: #d95926;
+      --good: #4cc24c; --good-bg: #14301a; --bad: #f08a8a; --bad-bg: #3a1c1c;
+      --accent: #86b6ef; --on-accent: #0d1b2e; --gold: #e0b93a; --track: #1c3552; --fill: #3987e5;
+      --chip: #262624;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; font-size: 16px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 56px; }
+  .kicker { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--ink2); margin: 0 0 20px; max-width: 62ch; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; }
+  .steps { margin: 8px 0 18px; padding-left: 20px; color: var(--ink2); } .steps li { margin: 4px 0; }
+  .btn { font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 11px 20px; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .opt:focus-visible, .ghost:focus-visible, summary:focus-visible { outline: 3px solid var(--s1); outline-offset: 2px; }
+  .ghost { font: inherit; font-size: 13px; background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+  .status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 8px; flex-wrap: wrap; }
+  .status strong { color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-bottom: 16px; }
+  .bar > i { display: block; height: 100%; background: var(--fill); width: 0; transition: width .3s; }
+  .case-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+  .case-text { margin: 0; color: var(--ink); }
+  .clue { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--chip); color: var(--ink2); font-size: 14.5px; }
+  .clue b { color: var(--ink); }
+  .q { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+  .q:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+  .q h3 { font-size: 16px; margin: 0 0 10px; line-height: 1.4; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { font: inherit; font-size: 15px; cursor: pointer; text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 8px; padding: 10px 16px; }
+  .opt small { display: block; color: var(--muted); font-size: 12.5px; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; }
+  .opt.right { border-color: var(--good); background: var(--good-bg); }
+  .opt.right::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+  .fb { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14.5px; }
+  .fb.ok { background: var(--good-bg); } .fb.no { background: var(--bad-bg); }
+  .fb b.v { display: block; margin-bottom: 2px; } .fb.ok b.v { color: var(--good); } .fb.no b.v { color: var(--bad); }
+  .hint { font-size: 13.5px; color: var(--ink2); margin: 6px 0 0; }
+  .path { margin-top: 14px; }
+  .path .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 0 0 6px; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .flow span { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 13.5px; }
+  .flow i { font-style: normal; color: var(--muted); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 2px 8px; background: var(--track); color: var(--accent); margin-bottom: 8px; }
+  .nextrow { margin-top: 18px; text-align: right; }
+  .hero { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.02em; margin: 4px 0; }
+  .meter { margin: 10px 0; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .rule { border-left: 3px solid var(--gold); padding-left: 12px; margin: 14px 0; color: var(--ink2); }
+  .rule b { color: var(--ink); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink2); font-weight: 600; }
+  details { margin-top: 10px; } summary { cursor: pointer; font-size: 14px; color: var(--ink2); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) { h1 { font-size: 25px; } .opt { width: 100%; } .hero { font-size: 44px; } th, td { padding: 5px 4px; font-size: 13px; } }
+
+  .teams { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .team { flex: 1 1 140px; background: var(--surface); border: 1px solid var(--border); border-left-width: 6px; border-radius: 10px; padding: 8px 12px; }
+  .team .n { font-size: 14px; font-weight: 700; display: flex; justify-content: space-between; gap: 6px; }
+  .team .sc { font-size: 30px; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; }
+  .team .adj { display: inline-flex; gap: 4px; }
+  .mini { font: inherit; font-size: 13px; cursor: pointer; background: var(--chip); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; line-height: 22px; }
+  .team.out { opacity: .55; }
+  .inputs { display: grid; gap: 8px; margin: 8px 0 16px; }
+  .inputs label { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+  .inputs input, .setup input { font: inherit; font-size: 16px; color: var(--ink); background: var(--page); border: 1.5px solid var(--axis); border-radius: 8px; padding: 8px 10px; }
+  .inputs input[type=number] { width: 110px; font-size: 22px; }
+  .setup .row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .setup .row input { flex: 1; }
+  .banner { background: var(--track); color: var(--accent); border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 700; margin-bottom: 12px; display: inline-block; }
+  .cl { list-style: none; margin: 8px 0 14px; padding: 0; display: grid; gap: 8px; }
+  .cl li { border: 1.5px dashed var(--axis); border-radius: 10px; padding: 12px 16px; font-size: 22px; color: var(--muted); }
+  .cl li.on { border: 1.5px solid var(--accent); border-style: solid; color: var(--ink); background: var(--surface); }
+  .cl li b { display: inline-block; min-width: 72px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+  .big { font-size: 26px; font-weight: 700; line-height: 1.3; margin: 6px 0 12px; }
+  .pts { font-size: 15px; color: var(--ink2); }
+  .pts strong { color: var(--ink); font-size: 20px; }
+  .tact { display: grid; gap: 8px; margin: 10px 0; }
+  .tact .r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tact .r span.nm { min-width: 160px; font-weight: 600; }
+  .btn.sec { background: var(--chip); color: var(--ink); border: 1px solid var(--border); }
+  .btn.good { background: var(--good); color: #fff; }
+  .btn.bad { background: var(--bad); color: #fff; }
+  .btn[disabled] { opacity: .4; cursor: default; }
+  .ans { border-left: 4px solid var(--good); }
+  .rank li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--grid); font-size: 20px; }
+  .rank { list-style: none; padding: 0; margin: 10px 0; }
+  .rank li:first-child { font-weight: 700; font-size: 26px; }
+  @media (max-width: 560px) { .team .sc { font-size: 24px; } .cl li { font-size: 18px; } .big { font-size: 21px; } }
+
+  .who { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 16px; }
+  .who label { display: grid; gap: 4px; font-size: 13px; color: var(--ink2); flex: 1 1 220px; }
+  .who input { font: inherit; font-size: 16px; color: var(--ink); background: var(--page); border: 1.5px solid var(--axis); border-radius: 8px; padding: 9px 10px; }
+  .slots { display: grid; gap: 6px; margin: 12px 0; }
+  .slot { display: flex; align-items: stretch; gap: 10px; }
+  .slot .no { flex: 0 0 34px; border-radius: 8px; background: var(--chip); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 700; color: var(--ink2); }
+  .slot .box { flex: 1; min-height: 52px; border: 2px dashed var(--axis); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; font-size: 15px; color: var(--muted); cursor: pointer; background: transparent; text-align: left; font-family: inherit; }
+  .slot .box.over { border-color: var(--accent); background: var(--chip); }
+  .slot .box.target { border-color: var(--accent); }
+  .slot .box.filled { border-style: solid; border-color: var(--axis); background: var(--surface); color: var(--ink); }
+  .slot .box.right { border-color: var(--good); background: var(--good-bg); color: var(--ink); }
+  .slot .box.right::before { content: "✓ "; color: var(--good); font-weight: 700; margin-right: 6px; }
+  .slot .box.wrong { border-color: var(--bad); background: var(--bad-bg); color: var(--ink); }
+  .slot .box.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; margin-right: 6px; }
+  .slot .box.locked { cursor: default; }
+  .bank { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; min-height: 48px; padding: 10px; border: 1px dashed var(--axis); border-radius: 10px; }
+  .bank.over { background: var(--chip); }
+  .pc { font: inherit; font-size: 14.5px; cursor: grab; background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 999px; padding: 8px 14px; text-align: left; }
+  .pc:hover { border-color: var(--accent); }
+  .pc.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--track); }
+  .pc.drag { opacity: .4; }
+  .lbl2 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 12px 0 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .res-line { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 15px; }
+  .copyok { font-size: 13px; color: var(--good); margin-left: 8px; }
+  @media (max-width: 560px) { .slot .box { font-size: 14px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 23 · Actividad individual</p>
+  <h1>Arma la vía de señalización</h1>
+  <p class="lead">Ordena los pasos de cada vía, desde el fármaco hasta la respuesta. Cada caso incluye una tarjeta que no pertenece a la vía.</p>
+
+  <section id="intro" class="card">
+    <h2>Antes de empezar</h2>
+    <div class="who">
+      <label>Nombre completo<input id="nm" maxlength="60" autocomplete="name"></label>
+      <label>Boleta (opcional)<input id="bol" maxlength="12" inputmode="numeric"></label>
+    </div>
+    <ol class="steps">
+      <li>Son 6 casos. En cada uno hay un fármaco y los pasos de su vía, mezclados.</li>
+      <li><b>Arrastra</b> cada tarjeta a su lugar. En celular o tableta: toca la tarjeta y luego toca el número donde va.</li>
+      <li>Toca una tarjeta ya colocada para devolverla.</li>
+      <li>Una tarjeta sobra: es un paso que no pertenece a esa vía.</li>
+      <li>Al comprobar se marcan los pasos correctos. Puedes corregir los incorrectos; la calificación cuenta tu primera comprobación.</li>
+    </ol>
+    <p><button class="btn" id="startBtn">Comenzar</button></p>
+  </section>
+
+  <section id="game" hidden>
+    <div class="status"><span id="stCase"></span><span id="stScore"></span></div>
+    <div class="bar" aria-hidden="true"><i id="pbar"></i></div>
+    <div class="card" id="caseCard"></div>
+  </section>
+
+  <section id="results" hidden></section>
+  <footer>Actividad didáctica de práctica. Los pasos están simplificados. ENMH · IPN.</footer>
+</main>
+<script>
+/* ========== DATOS Y LÓGICA PURA ========== */
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const CASES = [
+  { id: 'b2', title: 'Crisis asmática', text: 'Una paciente usa salbutamol, agonista β2. Ordena la vía que lleva a la broncodilatación.', family: 'Metabotrópico (Gs): vía del AMPc',
+    steps: ['Salbutamol se une al receptor β2', 'Se activa la proteína Gs', 'Se activa la adenilil ciclasa', 'ATP → AMPc', 'Se activa la proteína cinasa A (PKA)', 'Relajación del músculo liso bronquial'],
+    decoy: 'Se activa la fosfolipasa C',
+    why: 'β2 se acopla a Gs: activa la adenilil ciclasa, sube el AMPc y la PKA fosforila proteínas que relajan el bronquio. La fosfolipasa C pertenece a la vía de Gq.' },
+  { id: 'mu', title: 'Dolor intenso', text: 'Un paciente recibe morfina, agonista del receptor opioide μ. Ordena la vía.', family: 'Metabotrópico (Gi): vía del AMPc',
+    steps: ['Morfina se une al receptor opioide μ', 'Se activa la proteína Gi', 'Se inhibe la adenilil ciclasa', 'Disminuye el AMPc', 'Hay menos actividad de la PKA', 'Analgesia'],
+    decoy: 'Aumenta el IP₃',
+    why: 'Gi inhibe la adenilil ciclasa, por lo que el AMPc baja: es la vía contraria a Gs.' },
+  { id: 'a1', title: 'Hipotensión en urgencias', text: 'Se administra fenilefrina, agonista α1. Ordena la vía que produce vasoconstricción.', family: 'Metabotrópico (Gq): vía de IP₃, DAG y Ca²⁺',
+    steps: ['Fenilefrina se une al receptor α1', 'Se activa la proteína Gq', 'Se activa la fosfolipasa C', 'PIP₂ → IP₃ + DAG', 'El IP₃ libera Ca²⁺ del retículo', 'Contracción del músculo liso vascular'],
+    decoy: 'Aumenta el AMPc',
+    why: 'Gq activa la fosfolipasa C, que rompe el PIP₂ en IP₃ y DAG. El IP₃ eleva el Ca²⁺ intracelular y el músculo se contrae.' },
+  { id: 'no', title: 'Angina de pecho', text: 'Un paciente toma nitroglicerina, que libera óxido nítrico (NO). Ordena la vía.', family: 'Guanilil ciclasa soluble: vía del GMPc',
+    steps: ['Nitroglicerina libera NO', 'El NO activa la guanilil ciclasa soluble', 'GTP → GMPc', 'Se activa la proteína cinasa G (PKG)', 'Baja el Ca²⁺ y se desfosforila la miosina', 'Vasodilatación'],
+    decoy: 'Se activa la adenilil ciclasa',
+    why: 'El NO difunde a la célula y activa la guanilil ciclasa soluble. El GMPc activa la PKG, que relaja el músculo liso vascular.' },
+  { id: 'pde5', title: 'Sildenafil', text: 'El NO ya activó la guanilil ciclasa. Ordena cómo el sildenafil prolonga la vasodilatación.', family: 'Terminación de la señal: fosfodiesterasa 5',
+    steps: ['El NO activa la guanilil ciclasa', 'Se forma GMPc', 'Sildenafil inhibe la fosfodiesterasa 5', 'El GMPc ya no se degrada', 'La PKG sigue activa', 'Vasodilatación prolongada'],
+    decoy: 'Sildenafil activa la adenilil ciclasa',
+    why: 'La fosfodiesterasa 5 degrada el GMPc y apaga la señal. Al inhibirla, el GMPc se acumula y el efecto dura más.' },
+  { id: 'ins', title: 'Diabetes mellitus', text: 'Se aplica insulina. Ordena la vía de su receptor hasta la captación de glucosa.', family: 'Enzimático (tirosina cinasa)',
+    steps: ['Insulina se une al receptor', 'El receptor se autofosforila en tirosinas', 'Se fosforila el sustrato IRS-1', 'Se activan PI3K y Akt', 'GLUT4 llega a la membrana', 'Entra glucosa a la célula'],
+    decoy: 'Se activa la proteína Gs',
+    why: 'Es un receptor enzimático con actividad de tirosina cinasa: la señal viaja por fosforilación en cadena y no usa proteína G.' },
+];
+
+/* Tablero de un caso: pool (tarjetas mezcladas con ids), slots (null o id). Cada tarjeta: id = índice del paso correcto, o -1 para el señuelo */
+function makeCards(c) {
+  const cards = c.steps.map((t, i) => ({ id: i, t })).concat([{ id: -1, t: c.decoy }]);
+  return shuffle(cards);
+}
+/* Evalúa slots: devuelve arreglo de booleanos */
+function evaluate(slots) { return slots.map((v, i) => v === i); }
+function scoreOf(marks) { return marks.filter(Boolean).length; }
+/* Coloca la tarjeta cardId en el slot s (intercambia si hay otra) */
+function place(slots, pool, cardId, s) {
+  slots = slots.slice(); pool = pool.slice();
+  const from = slots.indexOf(cardId);
+  if (from >= 0) slots[from] = null; else pool = pool.filter((x) => x !== cardId);
+  const prev = slots[s];
+  slots[s] = cardId;
+  if (prev !== null && prev !== undefined) { if (from >= 0) slots[from] = prev; else pool.push(prev); }
+  return { slots, pool };
+}
+function unplace(slots, pool, s) {
+  slots = slots.slice(); pool = pool.slice();
+  if (slots[s] !== null) { pool.push(slots[s]); slots[s] = null; }
+  return { slots, pool };
+}
+/* ========== FIN LÓGICA PURA ========== */
+
+/* ========== INTERFAZ ========== */
+const $ = (id) => document.getElementById(id);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+function btn(text, cls, fn) { const b = el('button', 'btn ' + (cls || ''), text); b.type = 'button'; b.addEventListener('click', fn); return b; }
+
+let rounds = [], idx = 0, cards = [], pool = [], slots = [], locked = [], marks = null, firstDone = false, sel = null, drag = null, done = false;
+let results = [], total = 0, attempted = 0, who = { n: '', b: '' };
+
+function start() {
+  who = { n: $('nm').value.trim(), b: $('bol').value.trim() };
+  rounds = shuffle(CASES); idx = 0; results = []; total = 0; attempted = 0;
+  $('intro').hidden = true; $('results').hidden = true; $('game').hidden = false;
+  loadCase();
+}
+$('startBtn').addEventListener('click', start);
+
+function loadCase() {
+  const c = rounds[idx];
+  cards = makeCards(c); pool = cards.map((x) => x.id); slots = c.steps.map(() => null);
+  locked = c.steps.map(() => false); marks = null; firstDone = false; sel = null; done = false;
+  const st = $('stCase'); st.textContent = ''; st.append('Caso '); const b = el('strong', '', String(idx + 1)); st.appendChild(b); st.append(' de ' + rounds.length);
+  updateScore();
+  $('pbar').style.width = (idx / rounds.length * 100) + '%';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function updateScore() { $('stScore').textContent = 'Pasos correctos: ' + total + ' de ' + attempted; }
+const textOf = (id) => (id === -1 ? rounds[idx].decoy : rounds[idx].steps[id]);
+
+function doPlace(cardId, s) {
+  if (done || locked[s]) return;
+  const from = slots.indexOf(cardId); if (from >= 0 && locked[from]) return;
+  const r = place(slots, pool, cardId, s); slots = r.slots; pool = r.pool; sel = null; if (marks) clearMarkAt(s, from); render();
+}
+function clearMarkAt(s, from) { if (marks) { marks = marks.slice(); marks[s] = null; if (from >= 0) marks[from] = null; } }
+function doUnplace(s) { if (done || locked[s] || slots[s] === null) return; const r = unplace(slots, pool, s); slots = r.slots; pool = r.pool; sel = null; if (marks) { marks = marks.slice(); marks[s] = null; } render(); }
+
+function render() {
+  const c = rounds[idx], card = $('caseCard'); card.textContent = '';
+  card.appendChild(el('p', 'case-title', c.title));
+  card.appendChild(el('p', 'case-text', c.text));
+  card.appendChild(el('p', 'lbl2', 'Vía en orden'));
+  const sl = el('div', 'slots');
+  slots.forEach((cid, i) => {
+    const row = el('div', 'slot'); row.appendChild(el('div', 'no', String(i + 1)));
+    const bx = el('button', 'box'); bx.type = 'button';
+    if (cid === null) { bx.textContent = sel !== null ? 'Toca para colocar aquí' : 'Suelta una tarjeta aquí'; if (sel !== null) bx.classList.add('target'); }
+    else { bx.textContent = textOf(cid); bx.classList.add('filled'); }
+    if (marks && marks[i] === true) bx.classList.add('right');
+    else if (marks && marks[i] === false) bx.classList.add('wrong');
+    if (locked[i]) { bx.classList.add('locked'); bx.setAttribute('aria-label', 'Paso ' + (i + 1) + ' correcto: ' + textOf(cid)); }
+    if (cid !== null && !locked[i] && !done) {
+      bx.draggable = true;
+      bx.addEventListener('dragstart', (e) => { drag = cid; e.dataTransfer.setData('text/plain', String(cid)); e.dataTransfer.effectAllowed = 'move'; });
+      bx.addEventListener('dragend', () => { drag = null; });
+    }
+    bx.addEventListener('dragover', (e) => { if (!locked[i] && !done) { e.preventDefault(); bx.classList.add('over'); } });
+    bx.addEventListener('dragleave', () => bx.classList.remove('over'));
+    bx.addEventListener('drop', (e) => { e.preventDefault(); bx.classList.remove('over'); if (drag !== null) doPlace(drag, i); drag = null; });
+    bx.addEventListener('click', () => { if (locked[i] || done) return; if (sel !== null) doPlace(sel, i); else if (cid !== null) doUnplace(i); });
+    row.appendChild(bx); sl.appendChild(row);
+  });
+  card.appendChild(sl);
+
+  card.appendChild(el('p', 'lbl2', 'Tarjetas'));
+  const bank = el('div', 'bank');
+  bank.addEventListener('dragover', (e) => { if (!done) { e.preventDefault(); bank.classList.add('over'); } });
+  bank.addEventListener('dragleave', () => bank.classList.remove('over'));
+  bank.addEventListener('drop', (e) => { e.preventDefault(); bank.classList.remove('over'); if (drag !== null) { const s = slots.indexOf(drag); if (s >= 0) doUnplace(s); } drag = null; });
+  if (!pool.length) bank.appendChild(el('span', 'hint', done ? '' : 'No quedan tarjetas'));
+  pool.forEach((id) => {
+    const pc = el('button', 'pc' + (sel === id ? ' sel' : ''), textOf(id)); pc.type = 'button'; pc.draggable = !done;
+    pc.setAttribute('aria-pressed', sel === id ? 'true' : 'false');
+    pc.addEventListener('click', () => { if (done) return; sel = sel === id ? null : id; render(); });
+    pc.addEventListener('dragstart', (e) => { drag = id; e.dataTransfer.setData('text/plain', String(id)); e.dataTransfer.effectAllowed = 'move'; });
+    pc.addEventListener('dragend', () => { drag = null; });
+    bank.appendChild(pc);
+  });
+  card.appendChild(bank);
+
+  const act = el('div', 'actions');
+  const full = slots.every((v) => v !== null);
+  if (!done) {
+    const chk = btn('Comprobar', '', onCheck); chk.disabled = !full; act.appendChild(chk);
+    if (marks && marks.some((m) => m === false)) act.appendChild(btn('Devolver las incorrectas', 'sec', returnWrong));
+    if (firstDone) act.appendChild(btn('Ver respuesta', 'sec', showAnswer));
+    if (!full) act.appendChild(el('span', 'hint', 'Coloca los ' + slots.length + ' pasos para comprobar.'));
+  } else {
+    const last = idx === rounds.length - 1;
+    act.appendChild(btn(last ? 'Ver resultados →' : 'Siguiente caso →', '', () => { if (last) showResults(); else { idx++; loadCase(); } }));
+  }
+  card.appendChild(act);
+
+  if (done) {
+    const fb = el('div', 'fb ok'); fb.style.marginTop = '14px';
+    fb.appendChild(el('b', 'v', c.family)); fb.appendChild(document.createTextNode(c.why));
+    card.appendChild(fb);
+  }
+}
+
+function onCheck() {
+  const m = evaluate(slots);
+  if (!firstDone) { firstDone = true; const sc = scoreOf(m); results.push({ id: rounds[idx].id, title: rounds[idx].title, family: rounds[idx].family, score: sc, n: slots.length }); total += sc; attempted += slots.length; updateScore(); }
+  marks = m; locked = m.slice();
+  if (m.every(Boolean)) done = true;
+  render();
+}
+function returnWrong() {
+  slots.forEach((v, i) => { if (v !== null && !locked[i]) { pool.push(v); slots[i] = null; } });
+  marks = marks.map((m) => (m === true ? true : null)); render();
+}
+function showAnswer() {
+  const c = rounds[idx];
+  slots = c.steps.map((_, i) => i); pool = [-1]; marks = slots.map(() => true); locked = slots.map(() => true); done = true; render();
+}
+
+function showResults() {
+  $('game').hidden = true; const r = $('results'); r.hidden = false; r.textContent = '';
+  const n = results.reduce((a, x) => a + x.n, 0), pct = Math.round(total / n * 100);
+  const card = el('div', 'card'); r.appendChild(card);
+  card.appendChild(el('h2', '', 'Resultados' + (who.n ? ' de ' + who.n : '')));
+  card.appendChild(el('div', 'hero', pct + ' %'));
+  const p = el('p', 'lead'); p.style.margin = '0 0 12px'; p.textContent = total + ' pasos correctos de ' + n + ' en la primera comprobación. ' + (pct >= 90 ? 'Dominas las vías de señalización.' : pct >= 70 ? 'Vas bien; repasa los casos con menos aciertos.' : 'Repasa las vías y vuelve a intentarlo.');
+  card.appendChild(p);
+  results.forEach((x) => {
+    const row = el('div', 'res-line'); const a = el('span', '', x.title + ' · ' + x.family); const b = el('span', '', x.score + ' de ' + x.n);
+    row.appendChild(a); row.appendChild(b); card.appendChild(row);
+  });
+  const rule = el('div', 'rule');
+  [['Gs: ', 'adenilil ciclasa, ↑ AMPc, PKA.'], ['Gi: ', 'inhibe la adenilil ciclasa, ↓ AMPc.'], ['Gq: ', 'fosfolipasa C, PIP₂ → IP₃ + DAG, ↑ Ca²⁺.'], ['GMPc: ', 'guanilil ciclasa, PKG; la PDE5 lo degrada.'], ['Enzimático: ', 'fosforilación en cadena, sin proteína G.']].forEach(([b, t]) => {
+    const q = el('p'); q.style.margin = '3px 0'; q.appendChild(el('b', '', b)); q.appendChild(document.createTextNode(t)); rule.appendChild(q);
+  });
+  card.appendChild(rule);
+  const act = el('div', 'actions');
+  const txt = () => ['Arma la vía de señalización · Sesión 23 · Farmacología Básica 5PM6', 'Nombre: ' + (who.n || '(sin nombre)') + (who.b ? ' · Boleta: ' + who.b : ''), 'Fecha: ' + new Date().toLocaleDateString('es-MX'), 'Calificación: ' + total + '/' + n + ' (' + pct + ' %)'].concat(results.map((x) => '- ' + x.title + ': ' + x.score + '/' + x.n)).join('\n');
+  const ok = el('span', 'copyok');
+  act.appendChild(btn('Copiar mi resultado', 'sec', () => {
+    const t = txt();
+    const done = () => { ok.textContent = 'Copiado'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => fallback(t, done)); else fallback(t, done);
+  }));
+  act.appendChild(btn('Intentar de nuevo', '', () => { r.hidden = true; $('intro').hidden = false; window.scrollTo({ top: 0 }); }));
+  act.appendChild(ok); card.appendChild(act);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function fallback(t, cb) { try { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); cb(); } catch (e) { /* sin portapapeles */ } }
+
+</script>
+</body>
+</html>
