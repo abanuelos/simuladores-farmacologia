@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Genera la curva · Interacciones y regulación de receptores</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.12);
+    --s1: #2a78d6; --s2: #eb6834;
+    --good: #006300; --good-bg: #e8f3e8; --bad: #b02f2f; --bad-bg: #fbeaea;
+    --accent: #0b2545; --on-accent: #ffffff; --gold: #a07d10; --track: #cde2fb; --fill: #2a78d6;
+    --chip: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.12);
+      --s1: #3987e5; --s2: #d95926;
+      --good: #4cc24c; --good-bg: #14301a; --bad: #f08a8a; --bad-bg: #3a1c1c;
+      --accent: #86b6ef; --on-accent: #0d1b2e; --gold: #e0b93a; --track: #1c3552; --fill: #3987e5;
+      --chip: #262624;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; font-size: 16px; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 28px 16px 56px; }
+  .kicker { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--ink2); margin: 0 0 20px; max-width: 62ch; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 17px; margin: 0 0 8px; }
+  .steps { margin: 8px 0 18px; padding-left: 20px; color: var(--ink2); } .steps li { margin: 4px 0; }
+  .btn { font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 11px 20px; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .opt:focus-visible, .ghost:focus-visible, summary:focus-visible { outline: 3px solid var(--s1); outline-offset: 2px; }
+  .ghost { font: inherit; font-size: 13px; background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+  .status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 8px; flex-wrap: wrap; }
+  .status strong { color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-bottom: 16px; }
+  .bar > i { display: block; height: 100%; background: var(--fill); width: 0; transition: width .3s; }
+  .case-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+  .case-text { margin: 0; color: var(--ink); }
+  .clue { margin: 12px 0 0; padding: 10px 12px; border-radius: 8px; background: var(--chip); color: var(--ink2); font-size: 14.5px; }
+  .clue b { color: var(--ink); }
+  .q { border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px; }
+  .q:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+  .q h3 { font-size: 16px; margin: 0 0 10px; line-height: 1.4; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { font: inherit; font-size: 15px; cursor: pointer; text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 8px; padding: 10px 16px; }
+  .opt small { display: block; color: var(--muted); font-size: 12.5px; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; }
+  .opt.right { border-color: var(--good); background: var(--good-bg); }
+  .opt.right::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+  .fb { margin-top: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14.5px; }
+  .fb.ok { background: var(--good-bg); } .fb.no { background: var(--bad-bg); }
+  .fb b.v { display: block; margin-bottom: 2px; } .fb.ok b.v { color: var(--good); } .fb.no b.v { color: var(--bad); }
+  .hint { font-size: 13.5px; color: var(--ink2); margin: 6px 0 0; }
+  .path { margin-top: 14px; }
+  .path .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 0 0 6px; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .flow span { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 13.5px; }
+  .flow i { font-style: normal; color: var(--muted); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 2px 8px; background: var(--track); color: var(--accent); margin-bottom: 8px; }
+  .nextrow { margin-top: 18px; text-align: right; }
+  .hero { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.02em; margin: 4px 0; }
+  .meter { margin: 10px 0; }
+  .meter .row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+  .rule { border-left: 3px solid var(--gold); padding-left: 12px; margin: 14px 0; color: var(--ink2); }
+  .rule b { color: var(--ink); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 4px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--ink2); font-weight: 600; }
+  details { margin-top: 10px; } summary { cursor: pointer; font-size: 14px; color: var(--ink2); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) { h1 { font-size: 25px; } .opt { width: 100%; } .hero { font-size: 44px; } th, td { padding: 5px 4px; font-size: 13px; } }
+
+  .optsg { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+  .optsg .opt { width: 100%; }
+  .gl { font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 12px 0 6px; grid-column: 1 / -1; }
+  .gl:first-child { margin-top: 0; }
+  .chartbox { margin-top: 4px; }
+  svg.chart { width: 100%; height: auto; display: block; }
+  svg.chart .grid { stroke: var(--grid); stroke-width: 1; }
+  svg.chart .axis { stroke: var(--axis); stroke-width: 1.5; }
+  svg.chart text { fill: var(--ink2); font: 12px system-ui, sans-serif; }
+  svg.chart text.t { fill: var(--muted); font-size: 11.5px; }
+  svg.chart .c1 { stroke: var(--s1); } svg.chart .c2 { stroke: var(--s2); }
+  svg.chart .ln { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  svg.chart .ref { fill: none; stroke-width: 2; stroke-dasharray: 6 5; opacity: .75; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 6px 0 0; font-size: 13.5px; color: var(--ink2); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend svg { width: 30px; height: 8px; }
+  .legend line { stroke-width: 3; }
+  .legend .c1 { stroke: var(--s1); } .legend .c2 { stroke: var(--s2); }
+  .sl { margin: 14px 0 4px; }
+  .sl label { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 4px; flex-wrap: wrap; }
+  .sl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .read { font-size: 13.5px; color: var(--ink2); background: var(--chip); border-radius: 8px; padding: 8px 12px; margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .read b { color: var(--ink); }
+  .minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 12px 0; }
+  .mini { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--surface); }
+  .mini h4 { margin: 0 0 2px; font-size: 14px; } .mini p { margin: 0 0 4px; font-size: 12.5px; color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 26</p>
+  <h1>Genera la curva dosis-respuesta</h1>
+  <p class="lead">Lee cada caso, observa su curva dosis-respuesta y elige qué tipo de interacción o de regulación de receptores representa.</p>
+
+  <section id="intro" class="card">
+    <h2>Cómo funciona</h2>
+    <ol class="steps">
+      <li>Son 8 casos, en orden aleatorio.</li>
+      <li>Cada caso trae su curva: línea punteada, antes; línea continua, después. Puedes moverla con la barra.</li>
+      <li>Eliges entre 4 opciones. Al responder ves la explicación de por qué la curva se comporta así.</li>
+    </ol>
+    <details open>
+      <summary>Tabla de referencia</summary>
+      <table>
+        <thead><tr><th>Tipo</th><th>Qué ocurre con la curva</th></tr></thead>
+        <tbody>
+          <tr><td><b>Sumación</b></td><td>Se desplaza a la izquierda lo que equivale a la suma de los efectos</td></tr>
+          <tr><td><b>Potenciación</b></td><td>Se desplaza a la izquierda más de lo esperado por la suma</td></tr>
+          <tr><td><b>Sensibilización</b></td><td>Se desplaza a la izquierda: el tejido responde más</td></tr>
+          <tr><td><b>Antagonismo competitivo</b></td><td>A la derecha, mismo Emax</td></tr>
+          <tr><td><b>Antagonismo no competitivo</b></td><td>Baja el Emax</td></tr>
+          <tr><td><b>Antagonismo fisiológico</b></td><td>El efecto neto baja; otro agonista actúa en receptores distintos</td></tr>
+          <tr><td><b>Antagonismo químico</b></td><td>A la derecha: hay menos fármaco libre</td></tr>
+          <tr><td><b>Desensibilización</b></td><td>Baja el Emax; homóloga: solo un receptor; heteróloga: varios</td></tr>
+          <tr><td><b>Regulación al alza</b></td><td>A la izquierda: supersensibilidad al agonista</td></tr>
+        </tbody>
+      </table>
+    </details>
+    <p style="margin:16px 0 0"><button class="btn" id="startBtn">Comenzar</button></p>
+  </section>
+
+  <section id="game" hidden>
+    <div class="status"><span id="stCase"></span><span id="stScore"></span></div>
+    <div class="bar" aria-hidden="true"><i id="pbar"></i></div>
+    <div class="card">
+      <p class="case-title" id="caseTitle"></p>
+      <p class="case-text" id="caseText"></p>
+    </div>
+    <div class="card" id="ccard"></div>
+    <div class="card" id="qcard"></div>
+    <div class="nextrow" id="nextrow" hidden><button class="btn" id="nextBtn">Siguiente caso →</button></div>
+  </section>
+
+  <section id="results" hidden></section>
+  <footer>Actividad didáctica de práctica. Las curvas son modelos ilustrativos (E = Emax · D / (EC50 + D)). ENMH · IPN.</footer>
+</main>
+<script>
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const TYPES = [
+  ['Sinergismo', [['suma', 'Sumación'], ['poten', 'Potenciación'], ['sensi', 'Sensibilización']]],
+  ['Antagonismo', [['comp', 'Competitivo'], ['nocomp', 'No competitivo'], ['fisio', 'Fisiológico'], ['quim', 'Químico']]],
+  ['Regulación de receptores', [['homo', 'Desensibilización homóloga'], ['hetero', 'Desensibilización heteróloga'], ['alza', 'Regulación al alza (rebote)']]],
+];
+const LABEL = {};
+TYPES.forEach(([g, os]) => os.forEach(([k, l]) => { LABEL[k] = (g === 'Sinergismo' ? 'sinergismo: ' : g === 'Antagonismo' ? 'antagonismo ' : '') + l.toLowerCase(); }));
+const CURVES = [
+  ['der', 'Se desplaza a la derecha, con el mismo Emax'],
+  ['izq', 'Se desplaza a la izquierda, con el mismo Emax'],
+  ['emax', 'Baja el Emax'],
+  ['igual', 'No cambia'],
+];
+const NAME = { suma: 'Sinergismo: sumación', poten: 'Sinergismo: potenciación', sensi: 'Sinergismo: sensibilización', comp: 'Antagonismo competitivo', nocomp: 'Antagonismo no competitivo', fisio: 'Antagonismo fisiológico', quim: 'Antagonismo químico', homo: 'Desensibilización homóloga', hetero: 'Desensibilización heteróloga', alza: 'Regulación al alza (rebote)' };
+const CLABEL = Object.fromEntries(CURVES);
+
+// series: [{name, ctrl:{e,ec}, eff:{e,ec}, color:1|2}] ; ctrl = punteada, eff = continua
+const CASES = [
+  { id: 1, opts: ['quim','comp','fisio','nocomp'], title: 'Sobredosis de heparina', drug: 'la protamina',
+    text: 'Un paciente con sobredosis de heparina recibe protamina y se revierte el sangrado.',
+    type: 'quim', curve: 'der',
+    hintT: 'La protamina no ocupa ningún receptor: reacciona directamente con la heparina.',
+    hintC: 'Si hay menos heparina libre, hace falta más dosis para el mismo efecto.',
+    whyT: 'La protamina se une a la heparina y la inactiva, sin pasar por ningún receptor: antagonismo químico.',
+    whyC: 'Con menos heparina libre, la curva se desplaza a la derecha con el mismo Emax: una dosis suficientemente alta de heparina supera a la protamina. Se parece al antagonismo competitivo en la curva, pero el mecanismo es distinto: aquí se neutraliza al fármaco, no se bloquea el receptor.',
+    xlab: 'Dosis de heparina (relativa, escala log)', ylab: 'Efecto anticoagulante (%)',
+    series: [{ name: 'Heparina sola (antes) / con protamina (después)', ctrl: { e: 100, ec: 10 }, eff: { e: 100, ec: 45 }, color: 1 }],
+    slider: 'Cantidad de protamina' },
+  { id: 2, opts: ['fisio','nocomp','quim','comp'], title: 'Reacción alérgica', drug: 'la adrenalina',
+    text: 'La adrenalina revierte el broncoespasmo causado por histamina en una reacción alérgica.',
+    type: 'fisio', curve: 'emax',
+    hintT: 'La histamina y la adrenalina actúan sobre receptores distintos y con efectos opuestos.',
+    hintC: 'La adrenalina relaja el bronquio: la respuesta contráctil a la histamina tiene un máximo menor.',
+    whyT: 'Dos agonistas con efectos opuestos en receptores distintos (H1 y β2): antagonismo fisiológico.',
+    whyC: 'El efecto neto de la histamina baja porque la adrenalina produce el efecto contrario; el receptor H1 sigue libre. El perfil exacto depende de la dosis de cada agonista.',
+    xlab: 'Dosis de histamina (relativa, escala log)', ylab: 'Broncoconstricción (%)',
+    series: [{ name: 'Histamina sola (antes) / con adrenalina (después)', ctrl: { e: 100, ec: 10 }, eff: { e: 50, ec: 14 }, color: 1 }],
+    slider: 'Dosis de adrenalina' },
+  { id: 3, opts: ['poten','suma','sensi','fisio'], title: 'Infección bacteriana', drug: 'el ácido clavulánico',
+    text: 'El ácido clavulánico, casi sin efecto antibacteriano propio, aumenta el efecto de la amoxicilina.',
+    type: 'poten', curve: 'izq',
+    hintT: 'Un fármaco sin efecto propio aumenta el efecto del otro: 0 + 1 es mayor que 1.',
+    hintC: 'Con el clavulánico, hace falta menos amoxicilina para el mismo efecto.',
+    whyT: 'El clavulánico inhibe la β-lactamasa y protege a la amoxicilina, así que el efecto combinado supera lo esperado: potenciación.',
+    whyC: 'La curva se desplaza a la izquierda con el mismo Emax: sube la potencia aparente de la amoxicilina.',
+    xlab: 'Dosis de amoxicilina (relativa, escala log)', ylab: 'Efecto antibacteriano (%)',
+    series: [{ name: 'Amoxicilina sola (antes) / con clavulánico (después)', ctrl: { e: 100, ec: 10 }, eff: { e: 100, ec: 1.5 }, color: 1 }],
+    slider: 'Dosis de ácido clavulánico' },
+  { id: 4, opts: ['suma','poten','sensi','quim'], title: 'Analgesia combinada', drug: 'la combinación',
+    text: 'Paracetamol con ibuprofeno produce una analgesia igual a la suma de cada uno.',
+    type: 'suma', curve: 'izq',
+    hintT: 'El efecto combinado es exactamente la suma: 1 + 1 = 2.',
+    hintC: 'Sumar dos dosis equivalentes es como duplicar la dosis de uno solo.',
+    whyT: 'El efecto combinado es igual a la suma de los efectos individuales: sumación.',
+    whyC: 'La curva se desplaza a la izquierda, pero solo lo que equivale a sumar las dosis (aquí, a la mitad de la EC50). Una potenciación desplazaría más la curva.',
+    xlab: 'Dosis de paracetamol (relativa, escala log)', ylab: 'Analgesia (%)',
+    series: [{ name: 'Paracetamol solo (antes) / con ibuprofeno equivalente (después)', ctrl: { e: 100, ec: 10 }, eff: { e: 100, ec: 5 }, color: 1 }],
+    slider: 'Dosis de ibuprofeno (equivalente)' },
+  { id: 5, opts: ['homo','hetero','alza','nocomp'], title: 'Asma y uso repetido', drug: 'la exposición repetida',
+    text: 'Con salbutamol varias veces al día, la broncodilatación baja; los demás receptores de la célula no cambian.',
+    type: 'homo', curve: 'emax',
+    hintT: 'Solo se afecta el receptor que se activó una y otra vez.',
+    hintC: 'Los receptores β2 desacoplados ya no activan a su proteína G: se pierde respuesta máxima.',
+    whyT: 'Solo pierde respuesta el receptor activado por su propio agonista (GRK y β-arrestina): desensibilización homóloga.',
+    whyC: 'Baja el Emax (y sube algo la EC50) de la curva del receptor β2. La curva del otro receptor de la misma célula se mantiene igual.',
+    xlab: 'Dosis del agonista (relativa, escala log)', ylab: 'Respuesta (% del máximo basal)',
+    series: [
+      { name: 'Receptor β2 con salbutamol (antes / después del uso repetido)', ctrl: { e: 100, ec: 10 }, eff: { e: 55, ec: 25 }, color: 1 },
+      { name: 'Otro receptor de la célula (sin cambio)', ctrl: { e: 100, ec: 60 }, eff: { e: 100, ec: 60 }, color: 2 } ],
+    slider: 'Tiempo de exposición repetida al salbutamol' },
+  { id: 6, opts: ['hetero','homo','alza','fisio'], title: 'Segundos mensajeros sostenidos', drug: 'la elevación sostenida del AMPc',
+    text: 'Tras elevar el AMPc de forma sostenida, varios receptores Gs de la célula responden menos.',
+    type: 'hetero', curve: 'emax',
+    hintT: 'Se afectan varios receptores, aunque no todos hayan sido activados por su agonista.',
+    hintC: 'La PKA fosforila a varios receptores y los desacopla: baja la respuesta máxima de todos.',
+    whyT: 'La PKA (segundo mensajero) desensibiliza a varios receptores distintos: desensibilización heteróloga.',
+    whyC: 'Baja el Emax de las curvas de los receptores Gs, no solo de uno. Compara con el caso anterior, donde el segundo receptor no cambiaba.',
+    xlab: 'Dosis del agonista (relativa, escala log)', ylab: 'Respuesta (% del máximo basal)',
+    series: [
+      { name: 'Receptor Gs 1 (antes / después)', ctrl: { e: 100, ec: 10 }, eff: { e: 55, ec: 25 }, color: 1 },
+      { name: 'Receptor Gs 2 (antes / después)', ctrl: { e: 100, ec: 60 }, eff: { e: 55, ec: 120 }, color: 2 } ],
+    slider: 'Tiempo de elevación del AMPc' },
+  { id: 7, opts: ['alza','homo','sensi','poten'], title: 'Suspensión de β-bloqueador', drug: 'la suspensión del propranolol',
+    text: 'Un paciente suspende el propranolol de golpe y presenta taquicardia e hipertensión.',
+    type: 'alza', curve: 'izq',
+    hintT: 'Con el bloqueo crónico, la célula aumentó el número de receptores.',
+    hintC: 'Con más receptores disponibles, la adrenalina endógena produce más efecto con menos dosis.',
+    whyT: 'El bloqueo crónico aumentó los receptores β; al retirar el antagonista, hay respuesta exagerada: regulación al alza (rebote).',
+    whyC: 'La curva del agonista se desplaza a la izquierda (supersensibilidad): se necesita menos agonista para el mismo efecto. Por eso el β-bloqueador se retira de forma gradual.',
+    xlab: 'Dosis de adrenalina (relativa, escala log)', ylab: 'Respuesta cardiovascular (%)',
+    series: [{ name: 'Antes del tratamiento crónico / tras suspender el propranolol', ctrl: { e: 100, ec: 10 }, eff: { e: 100, ec: 2.5 }, color: 1 }],
+    slider: 'Duración del tratamiento previo con propranolol' },
+  { id: 8, opts: ['sensi','poten','alza','suma'], title: 'Anestesia con halotano', drug: 'el halotano',
+    text: 'Con halotano, el corazón responde con arritmias a dosis normales de adrenalina.',
+    type: 'sensi', curve: 'izq',
+    hintT: 'El tejido responde más a la adrenalina por la presencia del otro fármaco.',
+    hintC: 'La dosis de adrenalina que antes no causaba arritmia ahora sí.',
+    whyT: 'El halotano aumenta la sensibilidad del miocardio a las catecolaminas: sensibilización.',
+    whyC: 'La curva de la respuesta arrítmica se desplaza a la izquierda: hace falta menos adrenalina para el mismo efecto.',
+    xlab: 'Dosis de adrenalina (relativa, escala log)', ylab: 'Respuesta arrítmica (%)',
+    series: [{ name: 'Adrenalina sola (antes) / con halotano (después)', ctrl: { e: 100, ec: 10 }, eff: { e: 100, ec: 3 }, color: 1 }],
+    slider: 'Concentración de halotano' },
+];
+
+const $ = (id) => document.getElementById(id);
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVGNS, tag); Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v)); if (parent) parent.appendChild(e); return e; }
+
+// ---- curvas ----
+const XMIN = -1, XMAX = 3;
+function resp(d, e, ec) { return e * d / (ec + d); }
+function interp(c, t) { return { e: c.ctrl.e + t * (c.eff.e - c.ctrl.e), ec: c.ctrl.ec * Math.pow(c.eff.ec / c.ctrl.ec, t) }; }
+function drawChart(host, cs, small) {
+  const W = small ? 360 : 640, H = small ? 220 : 340, L = small ? 40 : 54, R = 14, T = 10, B = small ? 34 : 46;
+  const iw = W - L - R, ih = H - T - B;
+  const X = (lx) => L + (lx - XMIN) / (XMAX - XMIN) * iw, Y = (v) => T + (1 - v / 100) * ih;
+  host.textContent = '';
+  const svg = el('svg', { class: 'chart', viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Curva dosis-respuesta: ' + cs.title + '. ' + cs.whyC }, host);
+  [0, 50, 100].forEach((v) => { el('line', { class: 'grid', x1: L, x2: W - R, y1: Y(v), y2: Y(v) }, svg); const t = el('text', { x: L - 6, y: Y(v) + 4, 'text-anchor': 'end', class: 't' }, svg); t.textContent = v; });
+  [-1, 0, 1, 2, 3].forEach((lx) => { const t = el('text', { x: X(lx), y: H - B + 16, 'text-anchor': 'middle', class: 't' }, svg); t.textContent = Math.pow(10, lx) >= 1 ? Math.pow(10, lx) : '0,1'; });
+  el('line', { class: 'axis', x1: L, x2: W - R, y1: Y(0), y2: Y(0) }, svg); el('line', { class: 'axis', x1: L, x2: L, y1: T, y2: Y(0) }, svg);
+  if (!small) {
+    const xt = el('text', { x: L + iw / 2, y: H - 6, 'text-anchor': 'middle' }, svg); xt.textContent = cs.xlab;
+    const yt = el('text', { x: 14, y: T + ih / 2, 'text-anchor': 'middle', transform: 'rotate(-90 14 ' + (T + ih / 2) + ')' }, svg); yt.textContent = cs.ylab;
+  }
+  const path = (e, ec) => { let d = ''; for (let i = 0; i <= 80; i++) { const lx = XMIN + (XMAX - XMIN) * i / 80; d += (i ? 'L' : 'M') + X(lx).toFixed(1) + ' ' + Y(resp(Math.pow(10, lx), e, ec)).toFixed(1); } return d; };
+  const effs = [];
+  cs.series.forEach((s) => {
+    el('path', { class: 'ref c' + s.color, d: path(s.ctrl.e, s.ctrl.ec) }, svg);
+    effs.push([s, el('path', { class: 'ln c' + s.color, d: path(s.eff.e, s.eff.ec) }, svg)]);
+  });
+  return (t) => {
+    effs.forEach(([s, p]) => { const q = interp(s, t); p.setAttribute('d', path(q.e, q.ec)); });
+  };
+}
+function legendFor(cs) {
+  const lg = document.createElement('div'); lg.className = 'legend';
+  cs.series.forEach((s) => {
+    const sp = document.createElement('span'); const sv = el('svg', { viewBox: '0 0 30 8', 'aria-hidden': 'true' });
+    el('line', { x1: 1, x2: 29, y1: 4, y2: 4, class: 'ln c' + s.color, style: 'fill:none;stroke-width:3' }, sv);
+    sp.appendChild(sv); sp.appendChild(document.createTextNode(s.name)); lg.appendChild(sp);
+  });
+  const note = document.createElement('span'); note.textContent = 'Punteada: antes. Continua: después.'; lg.appendChild(note);
+  return lg;
+}
+function readoutText(cs, t) {
+  return cs.series.map((s, i) => { const q = interp(s, t); return (cs.series.length > 1 ? (i + 1) + ') ' : '') + 'Emax ' + Math.round(q.e) + ' %, EC50 ' + (q.ec < 10 ? q.ec.toFixed(1).replace('.', ',') : Math.round(q.ec)); }).join('  ·  ');
+}
+
+// ---- juego ----
+let rounds = [], idx = 0, score = 0, answered = 0, by = { t: [0, 0], c: [0, 0] };
+function start() {
+  rounds = shuffle(CASES); idx = 0; score = 0; answered = 0; by = { t: [0, 0], c: [0, 0] }; $('intro').hidden = true; $('results').hidden = true; $('game').hidden = false; loadRound();
+}
+function loadRound() {
+  const c = rounds[idx];
+  const st = $('stCase'); st.textContent = ''; st.append('Caso '); const b = document.createElement('strong'); b.textContent = String(idx + 1); st.appendChild(b); st.append(' de ' + rounds.length);
+  updateScore(); $('pbar').style.width = (idx / rounds.length * 100) + '%';
+  $('caseTitle').textContent = c.title; $('caseText').textContent = c.text;
+  $('qcard').textContent = ''; $('nextrow').hidden = true;
+  showCurve(); askType();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function updateScore() { $('stScore').textContent = answered ? 'Aciertos: ' + score + ' de ' + answered : 'Aciertos: 0'; }
+function askType() {
+  const c = rounds[idx];
+  const blk = document.createElement('div'); blk.className = 'q';
+  const h = document.createElement('h3'); h.textContent = '¿Qué tipo de interacción o de regulación representa esta curva?'; blk.appendChild(h);
+  const ops = document.createElement('div'); ops.className = 'opts'; blk.appendChild(ops);
+  const fb = document.createElement('div'); fb.setAttribute('aria-live', 'polite'); blk.appendChild(fb);
+  const hb = document.createElement('button'); hb.className = 'ghost'; hb.textContent = 'Ver pista'; hb.type = 'button'; blk.appendChild(hb);
+  const hp = document.createElement('p'); hp.className = 'hint'; hp.hidden = true; hp.textContent = c.hintT + ' ' + c.hintC; blk.appendChild(hp);
+  hb.addEventListener('click', () => { const open = hp.hidden; hp.hidden = !open; hb.textContent = open ? 'Ocultar pista' : 'Ver pista'; });
+  const btns = shuffle(c.opts).map((k) => { const b = document.createElement('button'); b.className = 'opt'; b.type = 'button'; b.dataset.val = k; b.textContent = NAME[k]; ops.appendChild(b); return b; });
+  btns.forEach((b) => b.addEventListener('click', () => {
+    const ok = b.dataset.val === c.type;
+    btns.forEach((x) => { x.disabled = true; if (x.dataset.val === c.type) x.classList.add('right'); else if (x === b) x.classList.add('wrong'); });
+    answered++; by.t[1]++; if (ok) { score++; by.t[0]++; } updateScore();
+    fb.className = 'fb ' + (ok ? 'ok' : 'no');
+    const v = document.createElement('b'); v.className = 'v'; v.textContent = ok ? '✓ Correcto' : '✗ No es esa';
+    const p = document.createElement('span'); p.textContent = 'Es ' + NAME[c.type].toLowerCase() + '. ' + c.whyT.replace(/:[^:]*\.$/, '.') + ' ' + c.whyC;
+    fb.appendChild(v); fb.appendChild(p); hb.hidden = true; hp.hidden = true;
+    const last = idx === rounds.length - 1;
+    $('nextBtn').textContent = last ? 'Ver resultados →' : 'Siguiente caso →'; $('nextrow').hidden = false;
+    $('pbar').style.width = ((idx + 1) / rounds.length * 100) + '%';
+    $('nextrow').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }));
+  $('qcard').appendChild(blk);
+}
+function showCurve() {
+  const c = rounds[idx], card = $('ccard'); card.textContent = '';
+  const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = 'Curva dosis-respuesta del caso'; card.appendChild(tag);
+  const box = document.createElement('div'); box.className = 'chartbox'; card.appendChild(box);
+  const upd = drawChart(box, c, false); card.appendChild(legendFor(c));
+  const sl = document.createElement('div'); sl.className = 'sl';
+  const lab = document.createElement('label'); const l1 = document.createElement('span'); l1.textContent = c.slider; lab.appendChild(l1);
+  const l2 = document.createElement('span'); l2.textContent = 'Mueve la barra para ver el cambio'; l2.style.color = 'var(--muted)'; lab.appendChild(l2);
+  const rg = document.createElement('input'); rg.type = 'range'; rg.min = 0; rg.max = 100; rg.value = 100; rg.setAttribute('aria-label', c.slider);
+  sl.appendChild(lab); sl.appendChild(rg); card.appendChild(sl);
+  const rd = document.createElement('div'); rd.className = 'read'; card.appendChild(rd);
+  const set = (t) => { upd(t); rd.textContent = readoutText(c, t); };
+  rg.addEventListener('input', () => set(rg.value / 100)); set(1);
+}
+function next() { idx++; if (idx >= rounds.length) showResults(); else loadRound(); }
+
+function showResults() {
+  $('game').hidden = true; const r = $('results'); r.hidden = false; r.textContent = '';
+  const pct = Math.round(score / answered * 100);
+  const card = document.createElement('div'); card.className = 'card'; r.appendChild(card);
+  const h = document.createElement('h2'); h.textContent = 'Resultados'; card.appendChild(h);
+  const hero = document.createElement('div'); hero.className = 'hero'; hero.textContent = pct + ' %'; card.appendChild(hero);
+  const sub = document.createElement('p'); sub.className = 'lead'; sub.style.margin = '0 0 12px';
+  sub.textContent = score + ' aciertos de ' + answered + ' casos. ' + (pct >= 90 ? 'Interpretas bien las curvas de interacciones y la regulación de receptores.' : pct >= 70 ? 'Vas bien; revisa los casos que fallaste.' : 'Repasa la tabla de referencia y vuelve a intentarlo.');
+  card.appendChild(sub);
+  [['t', 'Identificar el tipo de interacción o regulación']].forEach(([k, lab]) => {
+    const [ok, n] = by[k]; if (!n) return;
+    const m = document.createElement('div'); m.className = 'meter';
+    const row = document.createElement('div'); row.className = 'row';
+    const a = document.createElement('span'); a.textContent = lab; const b = document.createElement('span'); b.textContent = ok + ' de ' + n;
+    row.appendChild(a); row.appendChild(b); m.appendChild(row);
+    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.marginBottom = '0'; const fill = document.createElement('i'); fill.style.width = (ok / n * 100) + '%'; bar.appendChild(fill); m.appendChild(bar); card.appendChild(m);
+  });
+  const h2 = document.createElement('h2'); h2.textContent = 'Resumen: las ocho curvas'; h2.style.marginTop = '20px'; card.appendChild(h2);
+  const minis = document.createElement('div'); minis.className = 'minis'; card.appendChild(minis);
+  CASES.forEach((c) => {
+    const m = document.createElement('div'); m.className = 'mini';
+    const t = document.createElement('h4'); t.textContent = c.id + '. ' + NAME[c.type]; m.appendChild(t);
+    const p = document.createElement('p'); p.textContent = CLABEL[c.curve] || ''; m.appendChild(p);
+    const box = document.createElement('div'); m.appendChild(box); minis.appendChild(m);
+    drawChart(box, c, true)(1);
+  });
+  const rule = document.createElement('div'); rule.className = 'rule';
+  [['Izquierda:', ' sinergismo (sumación, potenciación, sensibilización) y regulación al alza.'],
+   ['Derecha:', ' antagonismo competitivo y químico.'],
+   ['Baja el Emax:', ' antagonismo no competitivo, fisiológico y desensibilización (homóloga y heteróloga).'],
+   ['Ojo:', ' curvas parecidas pueden tener causas distintas: para distinguirlas hay que preguntar qué cambió (otro fármaco, el receptor o el fármaco libre).']].forEach(([bt, t]) => {
+    const p = document.createElement('p'); p.style.margin = '4px 0'; const bb = document.createElement('b'); bb.textContent = bt; p.appendChild(bb); p.appendChild(document.createTextNode(t)); rule.appendChild(p);
+  });
+  card.appendChild(rule);
+  const again = document.createElement('button'); again.className = 'btn'; again.textContent = 'Intentar de nuevo'; again.style.marginTop = '12px'; again.addEventListener('click', start); card.appendChild(again);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+$('startBtn').addEventListener('click', start);
+$('nextBtn').addEventListener('click', next);
+</script>
+</body>
+</html>
