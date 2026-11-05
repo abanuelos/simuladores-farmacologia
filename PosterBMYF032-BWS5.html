@@ -1,0 +1,367 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Jatrophone SEDDS Poster</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: masthead band + responsive two-column card grid that stacks on phones; teal/magenta academic palette */
+:root{
+  --paper:#f3f1ec; --card:#ffffff; --ink:#1a2a33; --muted:#546069;
+  --line:#e2e2dc; --teal:#0e4d64; --teal2:#14708c; --mag:#7a2760; --red:#c0392b;
+  --green:#2f5e2a; --chipbg:#0a3a4c; --band:#0e4d64; --bandink:#eef6f8; --bandsub:#bcd9e2;
+  --shadow:0 2px 10px rgba(30,45,55,.10);
+  --f-disp:'Libre Franklin',system-ui,sans-serif;
+  --f-body:'Libre Franklin',system-ui,sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#12181c; --card:#1b2429; --ink:#e7edf0; --muted:#9fb0b8;
+  --line:#2c383f; --teal:#2a8cab; --teal2:#3fa6c4; --mag:#d183ae; --red:#e8847c;
+  --green:#7bbf74; --chipbg:#0c2d3a; --band:#0a3240; --bandink:#eef6f8; --bandsub:#bcd9e2;
+  --shadow:0 2px 12px rgba(0,0,0,.4); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#12181c; --card:#1b2429; --ink:#e7edf0; --muted:#9fb0b8;
+  --line:#2c383f; --teal:#2a8cab; --teal2:#3fa6c4; --mag:#d183ae; --red:#e8847c;
+  --green:#7bbf74; --chipbg:#0c2d3a; --band:#0a3240; --bandink:#eef6f8; --bandsub:#bcd9e2;
+  --shadow:0 2px 12px rgba(0,0,0,.4); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));}
+h1,h2,h3{text-wrap:balance;margin:0}
+/* ---------- sticky control bar ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);
+  background:var(--paper);z-index:21}
+.bar-in{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px}
+.bar .meta{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.02em}
+.bar .spacer{flex:1 1 auto;min-width:0}
+.seg{display:inline-flex;border:1px solid var(--teal);border-radius:999px;overflow:hidden}
+.seg button{font-family:var(--f-disp);font-weight:700;font-size:13px;letter-spacing:.03em;
+  border:0;background:transparent;color:var(--teal);padding:7px 16px;cursor:pointer;line-height:1}
+.seg button[aria-pressed="true"]{background:var(--teal);color:#fff}
+.icobtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;
+  width:38px;height:34px;cursor:pointer;font-size:15px;display:inline-flex;align-items:center;justify-content:center}
+.icobtn:focus-visible,.seg button:focus-visible{outline:2px solid var(--teal2);outline-offset:2px}
+/* ---------- masthead ---------- */
+.mast{background:var(--band);color:var(--bandink)}
+.mast-in{padding-block:26px;position:relative}
+.chip{position:absolute;top:22px;right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--chipbg);border:1px solid #cfe6ee55;border-radius:10px;padding:8px 16px;text-align:center}
+.chip b{font-family:var(--f-disp);font-weight:800;font-size:18px;letter-spacing:.04em;color:#fff;display:block}
+.chip span{font-size:10.5px;color:var(--bandsub);font-style:italic}
+.mast h1{font-family:var(--f-disp);font-weight:800;font-size:clamp(23px,3.6vw,40px);line-height:1.08;
+  letter-spacing:-.01em;max-width:24ch}
+.mast .sub{font-style:italic;color:var(--bandsub);font-size:clamp(14px,1.7vw,19px);margin-top:12px;max-width:60ch}
+.mast .authors{margin-top:18px;font-size:clamp(14px,1.7vw,18px);font-weight:600}
+.mast .authors sup{font-weight:400}
+.mast .affil{margin-top:8px;font-size:12.5px;color:var(--bandsub);line-height:1.45;max-width:95ch}
+.mast .affil .email{color:#fff;font-family:var(--f-mono);font-size:12px}
+/* ---------- content grid ---------- */
+main{padding-block:22px 40px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;
+  box-shadow:var(--shadow);min-width:0}
+.card h2{font-family:var(--f-disp);font-weight:800;font-size:19px;color:var(--teal);letter-spacing:-.01em}
+.card.mag h2{color:var(--mag)}
+.card p{margin:11px 0 0;font-size:14.5px;color:var(--ink)}
+.card p.small{font-size:13px;color:var(--muted);font-style:italic}
+.card ul{margin:11px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:9px}
+.card li{font-size:14.5px}
+b.red{color:var(--red)} b.teal{color:var(--teal2)} b.mag{color:var(--mag)} b.green{color:var(--green)}
+.banner{background:var(--band);color:#fff;border-radius:12px;padding:13px 18px;text-align:center;
+  font-family:var(--f-disp);font-weight:800;font-size:19px;letter-spacing:.01em;box-shadow:var(--shadow)}
+figure{margin:13px 0 0}
+figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff;display:block}
+figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);font-style:italic;line-height:1.45}
+/* VIF badge */
+.vif{margin-top:14px;background:color-mix(in srgb,var(--teal) 10%,var(--card));
+  border:1px solid color-mix(in srgb,var(--teal) 25%,var(--line));border-radius:10px;padding:14px;text-align:center}
+.vif .big{font-family:var(--f-disp);font-weight:800;font-size:30px;letter-spacing:.02em}
+.vif .big .inf{color:var(--red)} .vif .big .ar{color:var(--muted);font-size:22px} .vif .big .v{color:var(--teal2)}
+.vif .cap{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:4px}
+/* matrix table */
+.mtx-label{font-family:var(--f-disp);font-weight:700;color:var(--teal);font-size:15px;margin-top:16px}
+.tblwrap{overflow-x:auto;margin-top:8px}
+table.mtx{border-collapse:collapse;width:100%;font-size:13px;min-width:430px}
+table.mtx th,table.mtx td{border:1px solid var(--line);padding:7px 9px;text-align:center}
+table.mtx thead th{background:var(--teal);color:#fff;font-weight:700}
+table.mtx td.arm{text-align:left;font-weight:700}
+table.mtx td.vary{color:var(--mag);font-weight:700;font-family:var(--f-mono);font-size:12px}
+/* references */
+.refs{list-style:none;padding:0;margin:11px 0 0;display:flex;flex-direction:column;gap:7px}
+.refs li{font-size:12.5px;color:var(--muted)}
+/* footer */
+.foot{border-top:1px solid var(--line);margin-top:30px;padding-block:16px 8px;text-align:center;
+  font-size:12.5px;color:var(--muted)}
+.foot b{color:var(--teal)}
+.note{font-size:11.5px;color:var(--muted);text-align:center;margin-top:6px;font-style:italic}
+</style>
+
+<div class="bar">
+  <div class="wrap bar-in">
+    <span class="meta" id="metaCode">BMYF-032 · 5th BWS 2026</span>
+    <span class="spacer"></span>
+    <div class="seg" role="group" aria-label="Language">
+      <button id="btnES" aria-pressed="false" onclick="setLang('es')">ES</button>
+      <button id="btnEN" aria-pressed="true" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="icobtn" id="themeBtn" title="Theme" aria-label="Toggle theme" onclick="toggleTheme()">◐</button>
+  </div>
+</div>
+
+<header class="mast">
+  <div class="wrap mast-in">
+    <div class="chip"><b>BMYF-032</b><span id="area"></span></div>
+    <h1 id="title"></h1>
+    <div class="sub" id="subtitle"></div>
+    <div class="authors" id="authors"></div>
+    <div class="affil" id="affil"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="col">
+      <section class="card"><h2 id="h_intro"></h2><div id="c_intro"></div></section>
+      <section class="card"><h2 id="h_obj"></h2><p id="c_obj"></p></section>
+      <section class="card">
+        <h2 id="h_meth"></h2>
+        <div id="c_meth"></div>
+        <div class="mtx-label" id="mtx_label"></div>
+        <div class="tblwrap"><table class="mtx" id="mtx"></table></div>
+        <p class="small" id="mtx_note"></p>
+        <div class="vif">
+          <div class="big"><span class="v">VIF</span>&nbsp;&nbsp;<span class="inf">∞</span> <span class="ar">→</span> <span class="v">1.3</span></div>
+          <div class="cap" id="vif_cap"></div>
+        </div>
+      </section>
+      <section class="card"><h2 id="h_concl"></h2><ul id="c_concl"></ul></section>
+      <section class="card"><h2 id="h_ref"></h2><ol class="refs" id="c_ref"></ol></section>
+    </div>
+    <!-- RIGHT -->
+    <div class="col">
+      <div class="banner" id="b_results"></div>
+      <section class="card">
+        <h2 id="h_r1"></h2>
+        <figure><img id="fig_decon" alt=""><figcaption id="cap_r1"></figcaption></figure>
+      </section>
+      <section class="card">
+        <h2 id="h_r2"></h2>
+        <figure><img id="fig_vehicle" alt=""><figcaption id="cap_r2"></figcaption></figure>
+      </section>
+      <section class="card mag">
+        <h2 id="h_r3"></h2>
+        <figure><img id="fig_jat" alt=""><figcaption id="cap_r3"></figcaption></figure>
+      </section>
+      <section class="card mag"><h2 id="h_disc"></h2><p id="c_disc"></p></section>
+    </div>
+  </div>
+  <div class="foot">
+    <b id="foot_ev"></b><span id="foot_tags"></span>
+    <div class="note" id="foot_note"></div>
+  </div>
+</main>
+
+<script>
+const DATA = {
+  en: {
+    area:"Medical biotechnology & pharmacology",
+    meta:"BMYF-032 · 5th BWS 2026",
+    title:"Kolliphor EL drives self-emulsifying vehicle cytotoxicity in hFOB osteoblasts",
+    subtitle:"A biocompatible MCT vehicle delivers the cytotoxic diterpene jatrophone to osteoblasts",
+    authors:'Angel Ernesto Bañuelos-Hernández<sup>1*</sup>, Issac Duran-Galvan<sup>2</sup>, Leslie Alejandra Ávalos-Salas<sup>1</sup>, Nury Pérez-Hernández<sup>1</sup>',
+    affil:'<sup>1</sup>Instituto Politécnico Nacional, Escuela Nacional de Medicina y Homeopatía. Guillermo Massieu Helguera 239, La Escalera, Ticomán, G. A. Madero, 07320, Mexico City, Mexico. &nbsp;<sup>2</sup>Universidad Tecnológica de Tecámac. Carretera Federal México–Pachuca km 37.5, Predio Sierra Hermosa, Col. Sierra Hermosa, Tecámac, State of Mexico, 55740, Mexico. &nbsp;*Corresponding author: <span class="email">abanuelosh@ipn.mx</span>',
+    h_intro:"Introduction",
+    intro:[
+      'Many bioactive compounds —natural products and drug candidates such as <i><b>jatrophone</b></i>— are water-insoluble, which prevents testing their cytotoxicity in culture: they never reach an effective concentration in the medium.',
+      '<b>Self-emulsifying delivery systems (SEDDS)</b> solve this: they disperse the compound into fine droplets and keep it bioavailable, enabling <b>reliable dose-response curves</b> for molecules that DMSO alone fails to dissolve or that precipitate on dilution.',
+      'They combine DMSO, MCT and <b>Kolliphor EL (KP-EL)</b>, but the vehicle has its own toxicity. Because its components are diluted together, their effects are <b class="red">confounded (collinear)</b> and cannot be attributed separately. <b class="teal">Deconvolution</b> —varying each component independently to isolate and quantify its cytotoxic contribution— resolves this. No KP-EL cytotoxicity data in osteoblasts have been published.'
+    ],
+    h_obj:"Objective",
+    obj:"Deconvolve each component's cytotoxicity in hFOB, reformulate a biocompatible vehicle, and validate jatrophone delivery against conventional DMSO.",
+    h_meth:"Methodology · deconvolution",
+    meth:[
+      'MTT viability (ΔA570−A630) in hFOB 1.19 osteoblasts; n = 3–5; ANOVA + Dunnett.',
+      '<b class="red">Problem:</b> serial dilution varies all three components at once → <b class="red">perfect collinearity</b> (VIF → ∞); PCA, PLS and OPLS cannot separate their effects.',
+      '<b class="teal">Solution:</b> a matrix in which each component is varied independently in its own arm, within the feasible region (surfactant : oil ≥ 0.4), with full-vehicle and interaction arms.'
+    ],
+    mtx_label:"Deconvolution matrix",
+    mtx_head:["Arm (isolates)","DMSO %","MCT mg/mL","KP-EL mg/mL"],
+    mtx_rows:[
+      ["Control","0","0","0",-1],
+      ["DMSO","0.10 / 0.20 / 0.35","0","0",1],
+      ["Kolliphor EL","0","0","0.21 / 0.42 / 0.84",3],
+      ["MCT (KP fixed)","0","0.24 / 0.47 / 0.945","0.42",2],
+      ["Full vehicle + interaction","0.10–0.35","0.945","0.42",-1]
+    ],
+    mtx_note:"Purple = the component varied in that arm. This lowers VIF from ∞ to ≈1.3 and enables multiple regression with a separate coefficient per component.",
+    vif_cap:"collinearity broken → components separable · reformulation: compound in MCT, low KP-EL",
+    h_concl:"Conclusions",
+    concl:[
+      'Vehicle toxicity is attributable <b class="mag">entirely to Kolliphor EL</b>.',
+      'Reformulation (compound in MCT, low KP-EL) yields a <b>biocompatible vehicle</b> (69–97 % viability).',
+      'The MCT emulsion delivers jatrophone <b>at least as well as DMSO</b> (at 1 µM, a hint of greater potency): a non-toxic alternative to solvent delivery.'
+    ],
+    h_ref:"References",
+    refs:[
+      "Mosmann T. J Immunol Methods. 1983;65:55–63.",
+      "Gelderblom H, et al. Eur J Cancer. 2001;37:1590–1598.",
+      "Kiss L, et al. 2013 (KP-EL endothelial threshold).",
+      "Esteves-Pedro NM, et al. Curr Top Med Chem. 2018.",
+      "Kupchan SM, et al. J Am Chem Soc. 1970;92:4476–4477."
+    ],
+    b_results:"Results and discussion",
+    h_r1:"1 · KP-EL is the sole toxic component",
+    cap_r1:"DMSO (≤0.35 %) is non-toxic; viability collapses only with Kolliphor EL (0.21 → 0.42 mg/mL). KP-EL alone reproduces the full vehicle.",
+    h_r2:"2 · Reformulated vehicle is biocompatible",
+    cap_r2:"Every dilution of the reformulated vehicle (compound in MCT, KP-EL 0.020 mg/mL) stays at or above the ISO 10993-5 threshold (70 %), with viability rising dose-dependently to 97 % at 1:100. Safe working dilution ≥ 1:10. The original vehicle (KP-EL 0.42 mg/mL) gave 0 % viability — total death.",
+    h_r3:"3 · MCT delivers jatrophone at least as well as DMSO",
+    cap_r3:"Sub-µM potency: at ≥3 µM both routes cause near-total death. At 1 µM —the only dose with residual viability— the MCT emulsion left fewer viable cells than DMSO (2.9 % vs 7.9 %, p = 0.09): at least equivalent delivery, with a hint of greater potency.",
+    h_disc:"Discussion",
+    disc:"<b class=\"mag\">First report of KP-EL cytotoxicity in osteoblasts.</b> A biocompatible MCT vehicle (in-well: KP-EL 0.020 mg/mL, MCT 1.96 mg/mL, DMSO 0.008 % v/v) delivers the cytotoxic diterpene jatrophone as well as DMSO, without its toxicity; a high MCT load (~2 mg/mL) was well tolerated, confirming the oil is not the toxic component. Equivalence was assessed on the death plateau; the ongoing nanomolar curve (DMSO vs MCT) will define the IC₅₀ and test whether the emulsion enhances delivery (left-shifted IC₅₀); a hint already shows at 1 µM (MCT 2.9 % vs DMSO 7.9 %, p = 0.09).",
+    foot_ev:"5th Biotechnology World Symposium 2026 · Los Cabos, B.C.S., Mexico",
+    foot_tags:"    |    BMYF · MTT · hFOB · SEDDS · jatrophone",
+    foot_note:"Interactive poster · figures from MTT assays in hFOB 1.19 · analysis in Python (scipy)"
+  },
+  es: {
+    area:"Biotecnología médica y farmacología",
+    meta:"BMYF-032 · 5º BWS 2026",
+    title:"Kolliphor EL determina la citotoxicidad de un vehículo autoemulsificante en osteoblastos hFOB",
+    subtitle:"Un vehículo de MCT biocompatible entrega el diterpeno citotóxico jatrofona a osteoblastos",
+    authors:'Angel Ernesto Bañuelos-Hernández<sup>1*</sup>, Issac Duran-Galvan<sup>2</sup>, Leslie Alejandra Ávalos-Salas<sup>1</sup>, Nury Pérez-Hernández<sup>1</sup>',
+    affil:'<sup>1</sup>Instituto Politécnico Nacional, Escuela Nacional de Medicina y Homeopatía. Guillermo Massieu Helguera 239, La Escalera, Ticomán, G. A. Madero, 07320, Ciudad de México, México. &nbsp;<sup>2</sup>Universidad Tecnológica de Tecámac. Carretera Federal México–Pachuca km 37.5, Predio Sierra Hermosa, Col. Sierra Hermosa, Tecámac, Estado de México, 55740, México. &nbsp;*Autor de correspondencia: <span class="email">abanuelosh@ipn.mx</span>',
+    h_intro:"Introducción",
+    intro:[
+      'Muchos compuestos bioactivos —productos naturales y candidatos a fármaco como la <i><b>jatrofona</b></i>— son insolubles en agua, lo que impide evaluar su citotoxicidad en cultivo: no alcanzan concentración efectiva en el medio.',
+      'Los <b>sistemas autoemulsificantes (SEDDS)</b> lo resuelven: dispersan el compuesto en gotas finas y lo mantienen biodisponible, permitiendo <b>curvas dosis-respuesta confiables</b> para moléculas que el DMSO solo no solubiliza o precipita al diluir.',
+      'Combinan DMSO, MCT y <b>Kolliphor EL (KP-EL)</b>, pero el vehículo tiene toxicidad propia. Como sus componentes se diluyen juntos, sus efectos quedan <b class="red">confundidos (colineales)</b> y no pueden atribuirse por separado. La <b class="teal">deconvolución</b> —variar cada componente de forma independiente para aislar y cuantificar su contribución citotóxica— resuelve esto. No hay datos publicados de citotoxicidad de KP-EL en osteoblastos.'
+    ],
+    h_obj:"Objetivos",
+    obj:"Deconvolucionar la citotoxicidad de cada componente en hFOB, reformular un vehículo biocompatible y validar la entrega de jatrofona frente al DMSO convencional.",
+    h_meth:"Metodología · deconvolución",
+    meth:[
+      'Viabilidad por MTT (ΔA570−A630) en osteoblastos hFOB 1.19; n = 3–5; ANOVA + Dunnett.',
+      '<b class="red">Problema:</b> la dilución seriada varía los tres componentes a la vez → <b class="red">colinealidad perfecta</b> (VIF → ∞); PCA, PLS y OPLS no pueden separar sus efectos.',
+      '<b class="teal">Solución:</b> una matriz donde cada componente se varía de forma independiente en su propio brazo, dentro de la región factible (surfactante : aceite ≥ 0.4), con brazos de vehículo completo e interacción.'
+    ],
+    mtx_label:"Matriz de deconvolución",
+    mtx_head:["Brazo (aísla)","DMSO %","MCT mg/mL","KP-EL mg/mL"],
+    mtx_rows:[
+      ["Control","0","0","0",-1],
+      ["DMSO","0.10 / 0.20 / 0.35","0","0",1],
+      ["Kolliphor EL","0","0","0.21 / 0.42 / 0.84",3],
+      ["MCT (KP fijo)","0","0.24 / 0.47 / 0.945","0.42",2],
+      ["Vehículo completo + interacción","0.10–0.35","0.945","0.42",-1]
+    ],
+    mtx_note:"Morado = el componente que varía en ese brazo. Esto baja el VIF de ∞ a ≈1.3 y permite regresión múltiple con un coeficiente propio por componente.",
+    vif_cap:"colinealidad rota → componentes separables · reformulación: compuesto en MCT, KP-EL bajo",
+    h_concl:"Conclusiones",
+    concl:[
+      'La toxicidad del vehículo es atribuible <b class="mag">en su totalidad al Kolliphor EL</b>.',
+      'La reformulación (compuesto en MCT, KP-EL bajo) produce un <b>vehículo biocompatible</b> (69–97 % de viabilidad).',
+      'La emulsión de MCT entrega jatrofona <b>al menos tan bien como el DMSO</b> (a 1 µM, indicio de mayor potencia): alternativa no tóxica a la entrega con disolvente.'
+    ],
+    h_ref:"Literatura citada",
+    refs:[
+      "Mosmann T. J Immunol Methods. 1983;65:55–63.",
+      "Gelderblom H, et al. Eur J Cancer. 2001;37:1590–1598.",
+      "Kiss L, et al. 2013 (umbral de KP-EL en endotelio).",
+      "Esteves-Pedro NM, et al. Curr Top Med Chem. 2018.",
+      "Kupchan SM, et al. J Am Chem Soc. 1970;92:4476–4477."
+    ],
+    b_results:"Resultados y discusión",
+    h_r1:"1 · KP-EL es el único componente tóxico",
+    cap_r1:"El DMSO (≤0.35 %) no es tóxico; la viabilidad colapsa solo con Kolliphor EL (0.21 → 0.42 mg/mL). El KP-EL solo reproduce el vehículo completo.",
+    h_r2:"2 · Vehículo reformulado biocompatible",
+    cap_r2:"Cada dilución del vehículo reformulado (compuesto en MCT, KP-EL 0.020 mg/mL) se mantiene en o sobre el umbral ISO 10993-5 (70 %), con viabilidad creciente dosis-dependiente hasta 97 % a 1:100. Dilución de trabajo segura ≥ 1:10. El vehículo original (KP-EL 0.42 mg/mL) dio 0 % de viabilidad — muerte total.",
+    h_r3:"3 · El MCT entrega jatrofona al menos igual que el DMSO",
+    cap_r3:"Potencia sub-µM: a ≥3 µM ambas rutas causan muerte casi total. A 1 µM —única dosis con viabilidad residual— la emulsión MCT dejó menos células vivas que el DMSO (2.9 % vs 7.9 %, p = 0.09): entrega al menos equivalente, con indicio de mayor potencia.",
+    h_disc:"Discusión",
+    disc:"<b class=\"mag\">Primer reporte de citotoxicidad de KP-EL en osteoblastos.</b> Un vehículo de MCT biocompatible (en el pozo: KP-EL 0.020 mg/mL, MCT 1.96 mg/mL, DMSO 0.008 % v/v) entrega el diterpeno citotóxico jatrofona tan bien como el DMSO, sin su toxicidad; una carga alta de MCT (~2 mg/mL) fue bien tolerada, confirmando que el aceite no es el componente tóxico. La equivalencia se evaluó en la meseta de muerte; la curva nanomolar en curso (DMSO vs MCT) definirá el IC₅₀ y probará si la emulsión potencia la entrega (IC₅₀ desplazado a la izquierda); a 1 µM ya se insinúa (MCT 2.9 % vs DMSO 7.9 %, p = 0.09).",
+    foot_ev:"5º Biotechnology World Symposium 2026 · Los Cabos, B.C.S., México",
+    foot_tags:"    |    BMYF · MTT · hFOB · SEDDS · jatrofona",
+    foot_note:"Cartel interactivo · figuras de ensayos MTT en hFOB 1.19 · análisis en Python (scipy)"
+  }
+};
+
+let LANG = 'en';
+
+function el(id){return document.getElementById(id);}
+function setHTML(id,html){const n=el(id); if(n) n.innerHTML=html;}
+
+function render(){
+  const d = DATA[LANG];
+  document.documentElement.lang = LANG;
+  setHTML('area',d.area);
+  setHTML('metaCode',d.meta);
+  setHTML('title',d.title);
+  setHTML('subtitle',d.subtitle);
+  setHTML('authors',d.authors);
+  setHTML('affil',d.affil);
+  setHTML('h_intro',d.h_intro);
+  setHTML('c_intro',d.intro.map(p=>`<p>${p}</p>`).join(''));
+  setHTML('h_obj',d.h_obj);
+  setHTML('c_obj',d.obj);
+  setHTML('h_meth',d.h_meth);
+  setHTML('c_meth',d.meth.map(p=>`<p>${p}</p>`).join(''));
+  setHTML('mtx_label',d.mtx_label);
+  // matrix
+  let thead = '<thead><tr>'+d.mtx_head.map(h=>`<th>${h}</th>`).join('')+'</tr></thead>';
+  let tbody = '<tbody>'+d.mtx_rows.map(r=>{
+    const vary=r[4];
+    let cells = `<td class="arm">${r[0]}</td>`;
+    for(let c=1;c<=3;c++){cells += `<td class="${vary===c?'vary':''}">${r[c]}</td>`;}
+    return `<tr>${cells}</tr>`;
+  }).join('')+'</tbody>';
+  el('mtx').innerHTML = thead+tbody;
+  setHTML('mtx_note',d.mtx_note);
+  setHTML('vif_cap',d.vif_cap);
+  setHTML('h_concl',d.h_concl);
+  setHTML('c_concl',d.concl.map(li=>`<li>${li}</li>`).join(''));
+  setHTML('h_ref',d.h_ref);
+  setHTML('c_ref',d.refs.map(li=>`<li>${li}</li>`).join(''));
+  setHTML('b_results',d.b_results);
+  setHTML('h_r1',d.h_r1); setHTML('cap_r1',d.cap_r1);
+  setHTML('h_r2',d.h_r2); setHTML('cap_r2',d.cap_r2);
+  setHTML('h_r3',d.h_r3); setHTML('cap_r3',d.cap_r3);
+  setHTML('h_disc',d.h_disc); setHTML('c_disc',d.disc);
+  setHTML('foot_ev',d.foot_ev); setHTML('foot_tags',d.foot_tags); setHTML('foot_note',d.foot_note);
+  // figures
+  el('fig_decon').src = `assets/decon_${LANG}.png`;
+  el('fig_vehicle').src = `assets/vehicle_${LANG}.png`;
+  el('fig_jat').src = `assets/jat_${LANG}.png`;
+  el('fig_decon').alt = d.h_r1; el('fig_vehicle').alt = d.h_r2; el('fig_jat').alt = d.h_r3;
+  // buttons
+  el('btnES').setAttribute('aria-pressed', LANG==='es');
+  el('btnEN').setAttribute('aria-pressed', LANG==='en');
+}
+
+function setLang(l){
+  LANG = l; render();
+  try{ localStorage.setItem('poster_lang', l); }catch(e){}
+}
+function toggleTheme(){
+  const root=document.documentElement;
+  const cur=root.getAttribute('data-theme');
+  const next = cur==='dark' ? 'light' : (cur==='light' ? 'dark' :
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+  root.setAttribute('data-theme',next);
+  try{ localStorage.setItem('poster_theme', next); }catch(e){}
+}
+// init
+try{
+  const sl=localStorage.getItem('poster_lang'); if(sl==='es'||sl==='en') LANG=sl;
+  const st=localStorage.getItem('poster_theme'); if(st==='dark'||st==='light') document.documentElement.setAttribute('data-theme',st);
+}catch(e){}
+render();
+</script>
+
+</body></html>
