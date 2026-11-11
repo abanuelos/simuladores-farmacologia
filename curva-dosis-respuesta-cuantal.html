@@ -1,0 +1,903 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curva dosis-respuesta cuantal</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f5f3ee;
+  --surface: #fcfcfb;
+  --surface-2: #efece5;
+  --ink: #1d1c1a;
+  --ink-2: #52514e;
+  --ink-3: #75736e;
+  --line: #dcd8cf;
+  --grid: #e8e5de;
+  --accent: #1f5c52;
+  --accent-ink: #ffffff;
+  --hyp: #2a78d6;
+  --let: #eb6834;
+  --x: #d3201f;
+  --row: #e4efec;
+  --good: #1c6b3c;
+  --warn: #8f5a00;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131312;
+    --surface: #1a1a19;
+    --surface-2: #262624;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --ink-3: #9a998f;
+    --line: #3a3a37;
+    --grid: #2c2c2a;
+    --accent: #6cc3b2;
+    --accent-ink: #0d211d;
+    --hyp: #3987e5;
+    --let: #d95926;
+    --row: #20322e;
+    --good: #6fce96;
+    --warn: #e7b35a;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 24px 16px 56px; }
+h1, h2 { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-weight: 600; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+h2 { font-size: 1.25rem; }
+.intro { max-width: 76ch; margin: 8px 0 20px; color: var(--ink-2); }
+
+.layout { display: grid; gap: 20px; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
+
+/* Encabezado de la dosis */
+.dosehead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.dosehead .label { font-size: .85rem; color: var(--ink-2); }
+.dosehead .dose { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.dosehead .unit { font-size: 1rem; font-weight: 500; color: var(--ink-2); }
+.progress { height: 4px; background: var(--surface-2); border-radius: 2px; overflow: hidden; margin-bottom: 12px; }
+.progress i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+
+/* Jaula */
+.cage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  min-height: 280px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 3px solid #8b8f92;
+  background-color: #bf9c6b;
+  background-image:
+    radial-gradient(ellipse 7px 3px at 20% 30%, #d6b98c 60%, transparent 62%),
+    radial-gradient(ellipse 6px 2.5px at 70% 15%, #a5834f 60%, transparent 62%),
+    radial-gradient(ellipse 5px 3px at 45% 70%, #dcc397 60%, transparent 62%),
+    radial-gradient(ellipse 7px 2.5px at 85% 80%, #ab8a58 60%, transparent 62%),
+    radial-gradient(ellipse 4px 2px at 10% 85%, #cfae7d 60%, transparent 62%);
+  background-size: 46px 38px, 58px 44px, 40px 52px, 66px 48px, 34px 30px;
+  box-shadow: inset 0 0 26px rgba(50, 30, 5, .45);
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Cpath d='M2 30L11 21' stroke='%23222' stroke-width='2'/%3E%3Cpath d='M10 22L23 9' stroke='%23222' stroke-width='10'/%3E%3Cpath d='M11 21L22 10' stroke='%23e8f4ff' stroke-width='7'/%3E%3Cpath d='M23 9L28 4M24 1L31 8' stroke='%23222' stroke-width='3'/%3E%3C/svg%3E") 2 30, crosshair;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mouse {
+  position: absolute; left: 0; top: 0;
+  width: var(--mw, 100px);
+  aspect-ratio: 120 / 72;
+  will-change: transform;
+}
+.mouse .flip { width: 100%; height: 100%; }
+.mouse svg.rat { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.mouse[data-dosed="1"] { cursor: not-allowed; }
+.mouse.hl svg.rat { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 2px #fff); }
+
+.rat .fur { fill: #fbfaf6; stroke: #8c8880; stroke-width: 1.2; }
+.rat .skin { fill: #f2b6b4; stroke: #b98280; stroke-width: .8; }
+.rat .tail { fill: none; stroke: #eaa9a7; stroke-width: 3.4; stroke-linecap: round; }
+.rat .whisk { stroke: #8c8880; stroke-width: .7; }
+.rat .eye { fill: #8f1d2c; }
+.rat .eye-closed, .rat .eye-dead { fill: none; stroke: #3a3734; stroke-width: 1.8; stroke-linecap: round; display: none; }
+.rat .shadow { fill: rgba(50, 30, 5, .28); }
+.rat .pose, .rat .head, .rat .tail, .rat .leg { transform-box: view-box; }
+.rat .pose { transform-origin: 52px 42px; transition: transform .45s cubic-bezier(.3, 1.4, .6, 1); }
+.rat .head { transform-origin: 74px 42px; transition: transform .4s; }
+.rat .tail { transform-origin: 24px 44px; animation: tail 1.1s ease-in-out infinite; }
+.rat .leg { transform-box: fill-box; transform-origin: 50% 0; }
+.mouse:not(.still) .leg.a { animation: trot .28s linear infinite alternate; }
+.mouse:not(.still) .leg.b { animation: trot .28s linear infinite alternate-reverse; }
+@keyframes trot { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+@keyframes tail { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(9deg); } }
+
+.mouse.ataxic .pose { animation: wobble .45s ease-in-out infinite; }
+.mouse.ataxic .leg { animation-duration: .6s !important; }
+@keyframes wobble { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(7deg) translateY(2px); } }
+
+.mouse[data-state="sleep"] .leg, .mouse[data-state="dead"] .tail { animation: none; }
+.mouse[data-state="sleep"] .tail { animation: none; }
+.mouse[data-state="sleep"] .leg { transform: scaleY(.3); }
+.mouse[data-state="sleep"] .pose { transform: translateY(9px); animation: breathe 2.6s ease-in-out infinite; }
+.mouse[data-state="sleep"] .head { transform: rotate(14deg); }
+.mouse[data-state="sleep"] .eye { display: none; }
+.mouse[data-state="sleep"] .eye-closed { display: inline; }
+@keyframes breathe { 0%, 100% { transform: translateY(9px) scale(1, 1); } 50% { transform: translateY(8px) scale(1.02, 1.05); } }
+
+.mouse[data-state="dead"] .pose { transform: translateY(2px) scaleY(-1); }
+.mouse[data-state="dead"] .leg { animation: none !important; }
+.mouse[data-state="dead"] .eye { display: none; }
+.mouse[data-state="dead"] .eye-dead { display: inline; }
+.mouse[data-state="dead"] svg.rat { filter: saturate(.15) brightness(.82); }
+
+.mouse .badge {
+  position: absolute; left: -2px; top: -6px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  border-radius: 10px; background: #26251f; color: #fff;
+  font: 700 12px/20px system-ui, sans-serif; text-align: center;
+  pointer-events: none;
+}
+.mouse .mark {
+  position: absolute; left: 50%; top: 2%;
+  width: 28%; aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+  opacity: 0;
+}
+.mouse[data-dosed="1"] .mark { opacity: 1; animation: pop .25s ease-out forwards; }
+.mouse .mark path { fill: none; stroke-linecap: round; }
+.mouse .mark .halo { stroke: #fff; stroke-width: 22; }
+.mouse .mark .cross { stroke: var(--x); stroke-width: 12; }
+@keyframes pop { from { transform: translate(-50%, -50%) scale(1.8); } to { transform: translate(-50%, -50%) scale(1); } }
+.mouse .tag {
+  position: absolute; left: 50%; top: 100%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0 7px; border-radius: 4px;
+  background: rgba(20, 18, 14, .86); color: #fff;
+  font: 600 12px/18px system-ui, sans-serif;
+  pointer-events: none;
+}
+.mouse .tag:empty { display: none; }
+.mouse .zzz { position: absolute; right: 2%; top: -8%; pointer-events: none; display: none; }
+.mouse[data-state="sleep"] .zzz { display: block; }
+.mouse .zzz b { position: absolute; color: #173f73; font: 800 15px/1 system-ui, sans-serif; opacity: 0; animation: zz 2.4s linear infinite; }
+.mouse .zzz b:nth-child(2) { animation-delay: .8s; }
+.mouse .zzz b:nth-child(3) { animation-delay: 1.6s; }
+@keyframes zz { 0% { opacity: 0; transform: translate(0, 0) scale(.7); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(12px, -24px) scale(1.25); } }
+
+/* Estado y fichas */
+.status { min-height: 1.5em; margin: 12px 0 10px; font-weight: 500; }
+.chips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.chip {
+  font: inherit; font-size: .82rem; line-height: 1.25;
+  padding: 7px 4px; text-align: center;
+  color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 6px;
+  cursor: pointer;
+}
+.chip:hover:not(:disabled) { border-color: var(--accent); }
+.chip:disabled { cursor: default; }
+.chip b { display: block; }
+.chip span { color: var(--ink-2); }
+.chip[data-outcome="none"] { box-shadow: inset 0 -3px 0 var(--ink-3); }
+.chip[data-outcome="sleep"] { box-shadow: inset 0 -3px 0 var(--hyp); }
+.chip[data-outcome="dead"] { box-shadow: inset 0 -3px 0 var(--let); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.record { margin-top: 12px; padding: 12px; background: var(--row); border-radius: 8px; }
+.record .nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.record .nums div { font-size: .82rem; color: var(--ink-2); }
+.record .nums strong { display: block; font-size: 1.35rem; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.2; }
+button.primary, button.secondary {
+  font: inherit; font-weight: 600; padding: 9px 16px; border-radius: 7px; cursor: pointer;
+}
+button.primary { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); }
+button.primary:hover { filter: brightness(1.1); }
+button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+button.secondary:hover { border-color: var(--ink-3); }
+.record button { width: 100%; }
+
+/* Gráfica */
+.chart-title { margin-bottom: 4px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: .85rem; color: var(--ink-2); margin-bottom: 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend svg { width: 14px; height: 14px; }
+.chartbox { position: relative; }
+#chart { display: block; width: 100%; height: auto; }
+#chart text { font: 12px system-ui, sans-serif; fill: var(--ink-2); }
+#chart .axis-title { font-size: 12.5px; fill: var(--ink-2); }
+#chart .callout { font-weight: 600; fill: var(--ink); font-size: 13px; }
+#chart .halo { paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.tip {
+  position: absolute; pointer-events: none; z-index: 5;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 9px; font-size: .82rem; line-height: 1.35; white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
+  transform: translate(-50%, -100%);
+  font-variant-numeric: tabular-nums;
+}
+.tip[hidden] { display: none; }
+.tip i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; }
+.tip i.h { background: var(--hyp); border-radius: 50%; }
+.tiptab { width: auto; font-size: .8rem; margin-top: 3px; }
+.tiptab th, .tiptab td { padding: 1px 4px; border: 0; font-weight: 400; color: var(--ink-2); text-align: right; }
+.tiptab th:first-child { text-align: left; padding-left: 0; }
+.tiptab td { color: var(--ink); }
+.tip i.l { background: var(--let); }
+
+/* Tabla */
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
+caption { text-align: left; font-size: .85rem; color: var(--ink-2); padding-bottom: 6px; }
+th, td { padding: 5px 8px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+thead th { font-weight: 600; font-size: .8rem; color: var(--ink-2); border-bottom: 1px solid var(--line); vertical-align: bottom; white-space: normal; }
+tbody th { font-weight: 600; }
+th.grp { text-align: center; border-bottom: 1px solid var(--grid); }
+th.mean, td.mean { font-weight: 700; color: var(--ink); }
+td.now { background: var(--row); box-shadow: inset 0 0 0 2px var(--accent); }
+tr.current { background: var(--row); }
+tr.pending td { color: var(--ink-3); }
+tr.flash { animation: flash 1.1s ease-out; }
+@keyframes flash { from { background: var(--accent); } }
+.note { font-size: .82rem; color: var(--ink-2); margin: 8px 0 0; }
+
+/* Resultados */
+.discuss { margin-top: 20px; }
+@media (max-width: 920px) { #results { order: 2; } }
+.fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 10px 0 12px; }
+.fields label { font-size: .85rem; color: var(--ink-2); display: grid; gap: 3px; }
+.fields input {
+  font: inherit; width: 100%; padding: 7px 9px;
+  color: var(--ink); background: var(--surface);
+  border: 1px solid var(--ink-3); border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ok { color: var(--good); font-weight: 600; }
+.off { color: var(--warn); font-weight: 600; }
+#checkMsg { min-height: 1.5em; }
+ol.questions { margin: 8px 0 0; padding-left: 1.3em; }
+ol.questions li { margin-bottom: 8px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.disclaimer { font-size: .82rem; color: var(--ink-3); margin-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rat .tail, .rat .leg, .mouse .pose, .mouse .zzz b, tr.flash { animation: none !important; }
+  .mouse .zzz b { opacity: 1; }
+  .mouse .zzz b:nth-child(2) { transform: translate(8px, -12px); }
+  .mouse .zzz b:nth-child(3) { transform: translate(16px, -24px); }
+}
+@media print {
+  body { background: #fff; }
+  .wrap { max-width: none; padding: 0; }
+  #stagePanel, .toolbar, #checkBtn { display: none !important; }
+  .layout { display: block; }
+  .panel { border: 0; padding: 8px 0; break-inside: avoid; }
+  .tablewrap { overflow: visible; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Curva dosis-respuesta cuantal: hipnosis y letalidad</h1>
+  <p class="intro">Evalúa el hipnótico experimental <strong>Fármaco X</strong> (vía i.p.) en grupos de 5 ratones. Haz clic en cada ratón para inyectarlo y observa si no tiene efecto, se duerme o muere. Al terminar el grupo se registran los porcentajes y pasas a la dosis siguiente. La curva completa se hace por triplicado: 3 réplicas de 8 dosis con el mismo lote del fármaco.</p>
+
+  <div class="layout">
+    <section class="panel" id="stagePanel" aria-label="Jaula de experimentación">
+      <div class="dosehead">
+        <div>
+          <div class="label">Dosis de este grupo</div>
+          <div class="dose"><span id="doseNow">10</span> <span class="unit">mg/kg</span></div>
+        </div>
+        <div class="label" id="groupNow">Réplica 1 de 3 · Grupo 1 de 8</div>
+      </div>
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="cage" id="cage"></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="chips" id="chips" role="group" aria-label="Administrar por número de ratón"></div>
+      <div class="record" id="record" hidden>
+        <div class="nums" id="recordNums"></div>
+        <button class="primary" id="nextBtn" type="button"></button>
+      </div>
+    </section>
+
+    <section class="panel" id="results" hidden>
+      <h2>Análisis de resultados</h2>
+      <p class="note">Las curvas de la gráfica son el ajuste de Hill del promedio de tu triplicado. Traza una línea horizontal en 50 % y lee la dosis donde cruza cada curva.</p>
+      <form id="estimate" novalidate>
+        <div class="fields">
+          <label>DE₅₀ (mg/kg)<input id="inED" type="text" inputmode="decimal" autocomplete="off"></label>
+          <label>DL₅₀ (mg/kg)<input id="inLD" type="text" inputmode="decimal" autocomplete="off"></label>
+          <label>IT (DL₅₀/DE₅₀)<input id="inTI" type="text" inputmode="decimal" autocomplete="off"></label>
+        </div>
+        <div class="actions"><button class="primary" id="checkBtn" type="submit">Comprobar</button></div>
+      </form>
+      <p id="checkMsg" role="status" aria-live="polite"></p>
+      <div class="tablewrap" id="compareWrap" hidden>
+        <table>
+          <thead><tr><th scope="col" style="text-align:left">Parámetro</th><th scope="col">Tu lectura</th><th scope="col">Ajuste de tus datos</th><th scope="col">Valor real del lote</th></tr></thead>
+          <tbody id="compareBody"></tbody>
+        </table>
+        <p class="note">El valor real es el que usó el simulador. La diferencia con tu ajuste se debe a trabajar con solo 15 ratones por dosis (5 por réplica).</p>
+      </div>
+      <h2 class="discuss">Para discutir</h2>
+      <ol class="questions">
+        <li>¿En qué se diferencia esta curva cuantal de una curva gradual? ¿Qué representa exactamente el eje Y?</li>
+        <li>¿Cuánto variaron las 3 réplicas en una misma dosis? ¿Qué ganas al ajustar el promedio del triplicado en lugar de una sola réplica?</li>
+        <li>Compara el IT con el margen de seguridad (DL₁/DE₉₉). ¿Por qué un IT aceptable puede ocultar que las curvas se solapan?</li>
+        <li>¿Qué dosis elegirías para dormir a casi todos los ratones sin matar a ninguno? ¿Existe esa dosis en tus datos?</li>
+      </ol>
+    </section>
+
+    <div class="stack" id="dataCol">
+      <section class="panel">
+        <h2 class="chart-title">Curva dosis-respuesta</h2>
+        <div class="legend">
+          <span><svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="var(--hyp)"/></svg>Hipnosis</span>
+          <span><svg viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="2" width="10" height="10" rx="1" fill="var(--let)"/></svg>Letalidad</span>
+        </div>
+        <div class="chartbox" id="chartbox">
+          <svg id="chart" viewBox="0 0 560 340" role="img" aria-label="Porcentaje de ratones con hipnosis y con muerte según la dosis en escala logarítmica. Los valores están en la tabla de registro."></svg>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="tablewrap">
+          <table>
+            <caption>Registro por triplicado: % de ratones que responden (n = 5 por réplica)</caption>
+            <thead>
+              <tr>
+                <th scope="col" rowspan="2">Dosis (mg/kg)</th>
+                <th scope="colgroup" colspan="4" class="grp">Hipnosis total* (%)</th>
+                <th scope="colgroup" colspan="4" class="grp">Letalidad (%)</th>
+              </tr>
+              <tr>
+                <th scope="col">R1</th><th scope="col">R2</th><th scope="col">R3</th><th scope="col" class="mean">Prom.</th>
+                <th scope="col">R1</th><th scope="col">R2</th><th scope="col">R3</th><th scope="col" class="mean">Prom.</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <p class="note">*Hipnosis total = dormidos + muertos: un ratón que muere ya perdió antes el reflejo de enderezamiento, así que también alcanzó el efecto hipnótico.</p>
+      </section>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="secondary" id="resetBtn" type="button">Empezar con un lote nuevo</button>
+    <button class="secondary" id="printBtn" type="button">Imprimir o guardar PDF</button>
+  </div>
+  <p class="disclaimer">Simulación didáctica: el Fármaco X es hipotético y cada lote tiene valores de DE₅₀ y DL₅₀ distintos, por lo que los datos no describen ningún medicamento real.</p>
+</div>
+
+<script>
+/* ---------- Parámetros del modelo ---------- */
+const DOSES = [10, 16, 25, 40, 63, 100, 160, 250]; // serie logarítmica (paso ≈ 0,2 log)
+const N_MICE = 5;
+const N_REPS = 3;                                  // curva por triplicado con el mismo lote
+const SIGMA_HYP = 0.17, SIGMA_LET = 0.15;          // dispersión en unidades log10
+const RHO = 0.7;                                   // un ratón sensible a la hipnosis tiende a serlo a la letalidad
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 1) => v.toLocaleString('es', { maximumFractionDigits: d });
+
+let sim;      // estado del experimento
+let timers = [];
+let W = 0, H = 0, MW = 100, MH = 60;
+
+/* ---------- Estadística ---------- */
+function randn() {
+  let u = 0, v = 0;
+  while (!u) u = Math.random();
+  while (!v) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+// Función de distribución normal acumulada (aprox. de Zelen y Severo)
+function phi(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
+}
+
+// Ecuación de Hill (logística en log dosis): % = 100 / (1 + 10^(nH·(log DE50 − log D)))
+// Se escribe con s = 1/(nH·ln 10) para ajustar en unidades log10.
+function hill(x, fit) { return 1 / (1 + Math.exp(-(x - fit.mu) / fit.s)); }
+// Valor de log dosis que produce la fracción p de respuesta
+function hillInv(p, fit) { return fit.mu + fit.s * Math.log(p / (1 - p)); }
+
+// Ajuste por máxima verosimilitud en rejilla sobre el triplicado agrupado (n = 15 por dosis).
+// Un prior débil sobre s evita que el ajuste diverja si la respuesta salta de 0 % a 100 % entre dos dosis.
+function fitHill(points) {
+  let best = { mu: 1.5, s: 0.1, ll: -Infinity };
+  for (let mu = 0.8; mu <= 3.0; mu += 0.005) {
+    for (let s = 0.03; s <= 0.35; s += 0.005) {
+      let ll = -0.5 * Math.pow(Math.log(s / 0.1), 2);
+      for (const p of points) {
+        const q = Math.min(1 - 1e-6, Math.max(1e-6, hill(p.x, { mu, s })));
+        ll += p.r * Math.log(q) + (p.n - p.r) * Math.log(1 - q);
+      }
+      if (ll > best.ll) best = { mu, s, ll };
+    }
+  }
+  best.nH = 1 / (best.s * Math.LN10);
+  return best;
+}
+
+/* ---------- Ratón ---------- */
+const RAT_SVG = `
+<svg class="rat" viewBox="0 0 120 72" aria-hidden="true">
+  <ellipse class="shadow" cx="54" cy="66" rx="38" ry="4.5"/>
+  <g class="pose">
+    <path class="tail" d="M24 44 C12 48 10 32 1 37"/>
+    <rect class="leg skin b" x="33" y="52" width="6" height="13" rx="3"/>
+    <rect class="leg skin a" x="43" y="53" width="6" height="12" rx="3"/>
+    <rect class="leg skin a" x="62" y="53" width="6" height="12" rx="3"/>
+    <rect class="leg skin b" x="72" y="52" width="6" height="13" rx="3"/>
+    <ellipse class="fur" cx="52" cy="41" rx="30" ry="19"/>
+    <g class="head">
+      <ellipse class="fur" cx="84" cy="38" rx="16" ry="12"/>
+      <circle class="skin" cx="74" cy="26" r="8"/>
+      <circle class="skin" cx="99.5" cy="39" r="2.8"/>
+      <path class="whisk" d="M95 42L108 46M95 40L109 40M95 38L107 33"/>
+      <circle class="eye" cx="88" cy="34.5" r="2.5"/>
+      <path class="eye-closed" d="M84.5 34.5q3.5 3 7 0"/>
+      <path class="eye-dead" d="M85.5 32l5 5m0-5l-5 5"/>
+    </g>
+  </g>
+</svg>`;
+const X_SVG = `<svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+  <path class="halo" d="M16 16L84 84M84 16L16 84"/><path class="cross" d="M16 16L84 84M84 16L16 84"/></svg>`;
+
+const OUTCOME_TEXT = { none: 'Sin efecto', sleep: 'Dormido', dead: 'Muerto' };
+
+function createMouse(i, slot) {
+  const z1 = randn();
+  const z2 = RHO * z1 + Math.sqrt(1 - RHO * RHO) * randn();
+  const tLet = sim.logLD + SIGMA_LET * z2;
+  const tHyp = Math.min(sim.logED + SIGMA_HYP * z1, tLet); // morir implica haber perdido antes la conciencia
+
+  const el = document.createElement('div');
+  el.className = 'mouse';
+  el.dataset.state = 'free';
+  el.innerHTML = `<div class="flip">${RAT_SVG}</div><span class="zzz"><b>z</b><b>z</b><b>Z</b></span>${X_SVG}<span class="badge">${i + 1}</span><span class="tag"></span>`;
+  const m = {
+    i, el, tHyp, tLet, dosed: false, outcome: null,
+    slot, x: 0, y: 0, tx: 0, ty: 0,
+    // El movimiento es parte de la actividad: con "reducir animaciones" se conserva, pero más lento
+    speed: randBetween(55, 95) * (REDUCED ? 0.5 : 1), pause: Math.random() * 0.6, dir: Math.random() < 0.5 ? 1 : -1, ataxic: false,
+    flip: el.querySelector('.flip'),
+  };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); administer(m); });
+
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip';
+  chip.innerHTML = `<b>Ratón ${i + 1}</b><span>Por inyectar</span>`;
+  chip.addEventListener('click', () => administer(m));
+  chip.addEventListener('pointerenter', () => el.classList.add('hl'));
+  chip.addEventListener('pointerleave', () => el.classList.remove('hl'));
+  chip.addEventListener('focus', () => el.classList.add('hl'));
+  chip.addEventListener('blur', () => el.classList.remove('hl'));
+  m.chip = chip;
+  return m;
+}
+
+function moveToSlot(m) {
+  m.x = m.tx = m.slot[0] * Math.max(1, W - MW);
+  m.y = m.ty = m.slot[1] * Math.max(1, H - MH - 22);
+}
+
+function pickTarget(m) {
+  m.tx = Math.random() * Math.max(1, W - MW);
+  m.ty = Math.random() * Math.max(1, H - MH - 22);
+}
+
+function spawnGroup() {
+  const cage = $('cage'), chips = $('chips');
+  cage.innerHTML = '';
+  chips.innerHTML = '';
+  measure();
+  // Posiciones iniciales separadas para que ningún ratón nazca encima de otro
+  const slots = [[.05, .1], [.85, .08], [.45, .5], [.08, .9], [.9, .88]]
+    .sort(() => Math.random() - 0.5);
+  sim.mice = [];
+  for (let i = 0; i < N_MICE; i++) {
+    const m = createMouse(i, slots[i]);
+    moveToSlot(m);
+    sim.mice.push(m);
+    cage.appendChild(m.el);
+    chips.appendChild(m.chip);
+    place(m);
+  }
+}
+
+function place(m) {
+  const scale = 0.86 + 0.14 * (m.y / Math.max(1, H - MH));
+  m.el.style.transform = `translate(${m.x.toFixed(1)}px, ${m.y.toFixed(1)}px) scale(${scale.toFixed(3)})`;
+  m.el.style.zIndex = 10 + Math.round(m.y);
+  m.flip.style.transform = `scaleX(${m.dir})`;
+}
+
+/* ---------- Movimiento ---------- */
+let lastT = 0;
+function tick(t) {
+  const dt = Math.min(0.05, (t - lastT) / 1000 || 0);
+  lastT = t;
+  if (sim) {
+    for (const m of sim.mice) {
+      if (m.outcome === 'sleep' || m.outcome === 'dead') continue;
+      if (m.pause > 0) {
+        m.pause -= dt;
+        m.el.classList.add('still');
+      } else {
+        m.el.classList.remove('still');
+        let dx = m.tx - m.x, dy = m.ty - m.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 8) {
+          pickTarget(m);
+          if (Math.random() < 0.45) m.pause = randBetween(0.3, 1.3);
+          continue;
+        }
+        const v = m.speed * (m.ataxic ? 0.3 : 1);
+        let vx = dx / dist * v, vy = dy / dist * v * 0.8;
+        // Repulsión suave para que los ratones no se apilen
+        for (const o of sim.mice) {
+          if (o === m) continue;
+          const ox = m.x - o.x, oy = (m.y - o.y) * 1.5, d = Math.hypot(ox, oy);
+          if (d > 0 && d < MW * 0.95) {
+            const push = (1 - d / (MW * 0.95)) * 130;
+            vx += ox / d * push;
+            vy += oy / d * push;
+          }
+        }
+        m.x += vx * dt;
+        m.y += vy * dt;
+        if (Math.abs(vx) > 6) m.dir = vx > 0 ? 1 : -1;
+      }
+      m.x = Math.min(Math.max(0, m.x), Math.max(0, W - MW));
+      m.y = Math.min(Math.max(0, m.y), Math.max(0, H - MH - 22));
+      place(m);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+function measure() {
+  const c = $('cage');
+  const wasCollapsed = W < 150;
+  W = c.clientWidth; H = c.clientHeight;
+  MW = Math.max(72, Math.min(116, W * 0.17));
+  MH = MW * 72 / 120;
+  c.style.setProperty('--mw', MW + 'px');
+  // Si la página cargó en un panel oculto (ancho 0), reparte los ratones al aparecer la jaula
+  if (wasCollapsed && W >= 150 && sim) sim.mice.forEach(m => { moveToSlot(m); place(m); });
+}
+
+/* ---------- Administración ---------- */
+function administer(m) {
+  if (m.dosed || sim.phase !== 'dosing') return;
+  m.dosed = true;
+  m.el.dataset.dosed = '1';
+  m.chip.disabled = true;
+  m.chip.querySelector('span').textContent = 'Observando…';
+  m.el.classList.remove('hl');
+
+  const logDose = Math.log10(DOSES[sim.idx]);
+  const outcome = logDose >= m.tLet ? 'dead' : logDose >= m.tHyp ? 'sleep' : 'none';
+  if (outcome !== 'none') { m.ataxic = true; m.el.classList.add('ataxic'); }
+  updateStatus();
+
+  timers.push(setTimeout(() => {
+    m.outcome = outcome;
+    m.ataxic = false;
+    m.el.classList.remove('ataxic', 'still');
+    m.el.dataset.state = outcome === 'none' ? 'free' : outcome;
+    m.el.querySelector('.tag').textContent = OUTCOME_TEXT[outcome];
+    m.chip.querySelector('span').textContent = OUTCOME_TEXT[outcome];
+    m.chip.dataset.outcome = outcome;
+    if (sim.mice.every(x => x.outcome)) recordGroup();
+    else updateStatus();
+  }, randBetween(900, 1500)));
+}
+
+function updateStatus(extra) {
+  if (extra) { $('status').textContent = extra; return; }
+  const left = sim.mice.filter(m => !m.dosed).length;
+  $('status').textContent = left
+    ? `Haz clic en un ratón para administrar ${DOSES[sim.idx]} mg/kg. ${left === 1 ? 'Falta 1 ratón' : `Faltan ${left} ratones`}.`
+    : 'Observando el efecto del último ratón…';
+}
+
+function recordGroup() {
+  const c = { none: 0, sleep: 0, dead: 0 };
+  sim.mice.forEach(m => c[m.outcome]++);
+  sim.results[sim.rep][sim.idx] = { dose: DOSES[sim.idx], ...c };
+  sim.phase = 'recorded';
+  renderTable(sim.idx);
+  renderChart();
+
+  const pct = n => n / N_MICE * 100;
+  $('recordNums').innerHTML = `
+    <div><strong>${pct(c.none)} %</strong>Sin efecto</div>
+    <div><strong>${pct(c.sleep)} %</strong>Dormidos</div>
+    <div><strong>${pct(c.dead)} %</strong>Muertos</div>`;
+  const lastDose = sim.idx === DOSES.length - 1, lastRep = sim.rep === N_REPS - 1;
+  $('nextBtn').textContent = !lastDose ? `Siguiente dosis: ${DOSES[sim.idx + 1]} mg/kg`
+    : !lastRep ? `Iniciar réplica ${sim.rep + 2} de ${N_REPS} (mismo lote)`
+    : 'Ver análisis de resultados';
+  $('record').hidden = false;
+  updateStatus(lastDose && !lastRep
+    ? `Réplica ${sim.rep + 1} completa. La siguiente repite las 8 dosis con ratones nuevos y el mismo fármaco.`
+    : `Grupo de ${DOSES[sim.idx]} mg/kg registrado (réplica ${sim.rep + 1}).`);
+  $('nextBtn').focus({ preventScroll: true });
+}
+
+function nextDose() {
+  if (sim.idx < DOSES.length - 1) sim.idx++;
+  else if (sim.rep < N_REPS - 1) { sim.rep++; sim.idx = 0; }
+  else { showResults(); return; }
+  startDose();
+}
+
+function startDose() {
+  sim.phase = 'dosing';
+  $('record').hidden = true;
+  $('doseNow').textContent = DOSES[sim.idx];
+  $('groupNow').textContent = `Réplica ${sim.rep + 1} de ${N_REPS} · Grupo ${sim.idx + 1} de ${DOSES.length}`;
+  $('progressBar').style.width = ((sim.rep * DOSES.length + sim.idx) / (N_REPS * DOSES.length) * 100) + '%';
+  spawnGroup();
+  renderTable();
+  updateStatus();
+}
+
+/* ---------- Datos por réplica y promedio ---------- */
+// % de respuesta de una réplica en la dosis i; key 'h' = hipnosis total, 'l' = letalidad
+function repPct(rep, i, key) {
+  const r = sim.results[rep][i];
+  if (!r) return null;
+  return (key === 'h' ? r.sleep + r.dead : r.dead) / N_MICE * 100;
+}
+// Promedio del triplicado, solo cuando las 3 réplicas de esa dosis están completas
+function meanPct(i, key) {
+  const v = [];
+  for (let rep = 0; rep < N_REPS; rep++) v.push(repPct(rep, i, key));
+  return v.some(x => x === null) ? null : v.reduce((a, b) => a + b, 0) / N_REPS;
+}
+
+/* ---------- Tabla ---------- */
+function renderTable(flashIdx) {
+  const cell = v => v === null ? '—' : fmt(v, 1);
+  const dosing = sim.phase === 'dosing';
+  $('tbody').innerHTML = DOSES.map((d, i) => {
+    const any = sim.results.some(r => r[i]);
+    const cls = [any ? '' : 'pending', i === sim.idx && dosing ? 'current' : '', i === flashIdx ? 'flash' : ''].join(' ').trim();
+    let tds = '';
+    for (const key of ['h', 'l']) {
+      for (let rep = 0; rep < N_REPS; rep++) {
+        const now = dosing && rep === sim.rep && i === sim.idx;
+        tds += `<td${now ? ' class="now"' : ''}>${cell(repPct(rep, i, key))}</td>`;
+      }
+      tds += `<td class="mean">${cell(meanPct(i, key))}</td>`;
+    }
+    return `<tr class="${cls}"><th scope="row">${d}</th>${tds}</tr>`;
+  }).join('');
+}
+
+/* ---------- Gráfica ---------- */
+const CH = { w: 560, h: 340, l: 50, r: 16, t: 14, b: 50, x0: Math.log10(8), x1: Math.log10(320) };
+const sx = lg => CH.l + (lg - CH.x0) / (CH.x1 - CH.x0) * (CH.w - CH.l - CH.r);
+const sy = p => CH.h - CH.b - p / 100 * (CH.h - CH.t - CH.b);
+
+function curvePath(fit) {
+  let d = '';
+  for (let i = 0; i <= 100; i++) {
+    const lg = CH.x0 + (CH.x1 - CH.x0) * i / 100;
+    d += (i ? 'L' : 'M') + sx(lg).toFixed(1) + ' ' + sy(hill(lg, fit) * 100).toFixed(1);
+  }
+  return d;
+}
+
+function renderChart() {
+  let s = '';
+  // Rejilla y ejes
+  for (const p of [0, 25, 50, 75, 100]) {
+    const strong = p === 50;
+    s += `<line x1="${CH.l}" x2="${CH.w - CH.r}" y1="${sy(p)}" y2="${sy(p)}" stroke="${strong ? 'var(--ink-3)' : 'var(--grid)'}" ${strong ? 'stroke-dasharray="4 4"' : ''}/>`;
+    s += `<text x="${CH.l - 8}" y="${sy(p) + 4}" text-anchor="end">${p}</text>`;
+  }
+  for (const d of DOSES) {
+    const x = sx(Math.log10(d));
+    s += `<line x1="${x}" x2="${x}" y1="${sy(0)}" y2="${sy(0) + 5}" stroke="var(--ink-3)"/>`;
+    s += `<text x="${x}" y="${sy(0) + 19}" text-anchor="middle">${d}</text>`;
+  }
+  s += `<text class="axis-title" x="${(CH.l + CH.w - CH.r) / 2}" y="${CH.h - 8}" text-anchor="middle">Dosis (mg/kg, escala logarítmica)</text>`;
+  s += `<text class="axis-title" transform="translate(13 ${(CH.t + CH.h - CH.b) / 2}) rotate(-90)" text-anchor="middle">% de ratones que responden</text>`;
+
+  const xOf = i => Math.log10(DOSES[i]);
+  const means = DOSES.map((d, i) => ({ i, x: xOf(i), h: meanPct(i, 'h'), l: meanPct(i, 'l') })).filter(p => p.h !== null);
+  const current = DOSES.map((d, i) => ({ i, x: xOf(i), h: repPct(sim.rep, i, 'h'), l: repPct(sim.rep, i, 'l') })).filter(p => p.h !== null);
+
+  if (sim.fit) {
+    s += `<path d="${curvePath(sim.fit.h)}" fill="none" stroke="var(--hyp)" stroke-width="2"/>`;
+    s += `<path d="${curvePath(sim.fit.l)}" fill="none" stroke="var(--let)" stroke-width="2"/>`;
+    const lgH85 = hillInv(0.85, sim.fit.h), lgL15 = hillInv(0.15, sim.fit.l);
+    s += `<text class="callout halo" x="${sx(lgH85) - 10}" y="${sy(85) + 4}" text-anchor="end">Hipnosis</text>`;
+    s += `<text class="callout halo" x="${sx(lgL15) + 10}" y="${sy(15) + 4}" text-anchor="start">Letalidad</text>`;
+    if (sim.checked) {
+      for (const [fit, name, anchor, dx, dy] of [[sim.fit.h, 'DE₅₀', 'end', -7, -7], [sim.fit.l, 'DL₅₀', 'start', 7, 16]]) {
+        const x = sx(fit.mu);
+        s += `<line x1="${x}" x2="${x}" y1="${sy(50)}" y2="${sy(0)}" stroke="var(--ink-2)" stroke-dasharray="2 3"/>`;
+        s += `<text class="callout halo" x="${x + dx}" y="${sy(50) + dy}" text-anchor="${anchor}">${name} ${fmt(Math.pow(10, fit.mu), 0)}</text>`;
+      }
+    }
+  } else {
+    // Antes del ajuste: línea tenue que une los puntos de la réplica en curso
+    const line = (pts, k) => pts.map((p, j) => (j ? 'L' : 'M') + sx(p.x).toFixed(1) + ' ' + sy(p[k]).toFixed(1)).join('');
+    const pts = sim.phase === 'dosing' || sim.phase === 'recorded' ? current : [];
+    if (pts.length > 1) {
+      s += `<path d="${line(pts, 'h')}" fill="none" stroke="var(--hyp)" stroke-width="2" opacity=".45"/>`;
+      s += `<path d="${line(pts, 'l')}" fill="none" stroke="var(--let)" stroke-width="2" opacity=".45"/>`;
+    }
+  }
+  // Réplicas individuales: marcas pequeñas y huecas
+  for (let rep = 0; rep < N_REPS; rep++) {
+    DOSES.forEach((d, i) => {
+      const h = repPct(rep, i, 'h');
+      if (h === null) return;
+      const x = sx(xOf(i)), l = repPct(rep, i, 'l');
+      s += `<rect x="${x - 3.5}" y="${sy(l) - 3.5}" width="7" height="7" fill="none" stroke="var(--let)" stroke-width="1.5" opacity=".7"/>`;
+      s += `<circle cx="${x}" cy="${sy(h)}" r="3.5" fill="none" stroke="var(--hyp)" stroke-width="1.5" opacity=".7"/>`;
+    });
+  }
+  // Promedio del triplicado: marcas llenas (cuadrado debajo, círculo encima para que ambos se vean)
+  for (const p of means) {
+    const x = sx(p.x);
+    s += `<rect x="${x - 6}" y="${sy(p.l) - 6}" width="12" height="12" rx="1.5" fill="var(--let)" stroke="var(--surface)" stroke-width="2"/>`;
+    s += `<circle cx="${x}" cy="${sy(p.h)}" r="4.5" fill="var(--hyp)" stroke="var(--surface)" stroke-width="2"/>`;
+  }
+  s += `<line id="guide" y1="${sy(100)}" y2="${sy(0)}" stroke="var(--ink-3)" visibility="hidden"/>`;
+  // Bandas invisibles de hover, una por dosis con algún dato
+  DOSES.forEach((d, i) => {
+    if (!sim.results.some(r => r[i])) return;
+    const x = sx(xOf(i)), half = (sx(xOf(1)) - sx(xOf(0))) / 2;
+    s += `<rect class="band" data-i="${i}" x="${x - half}" y="${CH.t}" width="${half * 2}" height="${CH.h - CH.t - CH.b}" fill="transparent"/>`;
+  });
+  $('chart').innerHTML = s;
+}
+
+function showTip(i) {
+  if (!sim.results.some(r => r[i])) return;
+  const x = sx(Math.log10(DOSES[i]));
+  const cells = key => [0, 1, 2].map(rep => repPct(rep, i, key)).concat([meanPct(i, key)])
+    .map((v, j) => `<td${j === 3 ? ' class="mean"' : ''}>${v === null ? '—' : fmt(v, 1)}</td>`).join('');
+  const shown = [0, 1, 2].map(rep => repPct(rep, i, 'h')).concat([0, 1, 2].map(rep => repPct(rep, i, 'l'))).filter(v => v !== null);
+  const h = Math.max(...shown), l = h;
+  const tip = $('tip');
+  tip.innerHTML = `<strong>${DOSES[i]} mg/kg</strong> (% que responde)<table class="tiptab"><tr><th></th><th>R1</th><th>R2</th><th>R3</th><th>Prom.</th></tr>`
+    + `<tr><th><i class="h"></i>Hip.</th>${cells('h')}</tr><tr><th><i class="l"></i>Let.</th>${cells('l')}</tr></table>`;
+  const scale = $('chartbox').clientWidth / CH.w;
+  tip.hidden = false;
+  const half = tip.offsetWidth / 2 + 2;
+  tip.style.left = Math.min($('chartbox').clientWidth - half, Math.max(half, x * scale)) + 'px';
+  tip.style.top = (Math.min(sy(h), sy(l)) * scale - 10 > 62 ? Math.min(sy(h), sy(l)) * scale - 10 : 66) + 'px';
+  const g = $('guide');
+  g.setAttribute('x1', x); g.setAttribute('x2', x); g.setAttribute('visibility', 'visible');
+}
+function hideTip() {
+  $('tip').hidden = true;
+  const g = $('guide');
+  if (g) g.setAttribute('visibility', 'hidden');
+}
+
+/* ---------- Resultados ---------- */
+function showResults() {
+  sim.phase = 'done';
+  // El promedio del triplicado equivale a agrupar los 15 ratones de cada dosis
+  const pooled = DOSES.map((d, i) => {
+    const reps = sim.results.map(r => r[i]);
+    return { x: Math.log10(d), n: N_MICE * N_REPS, hyp: reps.reduce((a, r) => a + r.sleep + r.dead, 0), let: reps.reduce((a, r) => a + r.dead, 0) };
+  });
+  sim.fit = {
+    h: fitHill(pooled.map(p => ({ x: p.x, n: p.n, r: p.hyp }))),
+    l: fitHill(pooled.map(p => ({ x: p.x, n: p.n, r: p.let }))),
+  };
+  // El análisis ocupa el lugar de la jaula para leer la gráfica mientras se responde
+  $('stagePanel').hidden = true;
+  $('results').hidden = false;
+  renderChart();
+  renderTable();
+  document.querySelector('.layout').scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'start' });
+  $('inED').focus({ preventScroll: true });
+}
+
+function parseNum(str) {
+  const v = parseFloat(String(str).trim().replace(',', '.'));
+  return isFinite(v) && v > 0 ? v : null;
+}
+
+function checkEstimate(e) {
+  e.preventDefault();
+  const ed = parseNum($('inED').value), ld = parseNum($('inLD').value), ti = parseNum($('inTI').value);
+  const msg = $('checkMsg');
+  if (ed === null || ld === null || ti === null) {
+    msg.innerHTML = '<span class="off">Escribe los tres valores como números positivos.</span>';
+    return;
+  }
+  sim.checked = true;
+  const fED = Math.pow(10, sim.fit.h.mu), fLD = Math.pow(10, sim.fit.l.mu), fTI = fLD / fED;
+  const tED = Math.pow(10, sim.logED), tLD = Math.pow(10, sim.logLD), tTI = tLD / tED;
+  // Margen DL1/DE99: con el ajuste de Hill para tus datos; con el modelo normal del simulador para el valor real
+  const fM = Math.pow(10, hillInv(0.01, sim.fit.l)) / Math.pow(10, hillInv(0.99, sim.fit.h));
+  const z99 = 2.326;
+  const tM = Math.pow(10, sim.logLD - z99 * SIGMA_LET) / Math.pow(10, sim.logED + z99 * SIGMA_HYP);
+
+  const verdict = (val, ref) => Math.abs(val - ref) / ref <= 0.15
+    ? '<span class="ok">✓ cerca</span>'
+    : `<span class="off">△ ${val > ref ? 'alta' : 'baja'}</span>`;
+  const row = (name, you, f, t, d = 1) => `<tr><th scope="row" style="text-align:left">${name}</th><td>${you === null ? '—' : `${fmt(you, 2)} ${verdict(you, f)}`}</td><td>${fmt(f, d)}</td><td>${fmt(t, d)}</td></tr>`;
+  $('compareBody').innerHTML =
+    row('DE₅₀ (mg/kg)', ed, fED, tED) +
+    row('DL₅₀ (mg/kg)', ld, fLD, tLD) +
+    row('IT', ti, fTI, tTI, 2) +
+    row('Margen DL₁/DE₉₉', null, fM, tM, 2);
+  $('compareWrap').hidden = false;
+  msg.textContent = 'Se considera cerca una lectura a menos de 15 % del ajuste. Las líneas punteadas de la gráfica marcan DE₅₀ y DL₅₀.';
+  renderChart();
+}
+
+/* ---------- Inicio ---------- */
+function newExperiment() {
+  timers.forEach(clearTimeout);
+  timers = [];
+  sim = {
+    logED: randBetween(Math.log10(25), Math.log10(40)),
+    logLD: randBetween(Math.log10(100), Math.log10(160)),
+    idx: 0, rep: 0, phase: 'dosing', results: Array.from({ length: N_REPS }, () => []), mice: [], fit: null, checked: false,
+  };
+  $('stagePanel').hidden = false;
+  $('results').hidden = true;
+  $('compareWrap').hidden = true;
+  $('checkMsg').textContent = '';
+  $('estimate').reset();
+  hideTip();
+  startDose();
+  renderChart();
+}
+
+$('nextBtn').addEventListener('click', nextDose);
+$('estimate').addEventListener('submit', checkEstimate);
+$('printBtn').addEventListener('click', () => window.print());
+$('resetBtn').addEventListener('click', () => {
+  if (sim.results.some(r => r.length) && !confirm('Se perderán los datos registrados. ¿Empezar con un lote nuevo?')) return;
+  newExperiment();
+  scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+});
+$('chart').addEventListener('pointerover', e => {
+  const b = e.target.closest && e.target.closest('.band');
+  if (b) showTip(+b.dataset.i);
+});
+$('chart').addEventListener('pointerleave', hideTip);
+new ResizeObserver(measure).observe($('cage'));
+
+newExperiment();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
