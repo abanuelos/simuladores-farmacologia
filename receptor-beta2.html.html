@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Activa el receptor β2 · Juego didáctico</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.12);
+    --s1: #2a78d6;
+    --good: #006300; --good-bg: #e8f3e8; --bad: #b02f2f; --bad-bg: #fbeaea;
+    --accent: #0b2545; --on-accent: #ffffff; --gold: #a07d10; --track: #cde2fb; --fill: #2a78d6;
+    --chip: #eef1f5;
+    /* escena */
+    --extra: #fbf6ea; --cyto: #eef4fa; --head: #c9a86a; --tail: #dccba4;
+    --rec: #2a78d6; --rec-on: #0f5bb5; --ga: #eb6834; --gbg: #8a63d2; --ac: #13968a; --plc: #9a9a92;
+    --pka: #3c9a3c; --pkc: #9a9a92; --pde: #c8423b; --mlck: #b8862a; --lig: #e2a400; --camp: #d6408b;
+    --actin: #c9566f; --myosin: #6b5a8e; --hover: rgba(42,120,214,.10); --hover-line: rgba(42,120,214,.6);
+    /* bronquio */
+    --wall: #f1d9cf; --cart: #c9c4e4; --musc: #c9566f; --muco: #f6b7c0; --air: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.12);
+      --s1: #3987e5;
+      --good: #4cc24c; --good-bg: #14301a; --bad: #f08a8a; --bad-bg: #3a1c1c;
+      --accent: #86b6ef; --on-accent: #0d1b2e; --gold: #e0b93a; --track: #1c3552; --fill: #3987e5;
+      --chip: #262624;
+      --extra: #1f1b12; --cyto: #121a24; --head: #8f7643; --tail: #5a4c30;
+      --rec: #3987e5; --rec-on: #7db4f5; --ga: #e0743f; --gbg: #9a7be0; --ac: #22b3a5; --plc: #66665f;
+      --pka: #4cb04c; --pkc: #66665f; --pde: #e0605a; --mlck: #c99a3a; --lig: #f0bd2b; --camp: #e8609f;
+      --actin: #d9708a; --myosin: #9c87c7; --hover: rgba(57,135,229,.16); --hover-line: rgba(125,180,245,.7);
+      --wall: #3a2a26; --cart: #3f3a5e; --musc: #d9708a; --muco: #7a3e48; --air: #0d0d0d;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.55; font-size: 16px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 16px 56px; }
+  .kicker { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.01em; }
+  .lead { color: var(--ink2); margin: 0 0 20px; max-width: 70ch; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .card h2 { font-size: 18px; margin: 0 0 8px; line-height: 1.3; }
+  .btn { font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 11px 20px; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.sec { background: var(--chip); color: var(--ink); border: 1px solid var(--border); }
+  .btn[disabled] { opacity: .4; cursor: default; }
+  .btn:focus-visible, .opt:focus-visible, .ghost:focus-visible { outline: 3px solid var(--s1); outline-offset: 2px; }
+  .ghost { font: inherit; font-size: 13.5px; background: none; border: 0; color: var(--ink2); text-decoration: underline; cursor: pointer; padding: 6px 0; }
+  .ghost[disabled] { opacity: .4; cursor: default; }
+  .status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink2); margin-bottom: 8px; flex-wrap: wrap; }
+  .status strong { color: var(--ink); }
+  .bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; margin-bottom: 14px; }
+  .bar > i { display: block; height: 100%; background: var(--fill); width: 0; transition: width .4s; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 6px; padding: 2px 8px; background: var(--track); color: var(--accent); margin-bottom: 8px; }
+  .prompt { margin: 0 0 12px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { font: inherit; font-size: 15px; cursor: pointer; text-align: left; background: var(--surface); color: var(--ink); border: 1.5px solid var(--axis); border-radius: 8px; padding: 9px 14px; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; }
+  .opt.sel { border-color: var(--accent); background: var(--track); }
+  .opt.right { border-color: var(--good); background: var(--good-bg); }
+  .opt.right::before { content: "✓ "; color: var(--good); font-weight: 700; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+  .opt.wrong::before { content: "✗ "; color: var(--bad); font-weight: 700; }
+  .fb { margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14.5px; }
+  .fb.ok { background: var(--good-bg); } .fb.no { background: var(--bad-bg); }
+  .fb b.v { display: block; margin-bottom: 2px; } .fb.ok b.v { color: var(--good); } .fb.no b.v { color: var(--bad); }
+  .fb.hintbox { background: var(--chip); color: var(--ink2); }
+  .actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .flow span { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 13.5px; }
+  .flow i { font-style: normal; color: var(--muted); }
+  .hero { font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -.02em; margin: 4px 0; }
+  .rule { border-left: 3px solid var(--gold); padding-left: 12px; margin: 14px 0; color: var(--ink2); }
+  .rule b { color: var(--ink); }
+  footer { color: var(--muted); font-size: 12.5px; margin-top: 24px; }
+  [hidden] { display: none !important; }
+
+  /* intro */
+  .levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .levels .card { display: flex; flex-direction: column; margin: 0; }
+  .levels .card p { color: var(--ink2); margin: 0 0 14px; flex: 1; }
+  .best { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .learn { margin: 6px 0 0; padding-left: 20px; color: var(--ink2); } .learn li { margin: 3px 0; }
+
+  /* juego */
+  .game { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .stage { padding: 8px; }
+  .stage svg { display: block; width: 100%; height: auto; border-radius: 8px; user-select: none; -webkit-user-select: none; }
+  .legend { font-size: 13px; color: var(--muted); margin: 6px 6px 2px; }
+  @media (max-width: 860px) { .game { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { h1 { font-size: 25px; } .hero { font-size: 44px; } .opt { flex: 1 1 calc(50% - 8px); } }
+
+  /* SVG */
+  .zone { font-size: 12px; letter-spacing: .1em; fill: var(--muted); font-weight: 700; }
+  .lbl { font-size: 15px; fill: var(--ink2); text-anchor: middle; font-weight: 600; pointer-events: none; }
+  .in { font-size: 15px; fill: #fff; text-anchor: middle; font-weight: 700; pointer-events: none; }
+  .in.sm { font-size: 10px; }
+  .chip rect.body { fill: var(--surface); stroke: var(--axis); stroke-width: 1.5; }
+  .chip text { font-size: 15px; fill: var(--ink); font-weight: 600; pointer-events: none; }
+  .tgt { cursor: pointer; transition: opacity .5s; }
+  .tgt .hit { fill: transparent; stroke: transparent; stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .tgt:hover .hit { fill: var(--hover); stroke: var(--hover-line); }
+  .tgt.flash .hit { fill: rgba(176,47,47,.14); stroke: var(--bad); }
+  .tgt.okflash .hit { fill: rgba(0,99,0,.12); stroke: var(--good); }
+  .chip.gone { opacity: .18; pointer-events: none; }
+  .tok.gone { opacity: 0; pointer-events: none; }
+  .helix { fill: var(--rec); transition: fill .5s; }
+  #t-rec.on .helix { fill: var(--rec-on); }
+  #t-rec.on .glow, #t-ac.on .glow, #t-pka.on .glow { opacity: 1; }
+  .glow { opacity: 0; transition: opacity .6s; fill: none; stroke: var(--lig); stroke-width: 3; stroke-dasharray: 3 5; }
+  .ga { fill: var(--ga); } .gb { fill: var(--gbg); } .gg { fill: var(--gbg); opacity: .8; }
+  .nuc { fill: #fff; stroke: var(--ink2); stroke-width: 1; } .nuc.gtp { fill: #ffe9a8; stroke: var(--gold); }
+  .nuctxt { font-size: 9px; font-weight: 700; text-anchor: middle; fill: #222; pointer-events: none; }
+  .ac { fill: var(--ac); } .plc { fill: var(--plc); } .pka-r { fill: var(--pka); opacity: .65; } .pka-c { fill: var(--pka); }
+  .pkc { fill: var(--pkc); } .pde { fill: var(--pde); } .mlck { fill: var(--mlck); transition: fill .6s, opacity .6s; }
+  #t-mlck.inh .mlck { opacity: .45; }
+  .pbadge { fill: var(--gold); } .pbadge-t { font-size: 12px; font-weight: 800; fill: #fff; text-anchor: middle; }
+  .tokc { stroke: rgba(0,0,0,.15); stroke-width: 1; }
+  .tokc.gtp { fill: #ffe9a8; } .tokc.atp { fill: #bfe3ff; } .tokc.gmpc { fill: #d9d9d4; }
+  .toktxt { font-size: 12px; font-weight: 800; fill: #222; text-anchor: middle; pointer-events: none; }
+  .camp { fill: var(--camp); } .ampx { fill: var(--muted); }
+  .actin { stroke: var(--actin); stroke-width: 6; stroke-linecap: round; }
+  .zdisc { stroke: var(--ink2); stroke-width: 4; stroke-linecap: round; }
+  .myosin { fill: var(--myosin); } .mhead { fill: var(--myosin); }
+  .lig { fill: var(--lig); stroke: rgba(0,0,0,.25); stroke-width: 1; }
+  .fx { pointer-events: none; }
+
+  /* monitor */
+  .monitor { display: grid; grid-template-columns: 150px minmax(0,1fr); gap: 14px; align-items: center; }
+  .monitor svg { width: 150px; height: 150px; display: block; }
+  .bronch .wall { fill: var(--wall); } .bronch .cart { fill: none; stroke: var(--cart); stroke-width: 7; stroke-dasharray: 60 22; }
+  .bronch .musc { fill: none; stroke: var(--musc); } .bronch .muco { fill: var(--muco); } .bronch .lum { fill: var(--air); }
+  .mrow { font-size: 13px; color: var(--ink2); display: flex; justify-content: space-between; gap: 6px; }
+  .mrow b { color: var(--ink); font-size: 15px; }
+  .meter { height: 10px; border-radius: 5px; background: var(--track); overflow: hidden; margin: 4px 0 10px; }
+  .meter > i { display: block; height: 100%; background: var(--camp); width: 0; }
+  .meter.flowm > i { background: var(--s1); }
+  .mstate { font-weight: 700; font-size: 14.5px; margin-top: 2px; }
+  @media (max-width: 380px) { .monitor { grid-template-columns: 1fr; } .monitor svg { margin: 0 auto; } }
+
+  .qgroup { margin: 12px 0; }
+  .qgroup h3 { font-size: 15px; margin: 0 0 8px; }
+  .case-title { font-size: 19px; font-weight: 700; margin: 0 0 6px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="kicker">Farmacología Básica · Transducción de señales</p>
+  <h1>Activa el receptor β2 adrenérgico</h1>
+  <p class="lead">Un paciente llega con una crisis asmática: sus bronquios están contraídos. Recorre la cascada de señalización del receptor β2 paso a paso hasta relajar el músculo liso bronquial, y luego predice qué hacen distintos fármacos sobre la vía.</p>
+
+  <!-- ===== INTRO ===== -->
+  <section id="intro" class="screen">
+    <div class="levels">
+      <div class="card">
+        <span class="tag">Nivel 1</span>
+        <h2>Arma la cascada</h2>
+        <p>Haz clic en la molécula correcta, dentro de la célula o en los botones, para avanzar en cada uno de los 8 pasos: del ligando a la broncodilatación y al apagado de la señal. Cada error resta puntos.</p>
+        <div><button class="btn" id="go1">Jugar nivel 1</button></div>
+        <div class="best" id="best1"></div>
+      </div>
+      <div class="card">
+        <span class="tag">Nivel 2</span>
+        <h2>Predice el efecto</h2>
+        <p>Seis situaciones clínicas y de laboratorio: predice qué pasa con el AMPc y con el calibre del bronquio, y compruébalo en el monitor del paciente.</p>
+        <div><button class="btn" id="go2">Jugar nivel 2</button></div>
+        <div class="best" id="best2"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Qué vas a repasar</h2>
+      <ul class="learn">
+        <li>Selectividad de ligandos: agonista β2 selectivo, no selectivo, antagonista y otros receptores.</li>
+        <li>Acoplamiento a Gs, intercambio GDP → GTP y disociación de Gαs de Gβγ.</li>
+        <li>Adenilil ciclasa, AMPc como segundo mensajero y activación de PKA.</li>
+        <li>Por qué la inhibición de la MLCK relaja el músculo liso bronquial.</li>
+        <li>Terminación de la señal con la fosfodiesterasa y fármacos que actúan sobre cada paso.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== NIVEL 1 ===== -->
+  <section id="lvl1" class="screen" hidden>
+    <div class="game">
+      <div class="card stage">
+        <div id="sceneHost"></div>
+        <p class="legend">Pasa el cursor o toca una molécula para seleccionarla. El monitor del paciente muestra el corte del bronquio del paciente.</p>
+      </div>
+      <div>
+        <div class="card">
+          <div class="status"><span>Paso <strong id="l1step">1</strong> de 8</span><span>Puntos: <strong id="l1score">0</strong></span></div>
+          <div class="bar"><i id="l1bar"></i></div>
+          <span class="tag" id="l1tag"></span>
+          <h2 id="l1title"></h2>
+          <p class="prompt" id="l1prompt"></p>
+          <div class="opts" id="l1opts"></div>
+          <div id="l1fb"></div>
+          <div class="actions">
+            <button class="ghost" id="l1hint">Pedir pista (−10 puntos)</button>
+            <button class="btn" id="l1next" hidden>Siguiente →</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Monitor del paciente</h2>
+          <div class="monitor" id="mon1"></div>
+        </div>
+        <button class="ghost" id="l1quit">← Volver al menú</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NIVEL 2 ===== -->
+  <section id="lvl2" class="screen" hidden>
+    <div class="game">
+      <div class="card">
+        <div class="status"><span>Caso <strong id="l2i">1</strong> de <span id="l2n">6</span></span><span>Puntos: <strong id="l2score">0</strong></span></div>
+        <div class="bar"><i id="l2bar"></i></div>
+        <span class="tag" id="l2tag"></span>
+        <p class="case-title" id="l2title"></p>
+        <p class="prompt" id="l2text"></p>
+        <div class="qgroup">
+          <h3>1. ¿Qué pasa con el AMPc en el músculo liso bronquial?</h3>
+          <div class="opts" id="l2camp"></div>
+        </div>
+        <div class="qgroup">
+          <h3>2. ¿Qué pasa con el bronquio?</h3>
+          <div class="opts" id="l2bron"></div>
+        </div>
+        <div id="l2fb"></div>
+        <div class="actions">
+          <button class="ghost" id="l2quit">← Volver al menú</button>
+          <span>
+            <button class="btn" id="l2check" disabled>Comprobar</button>
+            <button class="btn" id="l2next" hidden>Siguiente →</button>
+          </span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Monitor del paciente</h2>
+        <div class="monitor" id="mon2"></div>
+        <div class="rule" style="font-size:14px"><b>Ley de Poiseuille:</b> el flujo aéreo es proporcional al radio a la cuarta potencia (r⁴). Si el radio se reduce a la mitad, el flujo cae a 1/16.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RESULTADOS ===== -->
+  <section id="results" class="screen" hidden>
+    <div class="card">
+      <span class="tag" id="rTag"></span>
+      <p class="hero" id="rScore"></p>
+      <p id="rRank" style="font-size:20px;font-weight:700;margin:6px 0 4px"></p>
+      <p id="rDetail" style="color:var(--ink2);margin:0 0 12px"></p>
+      <div id="rBody"></div>
+      <div class="actions" style="justify-content:flex-start">
+        <button class="btn" id="rAgain">Jugar de nuevo</button>
+        <button class="btn sec" id="rOther"></button>
+        <button class="btn sec" id="rMenu">Menú</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>Simulador educativo con fines didácticos. Los valores del monitor son ilustrativos, no datos clínicos.</footer>
+</main>
+
+<!-- Escena de la célula (se clona en cada partida) -->
+<template id="sceneTpl">
+<svg viewBox="0 0 820 560" role="img" aria-label="Célula de músculo liso bronquial con la vía del receptor β2">
+  <defs>
+    <pattern id="lip" width="12" height="40" patternUnits="userSpaceOnUse" patternTransform="translate(0,175)">
+      <path d="M4 9 V19 M8 9 V19 M4 21 V31 M8 21 V31" stroke="var(--tail)" stroke-width="1.5"/>
+      <circle cx="6" cy="5" r="4.6" fill="var(--head)"/><circle cx="6" cy="35" r="4.6" fill="var(--head)"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="820" height="175" fill="var(--extra)"/>
+  <rect x="0" y="215" width="820" height="345" fill="var(--cyto)"/>
+  <rect x="0" y="175" width="820" height="40" fill="url(#lip)"/>
+  <text x="14" y="24" class="zone">ESPACIO EXTRACELULAR (LUZ BRONQUIAL)</text>
+  <text x="14" y="550" class="zone">CITOPLASMA · MÚSCULO LISO BRONQUIAL</text>
+
+  <!-- Bandeja de ligandos -->
+  <g id="tray">
+    <g class="tgt chip" data-id="lig-salb"><rect class="hit" x="15" y="44" width="140" height="54" rx="12"/><rect class="body" x="19" y="48" width="132" height="46" rx="10"/><path d="M37 62 l9 9 l-9 9 l-9 -9z" class="lig"/><text x="53" y="76">Salbutamol</text></g>
+    <g class="tgt chip" data-id="lig-adr"><rect class="hit" x="170" y="44" width="140" height="54" rx="12"/><rect class="body" x="174" y="48" width="132" height="46" rx="10"/><circle cx="192" cy="71" r="8.5" fill="#d9822b"/><text x="208" y="76">Adrenalina</text></g>
+    <g class="tgt chip" data-id="lig-prop"><rect class="hit" x="325" y="44" width="140" height="54" rx="12"/><rect class="body" x="329" y="48" width="132" height="46" rx="10"/><rect x="339" y="63" width="16" height="16" rx="3" fill="#5f6b7a"/><text x="363" y="76">Propranolol</text></g>
+    <g class="tgt chip" data-id="lig-fen"><rect class="hit" x="480" y="44" width="140" height="54" rx="12"/><rect class="body" x="484" y="48" width="132" height="46" rx="10"/><path d="M502 62 l9 17 h-18z" fill="#7a9a3a"/><text x="518" y="76">Fenilefrina</text></g>
+    <g class="tgt chip" data-id="lig-ach"><rect class="hit" x="635" y="44" width="150" height="54" rx="12"/><rect class="body" x="639" y="48" width="142" height="46" rx="10"/><circle cx="656" cy="71" r="8.5" fill="#8a63d2"/><text x="671" y="76">Acetilcolina</text></g>
+  </g>
+
+  <!-- Receptor β2 -->
+  <g id="t-rec" class="tgt" data-id="rec">
+    <rect class="hit" x="96" y="138" width="110" height="102" rx="10"/>
+    <ellipse class="glow" cx="151" cy="198" rx="62" ry="48"/>
+    <path d="M108 162 q-10 -8 -2 -16" fill="none" stroke="var(--rec)" stroke-width="3"/>
+    <rect class="helix" x="104" y="162" width="11" height="70" rx="5"/>
+    <rect class="helix" x="117.5" y="166" width="11" height="66" rx="5"/>
+    <rect class="helix" x="131" y="162" width="11" height="70" rx="5"/>
+    <rect class="helix" x="144.5" y="170" width="11" height="62" rx="5"/>
+    <rect class="helix" x="158" y="162" width="11" height="70" rx="5"/>
+    <rect class="helix" x="171.5" y="166" width="11" height="66" rx="5"/>
+    <rect class="helix" x="185" y="162" width="11" height="70" rx="5"/>
+    <text x="150" y="134" class="lbl">Receptor β2</text>
+  </g>
+  <g id="ligpiece" class="fx" style="opacity:0"><path d="M150 155 l11 11 l-11 11 l-11 -11z" class="lig"/></g>
+
+  <!-- Proteína Gs -->
+  <g id="t-gs" class="tgt" data-id="gs">
+    <rect class="hit" x="238" y="217" width="134" height="92" rx="10"/>
+    <g id="gbg">
+      <ellipse class="gb" cx="328" cy="260" rx="24" ry="20"/><text x="328" y="265" class="in">β</text>
+      <ellipse class="gg" cx="352" cy="230" rx="14" ry="11"/><text x="352" y="235" class="in">γ</text>
+    </g>
+    <g id="ga">
+      <ellipse class="ga" cx="275" cy="248" rx="30" ry="24"/><text x="275" y="245" class="in">αs</text>
+      <circle id="nuc" class="nuc" cx="275" cy="262" r="10"/><text id="nuctxt" x="275" y="265.5" class="nuctxt">GDP</text>
+    </g>
+    <text x="300" y="300" class="lbl">Proteína Gs</text>
+  </g>
+
+  <!-- Adenilil ciclasa -->
+  <g id="t-ac" class="tgt" data-id="ac">
+    <rect class="hit" x="424" y="138" width="112" height="152" rx="10"/>
+    <ellipse class="glow" cx="480" cy="258" rx="56" ry="32"/>
+    <rect class="ac" x="452" y="165" width="22" height="74" rx="7"/>
+    <rect class="ac" x="486" y="165" width="22" height="74" rx="7"/>
+    <ellipse class="ac" cx="480" cy="258" rx="46" ry="22"/><text x="480" y="263" class="in">AC</text>
+    <text x="480" y="152" class="lbl">Adenilil ciclasa</text>
+  </g>
+
+  <!-- Fosfolipasa C (distractor) -->
+  <g id="t-plc" class="tgt" data-id="plc">
+    <rect class="hit" x="630" y="138" width="104" height="136" rx="10"/>
+    <ellipse class="plc" cx="682" cy="244" rx="44" ry="22"/><text x="682" y="249" class="in">PLC</text>
+    <text x="682" y="152" class="lbl">Fosfolipasa C</text>
+  </g>
+
+  <!-- Nucleótidos libres -->
+  <g id="t-gtp" class="tgt tok" data-id="gtp"><rect class="hit" x="184" y="309" width="52" height="52" rx="26"/><circle class="tokc gtp" cx="210" cy="335" r="21"/><text x="210" y="339" class="toktxt">GTP</text></g>
+  <g id="t-gmpc" class="tgt tok" data-id="gmpc"><rect class="hit" x="274" y="327" width="58" height="52" rx="26"/><circle class="tokc gmpc" cx="303" cy="353" r="23"/><text x="303" y="357" class="toktxt">GMPc</text></g>
+  <g id="t-atp" class="tgt tok" data-id="atp"><rect class="hit" x="514" y="304" width="52" height="52" rx="26"/><circle class="tokc atp" cx="540" cy="330" r="21"/><text x="540" y="334" class="toktxt">ATP</text></g>
+
+  <!-- PKC (distractor) -->
+  <g id="t-pkc" class="tgt" data-id="pkc">
+    <rect class="hit" x="146" y="402" width="92" height="70" rx="10"/>
+    <rect class="pkc" x="156" y="412" width="72" height="36" rx="10"/><text x="192" y="435" class="in">PKC</text>
+  </g>
+
+  <!-- PKA -->
+  <g id="t-pka" class="tgt" data-id="pka">
+    <rect class="hit" x="316" y="372" width="120" height="90" rx="10"/>
+    <ellipse class="glow" cx="378" cy="408" rx="64" ry="38"/>
+    <rect class="pka-r" x="328" y="386" width="58" height="15" rx="6"/><text x="357" y="398" class="in sm">R</text>
+    <rect class="pka-r" x="328" y="405" width="58" height="15" rx="6"/><text x="357" y="417" class="in sm">R</text>
+    <g id="pkaC1"><circle class="pka-c" cx="402" cy="394" r="11"/><text x="402" y="398" class="in sm">C</text></g>
+    <g id="pkaC2"><circle class="pka-c" cx="402" cy="418" r="11"/><text x="402" y="422" class="in sm">C</text></g>
+    <text x="370" y="452" class="lbl">PKA</text>
+  </g>
+
+  <!-- PDE4 -->
+  <g id="t-pde" class="tgt" data-id="pde">
+    <rect class="hit" x="540" y="390" width="104" height="64" rx="10"/>
+    <ellipse class="pde" cx="592" cy="420" rx="44" ry="21"/><text x="592" y="425" class="in">PDE4</text>
+  </g>
+
+  <!-- MLCK -->
+  <g id="t-mlck" class="tgt" data-id="mlck">
+    <rect class="hit" x="664" y="318" width="114" height="60" rx="10"/>
+    <ellipse class="mlck" cx="720" cy="347" rx="46" ry="21"/><text x="720" y="352" class="in">MLCK</text>
+    <g id="pbadge" style="opacity:0"><circle class="pbadge" cx="760" cy="330" r="11"/><text x="760" y="334.5" class="pbadge-t">P</text></g>
+  </g>
+
+  <!-- Sarcómero: actina y miosina -->
+  <g id="t-mlc" class="tgt" data-id="mlc">
+    <rect class="hit" x="462" y="462" width="352" height="84" rx="10"/>
+    <g id="actL" style="transform: translate(34px, 0)">
+      <line class="zdisc" x1="478" y1="474" x2="478" y2="536"/>
+      <line class="actin" x1="478" y1="484" x2="640" y2="484"/>
+      <line class="actin" x1="478" y1="526" x2="640" y2="526"/>
+    </g>
+    <g id="actR" style="transform: translate(-34px, 0)">
+      <line class="zdisc" x1="802" y1="474" x2="802" y2="536"/>
+      <line class="actin" x1="640" y1="484" x2="802" y2="484"/>
+      <line class="actin" x1="640" y1="526" x2="802" y2="526"/>
+    </g>
+    <rect class="myosin" x="572" y="500" width="136" height="10" rx="5"/>
+    <g class="mhead">
+      <ellipse cx="584" cy="494" rx="6" ry="4"/><ellipse cx="606" cy="494" rx="6" ry="4"/><ellipse cx="628" cy="494" rx="6" ry="4"/>
+      <ellipse cx="652" cy="494" rx="6" ry="4"/><ellipse cx="674" cy="494" rx="6" ry="4"/><ellipse cx="696" cy="494" rx="6" ry="4"/>
+      <ellipse cx="584" cy="516" rx="6" ry="4"/><ellipse cx="606" cy="516" rx="6" ry="4"/><ellipse cx="628" cy="516" rx="6" ry="4"/>
+      <ellipse cx="652" cy="516" rx="6" ry="4"/><ellipse cx="674" cy="516" rx="6" ry="4"/><ellipse cx="696" cy="516" rx="6" ry="4"/>
+    </g>
+    <text id="muscleLbl" x="640" y="465" class="lbl">Actina–miosina: contraído</text>
+  </g>
+
+  <g id="fx" class="fx"></g>
+</svg>
+</template>
+
+<script>
+/* ========== utilidades ========== */
+const $ = id => document.getElementById(id);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const SVGNS = 'http://www.w3.org/2000/svg';
+function tf(el, x, y, ms = 700) {
+  el.style.transition = ms ? `transform ${ms}ms cubic-bezier(.45,.05,.25,1), opacity ${ms}ms` : 'none';
+  el.style.transform = `translate(${x}px, ${y}px)`;
+  return wait(ms);
+}
+function fade(el, op, ms = 500) { el.style.transition = `transform ${ms}ms, opacity ${ms}ms`; el.style.opacity = op; return wait(ms); }
+function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+function show(id) { document.querySelectorAll('.screen').forEach(s => s.hidden = s.id !== id); window.scrollTo(0, 0); }
+function flowHTML(arr) { return '<div class="flow">' + arr.map(s => `<span>${s}</span>`).join('<i>→</i>') + '</div>'; }
+
+/* ========== monitor del bronquio ========== */
+function Monitor(root) {
+  root.innerHTML = `
+    <svg viewBox="0 0 200 200" class="bronch" role="img" aria-label="Corte transversal del bronquio">
+      <circle class="wall" cx="100" cy="100" r="92"/>
+      <circle class="cart" cx="100" cy="100" r="82"/>
+      <circle class="musc" cx="100" cy="100" r="58" stroke-width="8"/>
+      <circle class="muco" cx="100" cy="100" r="49"/>
+      <circle class="lum" cx="100" cy="100" r="40"/>
+    </svg>
+    <div>
+      <div class="mrow"><span>AMPc intracelular</span><b class="vc">0%</b></div>
+      <div class="meter"><i class="mc"></i></div>
+      <div class="mrow"><span>Flujo aéreo (∝ r⁴)</span><b class="vf">0%</b></div>
+      <div class="meter flowm"><i class="mf"></i></div>
+      <div class="mstate"></div>
+    </div>`;
+  const q = s => root.querySelector(s);
+  const el = { musc: q('.musc'), muco: q('.muco'), lum: q('.lum'), mc: q('.mc'), mf: q('.mf'), vc: q('.vc'), vf: q('.vf'), st: q('.mstate') };
+  let cur = { r: 40, c: 30 }, raf = 0;
+  function draw() {
+    const r = cur.r;
+    el.lum.setAttribute('r', r.toFixed(1));
+    el.muco.setAttribute('r', (r + 9).toFixed(1));
+    el.musc.setAttribute('r', (r + 18).toFixed(1));
+    el.musc.setAttribute('stroke-width', (7 + Math.max(0, 40 - r) * 0.45).toFixed(1));
+    const flow = Math.min(100, Math.round(Math.pow(r / 40, 4) * 100));
+    el.mc.style.width = cur.c.toFixed(0) + '%'; el.vc.textContent = cur.c.toFixed(0) + '%';
+    el.mf.style.width = flow + '%'; el.vf.textContent = flow + '%';
+    let st, col;
+    if (r < 25) { st = 'Broncoconstricción grave'; col = 'var(--bad)'; }
+    else if (r < 31) { st = 'Broncoconstricción'; col = 'var(--bad)'; }
+    else if (r < 36) { st = 'Parcialmente abierto'; col = 'var(--gold)'; }
+    else { st = 'Bronquio dilatado'; col = 'var(--good)'; }
+    el.st.textContent = st; el.st.style.color = col;
+  }
+  return {
+    jump(r, c) { cancelAnimationFrame(raf); cur = { r, c }; draw(); },
+    set(r, c, ms = 1400) {
+      cancelAnimationFrame(raf);
+      const from = { ...cur }, t0 = performance.now();
+      return new Promise(res => {
+        const step = now => {
+          const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+          cur = { r: from.r + (r - from.r) * e, c: from.c + (c - from.c) * e }; draw();
+          if (k < 1) raf = requestAnimationFrame(step); else res();
+        };
+        raf = requestAnimationFrame(step);
+      });
+    }
+  };
+}
+const mon1 = Monitor($('mon1'));
+const mon2 = Monitor($('mon2'));
+
+/* ========== NIVEL 1: datos ========== */
+const NAMES = {
+  'lig-salb': 'Salbutamol', 'lig-adr': 'Adrenalina', 'lig-prop': 'Propranolol', 'lig-fen': 'Fenilefrina', 'lig-ach': 'Acetilcolina',
+  rec: 'Receptor β2', gs: 'Proteína Gs', gtp: 'GTP', gmpc: 'GMPc', atp: 'ATP', amp: '5′-AMP', ac: 'Adenilil ciclasa', plc: 'Fosfolipasa C',
+  pka: 'PKA', pkc: 'PKC', pde: 'PDE4', mlck: 'MLCK', mlc: 'Cadena ligera de miosina', plb: 'Fosfolamban'
+};
+const WHY = {
+  'lig-adr': 'La adrenalina sí activa al β2, pero no es selectiva: también estimula α1, α2 y β1 (taquicardia, hipertensión, arritmias). Buscamos un agonista β2 selectivo.',
+  'lig-prop': 'El propranolol es un antagonista β no selectivo: ocupa el receptor pero no lo activa (eficacia intrínseca = 0). En un asmático puede desencadenar broncoespasmo.',
+  'lig-fen': 'La fenilefrina es agonista α1 (vía Gq): produce vasoconstricción, no broncodilatación.',
+  'lig-ach': 'La acetilcolina actúa sobre receptores muscarínicos M3 (Gq → IP₃ → Ca²⁺) y produce broncoconstricción: justo lo contrario de lo que buscamos.',
+  rec: 'El receptor β2 ya está ocupado y activo. La señal debe avanzar hacia el interior de la célula.',
+  gs: 'La proteína Gs ya cumplió su parte del acoplamiento. Busca el siguiente eslabón.',
+  gtp: 'El GTP activa a la subunidad α de la proteína G; no es lo que se necesita en este paso.',
+  gmpc: 'El GMPc es el segundo mensajero de la guanilil ciclasa (vía del óxido nítrico y de los péptidos natriuréticos). No participa en la vía β2.',
+  atp: 'El ATP es el sustrato de la adenilil ciclasa; todavía no es su turno.',
+  amp: 'El 5′-AMP es el producto inactivo de la degradación del AMPc por la fosfodiesterasa.',
+  ac: 'La adenilil ciclasa produce AMPc, pero no es el paso que buscamos ahora.',
+  plc: 'La fosfolipasa C es el efector de Gq (receptores α1, M3, H1): genera IP₃ y DAG. No participa en la vía β2–Gs.',
+  pka: 'PKA es la cinasa dependiente de AMPc; todavía no es su momento.',
+  pkc: 'PKC se activa con DAG y Ca²⁺ (vía Gq–PLC), no con AMPc.',
+  pde: 'La fosfodiesterasa degrada el AMPc y apaga la señal; todavía no queremos apagarla.',
+  mlck: 'La MLCK fosforila la cadena ligera de miosina para contraer el músculo. Más adelante PKA la inhibirá.',
+  mlc: 'PKA no fosforila directamente la cadena ligera de miosina: actúa sobre la enzima que la fosforila.',
+  plb: 'El fosfolamban es blanco de PKA en el corazón (vía β1): acelera la relajación del miocardio. No está en el músculo liso bronquial.'
+};
+
+const STEPS = [
+  { tag: 'Paso 1 · Ligando', title: 'Elige el ligando',
+    prompt: 'Paciente con crisis asmática. Elige el agonista β2 selectivo que se une al receptor y lo activa.',
+    answer: 'lig-salb', opts: ['lig-salb', 'lig-adr', 'lig-prop', 'lig-fen', 'lig-ach'],
+    fallback: 'Primero necesitas un ligando: elige uno de la bandeja de la parte superior.',
+    hint: 'Es el broncodilatador de rescate de los inhaladores: un agonista β2 de acción corta (SABA).',
+    learn: 'El salbutamol es un agonista β2 selectivo de acción corta. Al unirse al sitio ortostérico estabiliza la conformación activa del receptor.',
+    anim: async () => {
+      document.querySelectorAll('#tray .chip').forEach(c => c.classList.add('gone'));
+      const p = $('ligpiece');
+      tf(p, -113, -95, 0); p.getBoundingClientRect(); p.style.opacity = 1;
+      await tf(p, 0, 0, 1000);
+      $('t-rec').classList.add('on');
+      await wait(300);
+    } },
+  { tag: 'Paso 2 · Acoplamiento', title: 'El receptor cambia de forma',
+    prompt: 'El receptor β2 ocupado cambia de conformación: la hélice TM6 se desplaza hacia afuera. ¿Con qué proteína se acopla por su cara intracelular?',
+    answer: 'gs', opts: ['gs', 'ac', 'pka', 'plc'],
+    wrong: { ac: 'La adenilil ciclasa no se acopla directamente al receptor: necesita un intermediario.', pka: 'PKA está mucho más abajo en la cascada.' },
+    hint: 'Es un heterotrímero (α, β, γ) y su subunidad α es "estimuladora".',
+    learn: 'El β2 activo funciona como factor intercambiador de nucleótidos de guanina (GEF) para la proteína Gs heterotrimérica.',
+    anim: async () => { await tf($('t-gs'), -20, 0, 800); } },
+  { tag: 'Paso 3 · Activación de G', title: 'Cambia el nucleótido',
+    prompt: 'La subunidad Gαs tiene GDP unido (estado inactivo). ¿Qué nucleótido debe entrar para activarla?',
+    answer: 'gtp', opts: ['gtp', 'atp', 'gmpc'],
+    wrong: { atp: 'El ATP es el sustrato de la adenilil ciclasa y de las cinasas, no se une a la proteína G.' },
+    hint: 'Las proteínas G se llaman así porque unen nucleótidos de guanina.',
+    learn: 'El receptor activo provoca la salida del GDP y entra GTP, que es más abundante en el citosol. Gαs-GTP se separa de Gβγ.',
+    anim: async () => {
+      const gdp = mkTok(255, 262, 'GDP', 'tokc gmpc', 11, 9);
+      tf(gdp, -10, 70, 900); fade(gdp, 0, 900);
+      $('nuctxt').textContent = '';
+      await tf($('t-gtp'), 45, -73, 900);
+      $('t-gtp').classList.add('gone');
+      $('nuc').classList.add('gtp'); $('nuctxt').textContent = 'GTP';
+      gdp.remove();
+      await tf($('ga'), -16, 2, 600);
+    } },
+  { tag: 'Paso 4 · Efector', title: 'Gαs busca a su efector',
+    prompt: 'Gαs-GTP se separa de Gβγ y se desplaza a lo largo de la membrana. ¿Qué enzima efectora estimula?',
+    answer: 'ac', opts: ['ac', 'plc', 'pde'],
+    wrong: { pde: 'La PDE degrada el AMPc; Gαs no la estimula.' },
+    hint: 'Es una enzima con 12 segmentos transmembrana que fabrica el segundo mensajero de esta vía.',
+    learn: 'Gαs-GTP se une a la adenilil ciclasa (AC) y la estimula.',
+    anim: async () => { await tf($('ga'), 149, 8, 1100); $('t-ac').classList.add('on'); await wait(300); } },
+  { tag: 'Paso 5 · Segundo mensajero', title: 'Fabrica el segundo mensajero',
+    prompt: 'La adenilil ciclasa ya está activa y necesita su sustrato. ¿Qué molécula convierte en AMPc?',
+    answer: 'atp', opts: ['atp', 'amp', 'gmpc'],
+    hint: 'Es la "moneda energética" de la célula.',
+    learn: 'La AC cicla el ATP en AMPc + PPi. Una sola AC fabrica muchas moléculas de AMPc: así se amplifica la señal.',
+    anim: async () => {
+      await tf($('t-atp'), -60, -48, 800);
+      $('t-atp').classList.add('gone');
+      const spots = [[330, 318], [372, 352], [418, 318], [460, 368], [512, 350], [560, 378], [618, 318], [585, 300]];
+      L1.camps = spots.map(([x, y]) => { const t = mkTok(480, 282, 'AMPc', 'camp', 12, 8.5); t.dataset.x = 480; t.dataset.y = 282; t._to = [x, y]; return t; });
+      mon1.set(24, 55, 1600);
+      for (const t of L1.camps) { tf(t, t._to[0] - 480, t._to[1] - 282, 900); await wait(120); }
+      await wait(800);
+    } },
+  { tag: 'Paso 6 · Cinasa', title: '¿A quién activa el AMPc?',
+    prompt: 'El AMPc se acumula en el citosol. ¿Cuál es su principal proteína blanco en el músculo liso?',
+    answer: 'pka', opts: ['pka', 'pkc', 'pde', 'mlck'],
+    wrong: { pde: 'La PDE sí une AMPc, pero para degradarlo. Buscamos a quien propaga la señal.', mlck: 'La MLCK es un blanco posterior; el AMPc no actúa directamente sobre ella.' },
+    hint: 'Su nombre completo es "proteína cinasa dependiente de AMPc", o proteína cinasa A.',
+    learn: 'Cuatro moléculas de AMPc se unen a las dos subunidades reguladoras (R) de PKA, que liberan a las dos subunidades catalíticas (C) activas.',
+    anim: async () => {
+      const sites = [[322, 380], [356, 376], [322, 428], [356, 432]];
+      for (let i = 0; i < 4; i++) { const t = L1.camps[i]; t._to = sites[i]; tf(t, sites[i][0] - 480, sites[i][1] - 282, 900); await wait(100); }
+      await wait(900);
+      $('t-pka').classList.add('on');
+      tf($('pkaC1'), 34, -10, 700); await tf($('pkaC2'), 34, 10, 700);
+    } },
+  { tag: 'Paso 7 · Respuesta', title: 'Relaja el músculo liso',
+    prompt: 'La subunidad catalítica de PKA fosforila una enzima clave del músculo liso. ¿Cuál debe fosforilar (e inhibir) para relajarlo?',
+    answer: 'mlck', opts: ['mlck', 'mlc', 'plb'],
+    hint: 'Es la cinasa que, activada por Ca²⁺-calmodulina, fosforila la cadena ligera de miosina para contraer.',
+    learn: 'PKA fosforila e inhibe a la cinasa de la cadena ligera de miosina (MLCK): hay menos miosina fosforilada y el músculo se relaja. PKA además abre canales de K⁺ (BKCa) y reduce el Ca²⁺ intracelular. Resultado: broncodilatación.',
+    anim: async () => {
+      await tf($('pkaC1'), 266, -47, 1100);
+      await fade($('pbadge'), 1, 400);
+      $('t-mlck').classList.add('inh');
+      fade($('pkaC1'), .55, 400);
+      $('muscleLbl').textContent = 'Actina–miosina: relajado';
+      tf($('actL'), 0, 0, 1600); tf($('actR'), 0, 0, 1600);
+      await mon1.set(38.5, 82, 1800);
+    } },
+  { tag: 'Paso 8 · Apagado', title: 'Apaga la señal',
+    prompt: '¡Bronquio dilatado! Toda señal debe terminar. ¿Qué enzima degrada el AMPc?',
+    answer: 'pde', opts: ['pde', 'pka', 'ac'],
+    wrong: { ac: 'La adenilil ciclasa fabrica AMPc; necesitamos la enzima que lo degrada.', pka: 'PKA usa el AMPc, pero no lo destruye.' },
+    hint: 'Las metilxantinas, como la teofilina, la inhiben.',
+    learn: 'La PDE4 hidroliza el AMPc a 5′-AMP inactivo. Además, Gαs hidroliza su GTP (actividad GTPasa intrínseca) y se reasocia con Gβγ, y GRK y β-arrestina desensibilizan al receptor. Mientras siga habiendo salbutamol unido, el ciclo se repite.',
+    anim: async () => {
+      for (const t of L1.camps) {
+        tf(t, 592 - 480 + (Math.random() * 30 - 15), 420 - 282 + (Math.random() * 12 - 6), 800);
+        await wait(110);
+      }
+      await wait(800);
+      L1.camps.forEach(t => { t.querySelector('circle').setAttribute('class', 'ampx'); t.querySelector('text').textContent = 'AMP'; });
+      await wait(400);
+      L1.camps.forEach(t => fade(t, 0, 700));
+      mon1.set(38.5, 22, 1400);
+      $('nuc').classList.remove('gtp'); $('nuctxt').textContent = 'GDP';
+      $('t-ac').classList.remove('on');
+      tf($('ga'), 0, 0, 1200);
+      $('t-pka').classList.remove('on');
+      tf($('pkaC2'), 0, 0, 900);
+      await wait(1200);
+    } }
+];
+
+/* ========== NIVEL 1: lógica ========== */
+const L1 = { i: 0, score: 0, errors: 0, hints: 0, stepErr: 0, stepHint: false, busy: false, done: false, camps: [] };
+
+function mkTok(x, y, label, cls, r = 12, fs = 9) {
+  const g = document.createElementNS(SVGNS, 'g');
+  g.innerHTML = `<circle cx="${x}" cy="${y}" r="${r}" class="${cls}"/><text x="${x}" y="${y + fs * 0.35}" class="in" style="font-size:${fs}px">${label}</text>`;
+  $('fx').appendChild(g);
+  return g;
+}
+
+function startL1() {
+  $('sceneHost').innerHTML = '';
+  $('sceneHost').appendChild($('sceneTpl').content.cloneNode(true));
+  Object.assign(L1, { i: 0, score: 0, errors: 0, hints: 0, busy: false, camps: [] });
+  mon1.jump(24, 12);
+  show('lvl1');
+  renderStep();
+}
+
+function renderStep() {
+  const s = STEPS[L1.i];
+  L1.stepErr = 0; L1.stepHint = false; L1.done = false;
+  $('l1step').textContent = L1.i + 1;
+  $('l1score').textContent = L1.score;
+  $('l1bar').style.width = (L1.i / STEPS.length * 100) + '%';
+  $('l1tag').textContent = s.tag;
+  $('l1title').textContent = s.title;
+  $('l1prompt').textContent = s.prompt;
+  $('l1fb').innerHTML = '';
+  $('l1next').hidden = true;
+  $('l1hint').disabled = false;
+  const shuffled = s.opts.slice().sort(() => Math.random() - .5);
+  $('l1opts').innerHTML = shuffled.map(id => `<button class="opt" data-id="${id}">${NAMES[id]}</button>`).join('');
+}
+
+function flashTarget(id, cls) {
+  const g = document.querySelector(`#sceneHost .tgt[data-id="${id}"]`);
+  if (!g) return;
+  g.classList.add(cls); setTimeout(() => g.classList.remove(cls), 700);
+}
+
+async function chooseL1(id) {
+  if (L1.busy || L1.done) return;
+  const s = STEPS[L1.i];
+  const btn = $('l1opts').querySelector(`[data-id="${id}"]`);
+  if (id === s.answer) {
+    L1.busy = true; L1.done = true;
+    const pts = Math.max(20, 100 - 25 * L1.stepErr - (L1.stepHint ? 10 : 0));
+    L1.score += pts;
+    $('l1score').textContent = L1.score;
+    if (btn) btn.classList.add('right');
+    $('l1opts').querySelectorAll('.opt').forEach(b => b.disabled = true);
+    $('l1hint').disabled = true;
+    flashTarget(id, 'okflash');
+    $('l1fb').innerHTML = `<div class="fb ok"><b class="v">¡Correcto! +${pts} puntos</b>${s.learn}</div>`;
+    await s.anim();
+    L1.busy = false;
+    $('l1bar').style.width = ((L1.i + 1) / STEPS.length * 100) + '%';
+    $('l1next').textContent = L1.i === STEPS.length - 1 ? 'Ver resultados →' : 'Siguiente →';
+    $('l1next').hidden = false;
+    $('l1next').focus({ preventScroll: true });
+  } else {
+    L1.stepErr++; L1.errors++;
+    if (btn) { btn.classList.add('wrong'); btn.disabled = true; }
+    flashTarget(id, 'flash');
+    let txt = (s.wrong && s.wrong[id]) || WHY[id] || '';
+    if (s.fallback && !s.opts.includes(id)) txt = s.fallback;
+    $('l1fb').innerHTML = `<div class="fb no"><b class="v">No es ${NAMES[id] || 'eso'} (−25)</b>${txt}</div>`;
+  }
+}
+
+$('sceneHost').addEventListener('click', e => {
+  const g = e.target.closest('.tgt');
+  if (g) chooseL1(g.dataset.id);
+});
+$('l1opts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !b.disabled) chooseL1(b.dataset.id); });
+$('l1hint').addEventListener('click', () => {
+  if (L1.stepHint || L1.done) return;
+  L1.stepHint = true; L1.hints++;
+  $('l1hint').disabled = true;
+  $('l1fb').innerHTML = `<div class="fb hintbox"><b>Pista:</b> ${STEPS[L1.i].hint}</div>`;
+});
+$('l1next').addEventListener('click', () => {
+  if (L1.i < STEPS.length - 1) { L1.i++; renderStep(); }
+  else endL1();
+});
+
+const RANKS = [
+  [90, 'Agonista completo: alcanzaste el efecto máximo (Emax).'],
+  [70, 'Agonista parcial: buena respuesta, pero no máxima.'],
+  [45, 'Afinidad sí, eficacia a medias: repasa la cascada.'],
+  [0, 'Receptor desensibilizado: ¡inténtalo de nuevo!']
+];
+function rankOf(p) { return RANKS.find(r => p >= r[0])[1]; }
+
+let lastLevel = 1;
+function results(level, score, max, detail, body) {
+  lastLevel = level;
+  const key = 'b2_best_l' + level;
+  const prev = +(store(key) || 0);
+  if (score > prev) store(key, String(score));
+  const pct = Math.round(score / max * 100);
+  $('rTag').textContent = 'Resultados · Nivel ' + level;
+  $('rScore').textContent = `${score} / ${max}`;
+  $('rRank').textContent = rankOf(pct);
+  $('rDetail').textContent = detail + (score > prev && prev > 0 ? ' · ¡Nuevo récord!' : '');
+  $('rBody').innerHTML = body;
+  $('rOther').textContent = level === 1 ? 'Ir al nivel 2 →' : 'Ir al nivel 1';
+  updateBest();
+  show('results');
+}
+
+function endL1() {
+  results(1, L1.score, 800,
+    `Errores: ${L1.errors} · Pistas: ${L1.hints}`,
+    `<h2>La vía completa</h2>
+     ${flowHTML(['Salbutamol', 'Receptor β2', 'Gs: GDP → GTP', 'Gαs-GTP', 'Adenilil ciclasa', 'ATP → AMPc', 'PKA', 'MLCK fosforilada (inhibida)', 'Relajación del músculo liso', 'Broncodilatación'])}
+     <p class="rule"><b>Apagado:</b> la PDE4 degrada el AMPc a 5′-AMP, Gαs hidroliza su GTP y GRK/β-arrestina desensibilizan al receptor. El uso excesivo de agonistas β2 produce taquifilaxia por esta desensibilización.</p>`);
+}
+
+/* ========== NIVEL 2 ========== */
+const CAMP_OPTS = [['up', '↑ Aumenta'], ['down', '↓ Disminuye'], ['same', '= Sin cambio']];
+const BRON_OPTS = [['dil', 'Broncodilatación'], ['con', 'Broncoconstricción'], ['none', 'Sin cambio']];
+const BASE = { r: 29, c: 32 };
+const CASES = [
+  { tag: 'Agonista β2', title: 'Salbutamol inhalado',
+    text: 'Una paciente de 19 años con crisis asmática leve recibe dos disparos de salbutamol con espaciador.',
+    camp: 'up', bron: 'dil', r: 39, c: 85,
+    exp: 'Agonista β2 selectivo: activa Gs → adenilil ciclasa → ↑AMPc → PKA inhibe la MLCK y abre canales de K⁺ → relajación. Actúa en minutos y su efecto dura de 4 a 6 horas.',
+    flow: ['Salbutamol', 'β2', 'Gs', '↑ AC', '↑ AMPc', 'PKA', 'Broncodilatación'] },
+  { tag: 'Antagonista β no selectivo', title: 'Propranolol en un asmático',
+    text: 'Un paciente asmático con migraña empieza a tomar propranolol (antagonista β no selectivo) como profilaxis.',
+    camp: 'down', bron: 'con', r: 21, c: 12,
+    exp: 'El tono adrenérgico endógeno sobre los β2 mantiene algo de AMPc en el músculo liso bronquial. Al bloquearlos, el AMPc cae y predomina el tono colinérgico (M3), lo que causa broncoespasmo. Por eso los β-bloqueadores no selectivos están contraindicados en el asma.',
+    flow: ['Propranolol', 'Bloquea β2', '↓ Gs activa', '↓ AMPc', 'Predomina M3', 'Broncoespasmo'] },
+  { tag: 'Inhibidor de PDE', title: 'Teofilina',
+    text: 'A un paciente con asma persistente se le añade teofilina, una metilxantina que inhibe las fosfodiesterasas.',
+    camp: 'up', bron: 'dil', r: 36, c: 74,
+    exp: 'Al inhibir la PDE, el AMPc no se degrada y se acumula, lo que produce broncodilatación. También antagoniza los receptores de adenosina. Tiene un margen terapéutico estrecho: náuseas, arritmias y convulsiones en caso de toxicidad.',
+    flow: ['Teofilina', 'Inhibe PDE', 'AMPc no se degrada', '↑ AMPc', 'PKA', 'Broncodilatación'] },
+  { tag: 'Antagonismo competitivo', title: 'Salbutamol + propranolol',
+    text: 'Un paciente que toma propranolol a dosis altas usa su inhalador de salbutamol a la dosis habitual durante una crisis.',
+    camp: 'same', bron: 'none', r: 29, c: 33,
+    exp: 'Ambos compiten por el mismo sitio del receptor β2. El propranolol desplaza a la derecha la curva dosis-respuesta del salbutamol: a la dosis habitual casi no se forma complejo agonista-receptor, el AMPc no sube y no hay broncodilatación útil.',
+    flow: ['Salbutamol', 'β2 ocupado por propranolol', 'Sin activación de Gs', 'AMPc sin cambio', 'Sin efecto'] },
+  { tag: 'Toxina bacteriana', title: 'Toxina colérica (experimento)',
+    text: 'En el laboratorio se expone músculo liso bronquial aislado a la toxina colérica, que ADP-ribosila a Gαs y bloquea su actividad GTPasa. No se añade ningún agonista.',
+    camp: 'up', bron: 'dil', r: 40, c: 96,
+    exp: 'Sin actividad GTPasa, Gαs no puede hidrolizar su GTP: queda "encendida" de forma permanente y la adenilil ciclasa trabaja sin parar, aun sin agonista. En el intestino este mismo mecanismo causa la diarrea secretora del cólera.',
+    flow: ['Toxina colérica', 'Gαs-GTP no se apaga', 'AC siempre activa', '↑↑ AMPc', 'Relajación'] },
+  { tag: 'Otra vía', title: 'Bromuro de ipratropio',
+    text: 'Se administra ipratropio inhalado, un antagonista muscarínico.',
+    camp: 'same', bron: 'dil', r: 36, c: 32,
+    exp: 'El ipratropio bloquea los receptores M3 (vía Gq → PLC → IP₃ → Ca²⁺ → contracción). No toca la vía β2–AMPc, pero al quitar el tono colinérgico produce broncodilatación. Por eso se combina con salbutamol: actúan por dos vías complementarias.',
+    flow: ['Ipratropio', 'Bloquea M3', '↓ Gq / IP₃ / Ca²⁺', 'AMPc sin cambio', 'Broncodilatación'] }
+];
+const L2 = { i: 0, score: 0, sel: {}, checked: false, hits: 0 };
+
+function startL2() {
+  Object.assign(L2, { i: 0, score: 0, hits: 0 });
+  $('l2n').textContent = CASES.length;
+  mon2.jump(BASE.r, BASE.c);
+  show('lvl2');
+  renderCase();
+}
+function renderCase() {
+  const c = CASES[L2.i];
+  L2.sel = {}; L2.checked = false;
+  $('l2i').textContent = L2.i + 1;
+  $('l2score').textContent = L2.score;
+  $('l2bar').style.width = (L2.i / CASES.length * 100) + '%';
+  $('l2tag').textContent = c.tag;
+  $('l2title').textContent = c.title;
+  $('l2text').textContent = c.text;
+  $('l2camp').innerHTML = CAMP_OPTS.map(([v, t]) => `<button class="opt" data-g="camp" data-v="${v}">${t}</button>`).join('');
+  $('l2bron').innerHTML = BRON_OPTS.map(([v, t]) => `<button class="opt" data-g="bron" data-v="${v}">${t}</button>`).join('');
+  $('l2fb').innerHTML = '';
+  $('l2check').hidden = false; $('l2check').disabled = true;
+  $('l2next').hidden = true;
+  mon2.set(BASE.r, BASE.c, 700);
+}
+function pickL2(e) {
+  const b = e.target.closest('.opt');
+  if (!b || L2.checked) return;
+  const g = b.dataset.g;
+  L2.sel[g] = b.dataset.v;
+  b.parentElement.querySelectorAll('.opt').forEach(x => x.classList.toggle('sel', x === b));
+  $('l2check').disabled = !(L2.sel.camp && L2.sel.bron);
+}
+$('l2camp').addEventListener('click', pickL2);
+$('l2bron').addEventListener('click', pickL2);
+$('l2check').addEventListener('click', async () => {
+  if (L2.checked) return;
+  L2.checked = true;
+  const c = CASES[L2.i];
+  let pts = 0, okAll = true;
+  for (const g of ['camp', 'bron']) {
+    const box = $(g === 'camp' ? 'l2camp' : 'l2bron');
+    box.querySelectorAll('.opt').forEach(b => {
+      b.disabled = true; b.classList.remove('sel');
+      if (b.dataset.v === c[g]) b.classList.add('right');
+      else if (b.dataset.v === L2.sel[g]) b.classList.add('wrong');
+    });
+    if (L2.sel[g] === c[g]) { pts += 50; L2.hits++; } else okAll = false;
+  }
+  L2.score += pts;
+  $('l2score').textContent = L2.score;
+  $('l2check').hidden = true;
+  const head = okAll ? '¡Predicción correcta! +100' : pts ? `Mitad correcta: +${pts}` : 'Predicción incorrecta: +0';
+  $('l2fb').innerHTML = `<div class="fb ${okAll ? 'ok' : 'no'}"><b class="v">${head}</b>${c.exp}${flowHTML(c.flow)}</div>`;
+  $('l2bar').style.width = ((L2.i + 1) / CASES.length * 100) + '%';
+  $('l2next').textContent = L2.i === CASES.length - 1 ? 'Ver resultados →' : 'Siguiente →';
+  $('l2next').hidden = false;
+  await mon2.set(c.r, c.c, 1800);
+});
+$('l2next').addEventListener('click', () => {
+  if (L2.i < CASES.length - 1) { L2.i++; renderCase(); }
+  else results(2, L2.score, CASES.length * 100, `Aciertos: ${L2.hits} de ${CASES.length * 2} predicciones`,
+    `<h2>Puntos clave</h2>
+     <table style="border-collapse:collapse;width:100%;font-size:14px">
+       ${CASES.map(c => `<tr><td style="padding:6px 8px;border-bottom:1px solid var(--grid);font-weight:600">${c.title}</td><td style="padding:6px 8px;border-bottom:1px solid var(--grid);color:var(--ink2)">AMPc ${CAMP_OPTS.find(o => o[0] === c.camp)[1].toLowerCase()} · ${BRON_OPTS.find(o => o[0] === c.bron)[1].toLowerCase()}</td></tr>`).join('')}
+     </table>
+     <p class="rule"><b>Recuerda:</b> se puede broncodilatar subiendo el AMPc (agonistas β2, inhibidores de PDE) o bloqueando la vía contráctil Gq–Ca²⁺ (antimuscarínicos).</p>`);
+});
+
+/* ========== navegación ========== */
+function updateBest() {
+  const b1 = store('b2_best_l1'), b2 = store('b2_best_l2');
+  $('best1').textContent = b1 ? `Mejor puntaje: ${b1} / 800` : '';
+  $('best2').textContent = b2 ? `Mejor puntaje: ${b2} / ${CASES.length * 100}` : '';
+}
+$('go1').addEventListener('click', startL1);
+$('go2').addEventListener('click', startL2);
+$('l1quit').addEventListener('click', () => show('intro'));
+$('l2quit').addEventListener('click', () => show('intro'));
+$('rAgain').addEventListener('click', () => lastLevel === 1 ? startL1() : startL2());
+$('rOther').addEventListener('click', () => lastLevel === 1 ? startL2() : startL1());
+$('rMenu').addEventListener('click', () => show('intro'));
+updateBest();
+</script>
+</body>
+</html>
