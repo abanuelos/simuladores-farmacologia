@@ -1,0 +1,97 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>De la molécula al mercado · Juego sesión 29</title>
+<style>
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--border:rgba(11,11,11,.14);--good:#006300;--good-bg:#e8f3e8;--bad:#b02f2f;--bad-bg:#fbeaea;--accent:#0b2545;--on:#fff;--gold:#a07d10;--teal:#1e6e6e;--chip:#eef1f5}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;--border:rgba(255,255,255,.14);--good:#4cc24c;--good-bg:#14301a;--bad:#f08a8a;--bad-bg:#3a1c1c;--accent:#86b6ef;--on:#0d1b2e;--gold:#e0b93a;--teal:#58b5b5;--chip:#262624}}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 56px}
+.kicker{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 6px}
+h1{font-size:28px;line-height:1.15;margin:0 0 6px}h2{font-size:20px;margin:0 0 4px}.lead{color:var(--ink2);margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.steps{display:flex;gap:6px;flex:1;min-width:200px}.steps i{flex:1;height:6px;border-radius:3px;background:var(--border)}.steps i.on{background:var(--teal)}.steps i.cur{background:var(--gold)}
+.score{font-weight:700;color:var(--accent)}
+button{font:inherit;cursor:pointer;border:1px solid var(--border);background:var(--chip);color:var(--ink);border-radius:10px;padding:10px 14px;text-align:left;transition:transform .08s}
+button:hover:not(:disabled){border-color:var(--accent)}button:active:not(:disabled){transform:scale(.98)}
+button.pri{background:var(--accent);color:var(--on);border-color:var(--accent);font-weight:700;text-align:center}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.opts{display:grid;gap:8px;margin-top:12px}.opts.two{grid-template-columns:1fr 1fr}@media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+.ok{background:var(--good-bg)!important;border-color:var(--good)!important;color:var(--good)}.no{background:var(--bad-bg)!important;border-color:var(--bad)!important;color:var(--bad)}
+.fb{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:15px}.fb.ok{border:1px solid var(--good)}.fb.no{border:1px solid var(--bad)}
+.pool,.slots{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.slot{min-width:46px;min-height:44px;border:2px dashed var(--border);border-radius:10px;padding:8px 10px;font-size:14px;display:flex;align-items:center;gap:8px;flex:1 1 220px}
+.slot b{color:var(--gold)}.slot.fill{border-style:solid;border-color:var(--good);background:var(--good-bg);color:var(--good)}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}.shake{animation:sh .25s}
+.range{position:relative;height:34px;margin:6px 0 2px;background:var(--chip);border-radius:8px}
+.zone{position:absolute;top:0;bottom:0;background:var(--good-bg);border-left:2px solid var(--good);border-right:2px solid var(--good)}
+.ci{position:absolute;top:11px;height:12px;border-radius:6px;background:var(--accent)}
+.lbl{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.big{font-size:44px;font-weight:800;color:var(--accent);line-height:1}
+.hearts{letter-spacing:2px}
+.small{font-size:13px;color:var(--muted)}
+</style></head><body><div class="wrap">
+<p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 29</p>
+<h1>De la molécula al mercado</h1>
+<p class="lead">Cuatro rondas para reafirmar 2.7: desarrollo de fármacos, genéricos y similares, bioequivalencia y huérfanos.</p>
+<div class="bar"><div class="steps" id="steps"></div><div class="score">Puntos: <span id="pts">0</span> · <span class="hearts" id="lives"></span></div></div>
+<div id="app"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let pts=0,lives=5,round=0;
+const NAMES=['Ordena el recorrido','Clasifica','¿Bioequivalente?','Desgaste'];
+function hud(){$('#pts').textContent=pts;$('#lives').textContent='♥'.repeat(Math.max(lives,0))+'♡'.repeat(Math.max(5-lives,0));$('#steps').innerHTML=NAMES.map((_,i)=>`<i class="${i<round?'on':i==round?'cur':''}"></i>`).join('')}
+function lose(){lives--;hud()}
+function intro(){app.innerHTML=`<div class="card"><h2>Reglas</h2><p>Ganas puntos por cada acierto. Cada error te quita una vida (♥). Si pierdes las 5, terminas la partida, pero puedes reintentar y ver tus respuestas.</p><button class="pri" id="go">Empezar</button></div>`;$('#go').onclick=r1;hud()}
+function end(msg){app.innerHTML=`<div class="card" style="text-align:center"><p class="kicker">Resultado</p><div class="big">${pts}</div><p class="lead">${msg}</p><button class="pri" id="again">Jugar de nuevo</button></div>`;$('#again').onclick=()=>{pts=0;lives=5;round=0;intro()}}
+function over(){end('Te quedaste sin vidas. Repasa las diapositivas de 2.7 e inténtalo otra vez.')}
+function next(){round++;hud();[r1,r2,r3,r4,fin][round]()}
+function fin(){const m=lives>=4?'Excelente: dominas el recorrido del desarrollo de fármacos.':lives>=2?'Buen trabajo. Repasa los puntos donde fallaste.':'Pasaste por poco. Vuelve a las diapositivas y repite.';end(m+' Vidas restantes: '+lives)}
+
+/* R1 ordenar */
+const FASES=[['Identificar y validar el blanco','Se elige la proteína y se confirma su papel en la enfermedad.'],['Cribado: se obtienen “hits”','Miles de compuestos en ensayos automatizados.'],['Optimización del lead','Química medicinal: potencia, selectividad, ADME.'],['Estudios preclínicos','In vitro, animales y toxicología.'],['Fase I','Seguridad y farmacocinética, 20 a 100 voluntarios.'],['Fase II','Eficacia preliminar y dosis, 100 a 300 pacientes.'],['Fase III','Confirmar eficacia y seguridad, miles de pacientes.'],['Registro sanitario','COFEPRIS autoriza la comercialización.'],['Fase IV y farmacovigilancia','Efectos raros en uso real.']];
+function r1(){let k=0;const order=FASES.map((f,i)=>i);
+app.innerHTML=`<div class="card"><p class="kicker">Ronda 1 de 4</p><h2>Ordena el recorrido</h2><p class="lead">Toca las etapas en el orden en que ocurren, de la primera a la última (+10 por acierto).</p><div class="slots" id="sl"></div><div class="pool" id="pl"></div><div class="fb" id="fb" hidden></div></div>`;
+const sl=$('#sl'),pl=$('#pl'),fb=$('#fb');
+sl.innerHTML=FASES.map((_,i)=>`<div class="slot" id="s${i}"><b>${i+1}</b><span></span></div>`).join('');
+sh(order).forEach(i=>{const b=document.createElement('button');b.textContent=FASES[i][0];b.onclick=()=>{
+ if(i===k){const s=$('#s'+k);s.classList.add('fill');s.lastChild.textContent=FASES[i][0];b.remove();pts+=10;k++;hud();fb.hidden=false;fb.className='fb ok';fb.textContent=FASES[i][1];
+  if(k==FASES.length){fb.textContent='Recorrido completo.';const n=document.createElement('button');n.className='pri';n.textContent='Siguiente ronda';n.onclick=next;pl.append(n)}}
+ else{lose();b.classList.add('no','shake');setTimeout(()=>b.classList.remove('no','shake'),400);fb.hidden=false;fb.className='fb no';fb.textContent='Esa no sigue ahora. Piensa: ¿qué debe estar listo antes?';if(lives<=0)over()}};pl.append(b)})}
+
+/* R2 clasificar */
+const CL=['Patente','Genérico intercambiable','Similar','Huérfano'];
+const AFIRM=[['Dura 20 años desde la solicitud, tiempo en que su fabricante tiene exclusividad.',0,'La patente protege al innovador 20 años desde la solicitud.'],['Lleva la leyenda “GI” en el empaque.',1,'La leyenda GI identifica al genérico intercambiable.'],['Debe demostrar bioequivalencia frente al medicamento de referencia (NOM-177).',1,'La intercambiabilidad se demuestra con pruebas in vitro o in vivo.'],['Trata una enfermedad con menos de 5 casos por 10,000 habitantes.',3,'Es el umbral mexicano de enfermedad rara.'],['Mismo principio activo con marca propia, sin intercambiabilidad demostrada.',2,'Eso describe a los similares; revisa siempre su registro.'],['Es el primer medicamento registrado con una molécula nueva.',0,'El innovador es el medicamento de patente.'],['Puede recibir evaluación diferenciada y vías de revisión prioritarias.',3,'Son incentivos para compensar un mercado pequeño.'],['Se comercializa al vencer la patente y suele bajar el precio.',1,'Los genéricos aparecen cuando vence la patente del original.'],['El farmacéutico no puede sustituirlo por el de referencia.',2,'Sin intercambiabilidad, no se sustituye.'],['Terapia para fibrosis quística o enfermedad de Gaucher.',3,'Son ejemplos de enfermedades raras.']];
+function r2(){const q=sh(AFIRM);let i=0;
+function show(){const [t,c,e]=q[i];app.innerHTML=`<div class="card"><p class="kicker">Ronda 2 de 4 · ${i+1}/${q.length}</p><h2>¿A qué categoría corresponde?</h2><p style="font-size:18px">${t}</p><div class="opts two">${CL.map((n,j)=>`<button data-j="${j}">${n}</button>`).join('')}</div><div id="fb"></div></div>`;
+ app.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{const j=+b.dataset.j;app.querySelectorAll('[data-j]').forEach(x=>x.disabled=true);
+  const ok=j===c;if(ok)pts+=10;else lose();b.classList.add(ok?'ok':'no');if(!ok)app.querySelector(`[data-j="${c}"]`).classList.add('ok');hud();
+  $('#fb').innerHTML=`<div class="fb ${ok?'ok':'no'}">${ok?'Correcto. ':'No. '}${e}</div><p><button class="pri" id="nx">${i==q.length-1?'Siguiente ronda':'Continuar'}</button></p>`;
+  $('#nx').onclick=()=>{if(lives<=0)return over();i++;i<q.length?show():next()}})}
+show()}
+
+/* R3 bioequivalencia */
+const BE=[[92,108,88,112,1,'Ambos intervalos de confianza quedan dentro de 80–125 %.'],[82,119,85,121,1,'Los dos IC 90 % están dentro de 80–125 %.'],[76,110,90,115,0,'El límite inferior del ABC (76 %) cae debajo de 80 %.'],[95,130,90,118,0,'El límite superior del ABC (130 %) pasa de 125 %.'],[81,124,84,123,1,'Ambos intervalos caben en 80–125 %, aunque con poco margen.'],[70,95,65,90,0,'Los dos intervalos quedan por debajo de 80 %: absorción menor que la referencia.']];
+function r3(){const q=sh(BE);let i=0;const pos=v=>((v-60)/(140-60)*100)+'%';
+function bar(a,b,l){return `<div class="small">${l}: IC 90 % ${a}–${b} %</div><div class="range"><div class="zone" style="left:${pos(80)};width:${(125-80)/80*100}%"></div><div class="ci" style="left:${pos(a)};width:${(b-a)/80*100}%"></div></div>`}
+function show(){const [a,b,c,d,ok,e]=q[i];app.innerHTML=`<div class="card"><p class="kicker">Ronda 3 de 4 · ${i+1}/${q.length}</p><h2>¿Es bioequivalente al de referencia?</h2><p class="lead">Razón genérico/referencia. La zona verde marca 80–125 %. Deben cumplir ABC y Cmáx.</p>${bar(a,b,'ABC')}${bar(c,d,'Cmáx')}<div class="lbl"><span>60 %</span><span>100 %</span><span>140 %</span></div><div class="opts two"><button data-v="1">Sí, es bioequivalente</button><button data-v="0">No lo es</button></div><div id="fb"></div></div>`;
+ app.querySelectorAll('[data-v]').forEach(btn=>btn.onclick=()=>{app.querySelectorAll('[data-v]').forEach(x=>x.disabled=true);const r=+btn.dataset.v===ok;if(r)pts+=15;else lose();btn.classList.add(r?'ok':'no');if(!r)app.querySelector(`[data-v="${ok}"]`).classList.add('ok');hud();
+  $('#fb').innerHTML=`<div class="fb ${r?'ok':'no'}">${r?'Correcto (+15). ':'No. '}${e}</div><p><button class="pri" id="nx">${i==q.length-1?'Siguiente ronda':'Continuar'}</button></p>`;
+  $('#nx').onclick=()=>{if(lives<=0)return over();i++;i<q.length?show():next()}})}
+show()}
+
+/* R4 desgaste */
+const MC=[['¿En qué fase se busca la dosis y se evalúa eficacia preliminar en cientos de pacientes?',['Fase II','Fase I','Fase IV','Preclínica'],'La fase II incluye aproximadamente 100–300 pacientes.'],['¿Qué sistema detecta efectos adversos raros una vez comercializado el medicamento?',['Fase IV y farmacovigilancia','Fase I','Cribado de alto rendimiento','Optimización del lead'],'Los ensayos son pequeños y breves; los efectos raros aparecen con uso masivo.'],['¿Qué etapa sigue después de identificar un “hit”?',['Convertirlo en lead','Registrarlo ante COFEPRIS','Iniciar fase III','Comercializarlo'],'El hit se confirma y se convierte en lead antes de optimizarlo.'],['¿Qué fracción aproximada de los candidatos que entran a fase I llega a aprobarse?',['10–20 %','50–60 %','80–90 %','Menos de 1 %'],'Alrededor de 10–20 %; la fase II elimina más candidatos.'],['¿Cuál es el umbral de prevalencia de enfermedad rara que usa México?',['Menos de 5 por 10,000','Menos de 5 por 1,000','Menos de 1 por 1,000,000','Menos de 50 por 10,000'],'Menos de 5 personas por cada 10,000 habitantes.'],['¿Por qué importa más la bioequivalencia en fármacos de margen terapéutico estrecho, como warfarina?',['Pequeñas diferencias de concentración pueden causar toxicidad o falla terapéutica','Porque son más baratos','Porque no tienen patente','Porque se absorben siempre al 100 %'],'Con margen estrecho, una diferencia pequeña de ABC o Cmáx cambia el riesgo.'],['¿Quiénes participan típicamente en fase I?',['Alrededor de 20 a 100 voluntarios sanos','Miles de pacientes','Solo animales','Cientos de pacientes con la enfermedad'],'Fase I: seguridad, tolerabilidad y farmacocinética.']];
+function r4(){const q=sh(MC);let i=0;
+function show(){const [t,o,e]=q[i];const opts=sh(o.map((x,k)=>[x,k==0]));app.innerHTML=`<div class="card"><p class="kicker">Ronda 4 de 4 · ${i+1}/${q.length}</p><h2>${t}</h2><div class="opts">${opts.map((x,k)=>`<button data-k="${k}">${x[0]}</button>`).join('')}</div><div id="fb"></div></div>`;
+ app.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{app.querySelectorAll('[data-k]').forEach(x=>x.disabled=true);const r=opts[+b.dataset.k][1];if(r)pts+=15;else lose();b.classList.add(r?'ok':'no');if(!r)app.querySelectorAll('[data-k]')[opts.findIndex(x=>x[1])].classList.add('ok');hud();
+  $('#fb').innerHTML=`<div class="fb ${r?'ok':'no'}">${r?'Correcto (+15). ':'No. '}${e}</div><p><button class="pri" id="nx">${i==q.length-1?'Ver resultado':'Continuar'}</button></p>`;
+  $('#nx').onclick=()=>{if(lives<=0)return over();i++;i<q.length?show():next()}})}
+show()}
+intro();
+</script></body></html>
+
+</body></html>
