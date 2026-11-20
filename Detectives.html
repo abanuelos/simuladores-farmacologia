@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
 <title>Detectives de reacciones adversas · Juego sesión 30</title>
@@ -47,54 +46,31 @@ function fin(){end((lives>=4?'Excelente: ya distingues efectos, reacciones y su 
 function quiz(o){const q=sh(o.items).slice(0,o.n||o.items.length);let i=0;
 function show(){const it=q[i];const opts=o.opts?o.opts.map((t,k)=>({t,k})):sh(it.o.map((t,k)=>({t,k:k==0?0:1})));
  const correct=o.opts?it.c:0;
- app.innerHTML=`<div class="card"><p class="kicker">${o.kick} · ${i+1}/${q.length}</p><h2>${o.title}</h2>${it.tag?`<span class="tag">${it.tag}</span>`:''}<p class="case">${it.t}</p><div class="opts ${o.two?'two':''}">${opts.map((x,j)=>`<button class="opt" data-j="${j}">${o.letters?`<b>${o.letters[x.k]}</b>`:''}${x.t}</button>`).join('')}</div><div id="fb"></div></div>`;
+ app.innerHTML=`<div class="card"><p class="kicker">${o.kick} · ${i+1}/${q.length}</p><h2>${o.title}</h2>${o.legend?`<p class="small">${o.legend}</p>`:''}${it.tag?`<span class="tag">${it.tag}</span>`:''}<p class="case">${it.t}</p><div class="opts ${o.two?'two':''}">${opts.map((x,j)=>`<button class="opt" data-j="${j}">${o.letters?`<b>${o.letters[x.k]}</b>`:''}${x.t}</button>`).join('')}</div><div id="fb"></div></div>`;
  const bs=app.querySelectorAll('[data-j]');
  bs.forEach((b,j)=>b.onclick=()=>{bs.forEach(x=>x.disabled=true);const ok=opts[j].k===correct;const bonus=reg(ok,o.pts);b.classList.add(ok?'ok':'no');if(!ok)bs[opts.findIndex(x=>x.k===correct)].classList.add('ok');hud();
   $('#fb').innerHTML=`<div class="fb ${ok?'ok':'no'}">${ok?`Correcto (+${o.pts+bonus}${bonus?', racha':''}). `:'No. '}${it.e}</div><p><button class="pri" id="nx">${i==q.length-1?o.last:'Continuar'}</button></p>`;
   $('#nx').onclick=()=>{if(lives<=0)return over();i++;i<q.length?show():next()}})}
 show()}
 /* R1 */
-function r1(){quiz({kick:'Ronda 1 de 4',title:'¿Qué tipo de efecto es?',pts:10,two:true,opts:['Terapéutico','Colateral','Secundario','Tóxico'],last:'Siguiente ronda',n:10,items:[
-{t:'Atropina en una bradicardia sintomática: aumenta la frecuencia cardiaca.',c:0,e:'Es el efecto buscado para esa indicación.'},
-{t:'Atropina: el paciente presenta boca seca y retención urinaria.',c:1,e:'Es la misma acción antimuscarínica actuando en glándulas y vejiga.'},
-{t:'Antibiótico de amplio espectro: aparece candidiasis oral.',c:2,e:'Consecuencia indirecta: se altera la flora normal y proliferan los hongos.'},
-{t:'Sobredosis de paracetamol: necrosis hepática.',c:3,e:'Daño por dosis excesiva; es un efecto tóxico dependiente de la dosis.'},
-{t:'Morfina para el dolor: estreñimiento.',c:1,e:'Acción en receptores μ intestinales, predecible por el mecanismo.'},
-{t:'Ácido acetilsalicílico en dosis baja para prevención cardiovascular: inhibe la agregación plaquetaria.',c:0,e:'Aquí es el efecto buscado; en un analgésico sería colateral.'},
-{t:'Difenhidramina tomada para dormir: somnolencia.',c:0,e:'Por el contexto, la somnolencia es el efecto terapéutico buscado.'},
-{t:'Difenhidramina tomada para la rinitis: somnolencia.',c:1,e:'Mismo efecto, distinto contexto: aquí es colateral indeseable.'},
-{t:'Tras un antibiótico, el paciente tiene diarrea por alteración de la flora intestinal.',c:2,e:'Efecto secundario: consecuencia indirecta del efecto principal.'},
-{t:'Concentraciones muy altas de digoxina: arritmias y náusea.',c:3,e:'Toxicidad por exceso de dosis o falta de eliminación; el margen terapéutico es estrecho.'}]})}
+function r1(){quiz({kick:'Ronda 1 de 4',title:'¿Qué tipo de efecto es?',legend:'Pista: <b>terapéutico</b> = el efecto buscado en esa indicación · <b>colateral</b> = la misma acción farmacológica (mismo receptor o mecanismo) en otro tejido · <b>secundario</b> = consecuencia indirecta del efecto principal, sin actuar sobre otro receptor · <b>tóxico</b> = exceso de dosis o acumulación.',pts:10,two:true,opts:['Terapéutico','Colateral','Secundario','Tóxico'],last:'Siguiente ronda',n:10,items:[
+{t:'Atropina en una bradicardia sintomática: bloquea los receptores muscarínicos M2 del nodo sinusal y aumenta la frecuencia cardiaca.',c:0,e:'Es el efecto buscado para esa indicación: acción sobre el blanco terapéutico (nodo sinusal).'},
+{t:'Esa misma atropina bloquea receptores muscarínicos M3 en glándulas salivales y vejiga: el paciente tiene boca seca y retención urinaria.',c:1,e:'Colateral: el mismo mecanismo (bloqueo muscarínico) actuando en otros tejidos, por eso es predecible.'},
+{t:'Un antibiótico de amplio espectro mata bacterias sensibles de la flora intestinal y oral; proliferan hongos y aparece candidiasis. No hay acción sobre un receptor humano.',c:2,e:'Secundario: consecuencia indirecta del efecto antibacteriano, no una acción en otro tejido del paciente.'},
+{t:'Sobredosis de paracetamol: se agota el glutatión y el metabolito NAPQI daña el hígado.',c:3,e:'Tóxico: daño por exceso de dosis y saturación de la vía de detoxificación.'},
+{t:'Morfina para el dolor: activa receptores μ en el sistema nervioso central (analgesia) y también receptores μ del plexo mientérico intestinal; el paciente tiene estreñimiento.',c:1,e:'Colateral: mismo receptor μ, otro tejido (intestino).'},
+{t:'Ácido acetilsalicílico en dosis baja para prevención cardiovascular: inhibe irreversiblemente la COX-1 plaquetaria y disminuye la agregación.',c:0,e:'Aquí la inhibición plaquetaria es el efecto buscado; en un analgésico sería colateral.'},
+{t:'Difenhidramina tomada para dormir: bloquea receptores H1 en el SNC y produce somnolencia.',c:0,e:'Por el contexto (insomnio), la somnolencia es el efecto terapéutico buscado.'},
+{t:'Difenhidramina tomada para la rinitis: el efecto buscado es bloquear receptores H1 de la mucosa nasal, pero también bloquea receptores H1 centrales y causa somnolencia.',c:1,e:'Colateral: mismo receptor H1, otro tejido (SNC); es indeseable en este contexto.'},
+{t:'Tras un antibiótico oral, el paciente tiene diarrea porque se eliminó parte de la flora intestinal que regula el equilibrio microbiano.',c:2,e:'Secundario: resulta de eliminar la flora, un efecto indirecto del efecto antibacteriano.'},
+{t:'Concentraciones séricas muy altas de digoxina inhiben en exceso la Na⁺/K⁺-ATPasa: aparecen arritmias y náusea.',c:3,e:'Tóxico: el margen terapéutico es estrecho y el exceso de dosis o la falta de eliminación lo provoca.'}]})}
 /* R2 */
-function r2(){const L=['A','B','C','D','E','F'];quiz({kick:'Ronda 2 de 4',title:'¿Qué tipo de reacción adversa es?',pts:15,two:true,letters:L,opts:['Aumentada (dosis-dependiente)','Bizarra (impredecible)','Crónica','Diferida','Fin de uso','Falla terapéutica'],last:'Siguiente ronda',n:8,items:[
-{t:'Un paciente se inyecta más insulina de la indicada y presenta hipoglucemia.',c:0,e:'Tipo A: exageración del efecto farmacológico, dependiente de la dosis.'},
-{t:'Veinte minutos después de la primera dosis de penicilina aparece anafilaxia.',c:1,e:'Tipo B: hipersensibilidad, no depende de la dosis y es impredecible.'},
-{t:'Tras meses de prednisona, el eje hipotálamo-hipófisis-suprarrenal queda suprimido.',c:2,e:'Tipo C: relacionada con la dosis acumulada y el tiempo de uso.'},
-{t:'Un recién nacido con focomelia; su madre tomó talidomida en el embarazo.',c:3,e:'Tipo D: reacción diferida, teratogénica.'},
-{t:'Un paciente suspende clonidina de golpe y presenta hipertensión rebote.',c:4,e:'Tipo E: aparece al retirar el fármaco; se previene retirándolo de forma gradual.'},
-{t:'Una paciente en tratamiento con anticonceptivo oral y rifampicina se embaraza.',c:5,e:'Tipo F: falla terapéutica por interacción (inducción enzimática).'},
-{t:'Un paciente con warfarina aumenta la dosis y presenta hematomas y sangrado.',c:0,e:'Tipo A: efecto anticoagulante exagerado, predecible y vigilado con el INR.'},
-{t:'Un paciente susceptible desarrolla hipertermia maligna con un anestésico halogenado.',c:1,e:'Tipo B: idiosincrasia de origen genético.'}]})}
-/* R3 */
-function r3(){const T=['Evento adverso','Reacción adversa (RAM)','Sospecha de RAM','Reacción adversa inesperada','Error de medicación','Falta de eficacia'];
-quiz({kick:'Ronda 3 de 4',title:'¿A qué término corresponde esta definición?',pts:10,two:true,opts:T,last:'Siguiente ronda',n:6,items:[
-{t:'Cualquier suceso médico indeseable durante el tratamiento, sin causalidad demostrada.',c:0,e:'Ejemplo: fractura por una caída mientras toma un fármaco.'},
-{t:'Respuesta no deseada a un medicamento, con relación causal al menos razonablemente atribuible.',c:1,e:'La causalidad se valora con algoritmos como el de Naranjo.'},
-{t:'Manifestación clínica o de laboratorio no deseada que ocurre tras administrar un medicamento y cuya relación causal se está evaluando.',c:2,e:'Es lo que se notifica a farmacovigilancia antes de confirmar la causalidad.'},
-{t:'Su naturaleza o severidad no está descrita en la información para prescribir del producto.',c:3,e:'Define una señal nueva de seguridad.'},
-{t:'Acontecimiento prevenible que puede causar daño al paciente, como dar un fármaco o una dosis equivocados.',c:4,e:'No es RAM aunque cause daño: pudo evitarse.'},
-{t:'Ausencia, disminución o cambio inesperado del efecto terapéutico con el uso indicado.',c:5,e:'Se notifica, aunque el paciente no haya tenido una reacción adversa.'}]})}
-/* R4 */
-function r4(){quiz({kick:'Ronda 4 de 4',title:'Casos de alto riesgo',pts:15,last:'Ver resultado',n:8,items:[
-{tag:'Gravedad',t:'Una anafilaxia dura solo minutos y cede con adrenalina. ¿Cómo se clasifica?',o:['Grave: pone en peligro la vida','No grave, porque fue breve','Leve, porque se resolvió','No es una reacción adversa'],e:'La gravedad depende del riesgo para el paciente, no de cuánto dure.'},
-{tag:'Frecuencia',t:'Una reacción aparece en 3 de cada 100 pacientes. ¿Qué categoría tiene?',o:['Frecuente (1 a 10 %)','Muy frecuente (≥ 10 %)','Rara (0.01 a 0.1 %)','Muy rara (< 0.01 %)'],e:'Frecuente: ≥ 1/100 a < 1/10.'},
-{tag:'Frecuencia',t:'Una reacción ocurre en 1 de cada 20,000 pacientes. ¿Qué categoría tiene?',o:['Muy rara (< 1/10,000)','Rara (1/10,000 a 1/1,000)','Poco frecuente','Frecuente'],e:'1/20,000 es menor que 1/10,000: muy rara. Solo se detecta con uso masivo (fase IV).'},
-{tag:'Causalidad',t:'En el algoritmo de Naranjo un caso suma 6 puntos. ¿Qué categoría le corresponde?',o:['Probable (5 a 8)','Definida (≥ 9)','Posible (1 a 4)','Dudosa (≤ 0)'],e:'5 a 8 puntos es probable.'},
-{tag:'Causalidad',t:'Un paciente que toma losartán se fractura la muñeca al resbalar. ¿Qué es?',o:['Un evento adverso sin causalidad demostrada','Una RAM tipo A','Una RAM tipo B','Una falla terapéutica'],e:'Ocurre durante el tratamiento, pero no hay motivo para atribuirla al fármaco.'},
-{tag:'Causalidad',t:'¿Qué dato refuerza más la causalidad, aunque casi nunca es ético buscarlo?',o:['Que reaparezca al reexponer al paciente','Que haya ocurrido en un hospital','Que el paciente sea joven','Que el fármaco sea genérico'],e:'La reaparición tras la reexposición es la evidencia más fuerte.'},
-{tag:'Notificación',t:'Según la NOM-220, ¿en cuántos días naturales debe notificarse una sospecha de reacción adversa grave?',o:['7 días naturales','90 días naturales','15 días hábiles','No tiene plazo'],e:'Grave: 7 días naturales; no grave: 90. Dos o más graves semejantes: hasta 48 horas.'},
-{tag:'Manejo',t:'Ante una reacción tipo B por hipersensibilidad, ¿qué es lo más adecuado?',o:['Suspender, tratar y evitar el fármaco definitivamente','Reducir la dosis a la mitad','Continuar y vigilar','Cambiar solo el horario'],e:'La reacción no depende de la dosis, así que ajustarla no sirve; se registra la alergia.'}]})}
-intro();
-</script></body></html>
-
-</body></html>
+function r2(){const L=['A','B','C','D','E','F'];quiz({kick:'Ronda 2 de 4',title:'¿Qué tipo de reacción adversa es?',legend:'Pista: <b>A</b> exageración del efecto, depende de la dosis · <b>B</b> inmunológica o genética, no depende de la dosis · <b>C</b> dosis acumulada y tiempo · <b>D</b> aparece mucho después · <b>E</b> al retirar el fármaco · <b>F</b> el tratamiento falla.',pts:15,two:true,letters:L,opts:['Aumentada (dosis-dependiente)','Bizarra (impredecible)','Crónica','Diferida','Fin de uso','Falla terapéutica'],last:'Siguiente ronda',n:8,items:[
+{t:'Un paciente se inyecta más insulina de la indicada: el exceso del efecto hipoglucemiante en los mismos receptores produce hipoglucemia.',c:0,e:'Tipo A: exageración del efecto farmacológico, dependiente de la dosis.'},
+{t:'Veinte minutos después de la primera dosis de penicilina aparece anafilaxia. Hay IgE contra el fármaco y no se relaciona con cuánta penicilina se dio.',c:1,e:'Tipo B: hipersensibilidad inmunológica, no depende de la dosis y no es predecible.'},
+{t:'Tras meses de prednisona, la retroalimentación negativa mantenida suprime el eje hipotálamo-hipófisis-suprarrenal.',c:2,e:'Tipo C: depende de la dosis acumulada y del tiempo de uso.'},
+{t:'Un recién nacido con focomelia; su madre tomó talidomida durante el primer trimestre del embarazo.',c:3,e:'Tipo D: reacción diferida, teratogénica; aparece en la descendencia.'},
+{t:'Un paciente con hipertensión controlada suspende clonidina de golpe y días después presenta hipertensión rebote con taquicardia.',c:4,e:'Tipo E: aparece al retirar el fármaco; se previene retirándolo de forma gradual.'},
+{t:'Una paciente con anticonceptivo oral comienza rifampicina, que induce el citocromo P450 y acelera el metabolismo de los estrógenos; se embaraza.',c:5,e:'Tipo F: falla terapéutica por interacción (inducción enzimática).'},
+{t:'Un paciente con warfarina aumenta la dosis; se potencia el efecto anticoagulante sobre los mismos factores de coagulación y aparecen hematomas y sangrado.',c:0,e:'Tipo A: efecto anticoagulante exagerado, predecible y vigilado con el INR.'},
+{t:'Un paciente con variante genética del receptor de rianodina desarrolla hipertermia maligna con un anestésico halogenado. Otros pacientes con la misma dosis no tienen problema.',c:1,e:'Tipo
