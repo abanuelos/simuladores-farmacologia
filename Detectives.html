@@ -28,9 +28,10 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 <h1>Detectives de reacciones adversas</h1>
 <p class="lead">Cuatro rondas para reafirmar 3.1: efectos colaterales, secundarios y tóxicos; tipos de RAM; definiciones; gravedad, frecuencia y causalidad.</p>
 <div class="bar"><div class="steps" id="steps"></div><div class="score">Puntos: <span id="pts">0</span> · <span class="hearts" id="lives"></span></div></div>
-<div id="app"></div>
+<div id="app"><div class="card"><p>Cargando…</p></div></div>
 </div>
 <script>
+window.addEventListener('error',function(e){var d=document.createElement('div');d.style.cssText='background:#fbeaea;color:#b02f2f;padding:10px;margin:8px 0;border:1px solid #b02f2f;border-radius:8px;font:14px system-ui';d.textContent='Error en la página: '+e.message+' (línea '+e.lineno+')';document.body.insertBefore(d,document.body.firstChild)});
 const $=s=>document.querySelector(s),app=$('#app');
 const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 let pts=0,lives=5,round=0,streak=0,best=0;
@@ -73,4 +74,25 @@ function r2(){const L=['A','B','C','D','E','F'];quiz({kick:'Ronda 2 de 4',title:
 {t:'Un paciente con hipertensión controlada suspende clonidina de golpe y días después presenta hipertensión rebote con taquicardia.',c:4,e:'Tipo E: aparece al retirar el fármaco; se previene retirándolo de forma gradual.'},
 {t:'Una paciente con anticonceptivo oral comienza rifampicina, que induce el citocromo P450 y acelera el metabolismo de los estrógenos; se embaraza.',c:5,e:'Tipo F: falla terapéutica por interacción (inducción enzimática).'},
 {t:'Un paciente con warfarina aumenta la dosis; se potencia el efecto anticoagulante sobre los mismos factores de coagulación y aparecen hematomas y sangrado.',c:0,e:'Tipo A: efecto anticoagulante exagerado, predecible y vigilado con el INR.'},
-{t:'Un paciente con variante genética del receptor de rianodina desarrolla hipertermia maligna con un anestésico halogenado. Otros pacientes con la misma dosis no tienen problema.',c:1,e:'Tipo
+{t:'Un paciente con variante genética del receptor de rianodina desarrolla hipertermia maligna con un anestésico halogenado. Otros pacientes con la misma dosis no tienen problema.',c:1,e:'Tipo B: idiosincrasia de origen genético, no se relaciona con la dosis.'}]})}
+/* R3 */
+function r3(){const T=['Evento adverso','Reacción adversa (RAM)','Sospecha de RAM','Reacción adversa inesperada','Error de medicación','Falta de eficacia'];
+quiz({kick:'Ronda 3 de 4',title:'¿A qué término corresponde esta definición?',pts:10,two:true,opts:T,last:'Siguiente ronda',n:6,items:[
+{t:'Cualquier suceso médico indeseable durante el tratamiento, sin causalidad demostrada.',c:0,e:'Ejemplo: fractura por una caída mientras toma un fármaco.'},
+{t:'Respuesta no deseada a un medicamento, con relación causal al menos razonablemente atribuible.',c:1,e:'La causalidad se valora con algoritmos como el de Naranjo.'},
+{t:'Manifestación clínica o de laboratorio no deseada que ocurre tras administrar un medicamento y cuya relación causal se está evaluando.',c:2,e:'Es lo que se notifica a farmacovigilancia antes de confirmar la causalidad.'},
+{t:'Su naturaleza o severidad no está descrita en la información para prescribir del producto.',c:3,e:'Define una señal nueva de seguridad.'},
+{t:'Acontecimiento prevenible que puede causar daño al paciente, como dar un fármaco o una dosis equivocados.',c:4,e:'No es RAM aunque cause daño: pudo evitarse.'},
+{t:'Ausencia, disminución o cambio inesperado del efecto terapéutico con el uso indicado.',c:5,e:'Se notifica, aunque el paciente no haya tenido una reacción adversa.'}]})}
+/* R4 */
+function r4(){quiz({kick:'Ronda 4 de 4',title:'Casos de alto riesgo',pts:15,last:'Ver resultado',n:8,items:[
+{tag:'Gravedad',t:'Una anafilaxia dura solo minutos y cede con adrenalina. ¿Cómo se clasifica?',o:['Grave: pone en peligro la vida','No grave, porque fue breve','Leve, porque se resolvió','No es una reacción adversa'],e:'La gravedad depende del riesgo para el paciente, no de cuánto dure.'},
+{tag:'Frecuencia',t:'Una reacción aparece en 3 de cada 100 pacientes. ¿Qué categoría tiene?',o:['Frecuente (1 a 10 %)','Muy frecuente (≥ 10 %)','Rara (0.01 a 0.1 %)','Muy rara (< 0.01 %)'],e:'Frecuente: ≥ 1/100 a < 1/10.'},
+{tag:'Frecuencia',t:'Una reacción ocurre en 1 de cada 20,000 pacientes. ¿Qué categoría tiene?',o:['Muy rara (< 1/10,000)','Rara (1/10,000 a 1/1,000)','Poco frecuente','Frecuente'],e:'1/20,000 es menor que 1/10,000: muy rara. Solo se detecta con uso masivo (fase IV).'},
+{tag:'Causalidad',t:'En el algoritmo de Naranjo un caso suma 6 puntos. ¿Qué categoría le corresponde?',o:['Probable (5 a 8)','Definida (≥ 9)','Posible (1 a 4)','Dudosa (≤ 0)'],e:'5 a 8 puntos es probable.'},
+{tag:'Causalidad',t:'Un paciente que toma losartán se fractura la muñeca al resbalar. ¿Qué es?',o:['Un evento adverso sin causalidad demostrada','Una RAM tipo A','Una RAM tipo B','Una falla terapéutica'],e:'Ocurre durante el tratamiento, pero no hay motivo para atribuirla al fármaco.'},
+{tag:'Causalidad',t:'¿Qué dato refuerza más la causalidad, aunque casi nunca es ético buscarlo?',o:['Que reaparezca al reexponer al paciente','Que haya ocurrido en un hospital','Que el paciente sea joven','Que el fármaco sea genérico'],e:'La reaparición tras la reexposición es la evidencia más fuerte.'},
+{tag:'Notificación',t:'Según la NOM-220, ¿en cuántos días naturales debe notificarse una sospecha de reacción adversa grave?',o:['7 días naturales','90 días naturales','15 días hábiles','No tiene plazo'],e:'Grave: 7 días naturales; no grave: 90. Dos o más graves semejantes: hasta 48 horas.'},
+{tag:'Manejo',t:'Ante una reacción tipo B por hipersensibilidad, ¿qué es lo más adecuado?',o:['Suspender, tratar y evitar el fármaco definitivamente','Reducir la dosis a la mitad','Continuar y vigilar','Cambiar solo el horario'],e:'La reacción no depende de la dosis, así que ajustarla no sirve; se registra la alergia.'}]})}
+intro();
+</script></body></html>
