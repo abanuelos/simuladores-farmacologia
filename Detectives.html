@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light dark">
+<title>Detectives de reacciones adversas · Juego sesión 30</title>
+<style>
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--border:rgba(11,11,11,.14);--good:#006300;--good-bg:#e8f3e8;--bad:#b02f2f;--bad-bg:#fbeaea;--accent:#0b2545;--on:#fff;--gold:#a07d10;--teal:#1e6e6e;--chip:#eef1f5}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;--border:rgba(255,255,255,.14);--good:#4cc24c;--good-bg:#14301a;--bad:#f08a8a;--bad-bg:#3a1c1c;--accent:#86b6ef;--on:#0d1b2e;--gold:#e0b93a;--teal:#58b5b5;--chip:#262624}}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 56px}
+.kicker{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 6px}
+h1{font-size:28px;line-height:1.15;margin:0 0 6px}h2{font-size:20px;margin:0 0 4px}.lead{color:var(--ink2);margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.steps{display:flex;gap:6px;flex:1;min-width:200px}.steps i{flex:1;height:6px;border-radius:3px;background:var(--border)}.steps i.on{background:var(--teal)}.steps i.cur{background:var(--gold)}
+.score{font-weight:700;color:var(--accent)}
+button{font:inherit;cursor:pointer;border:1px solid var(--border);background:var(--chip);color:var(--ink);border-radius:10px;padding:10px 14px;text-align:left;transition:transform .08s}
+button:hover:not(:disabled){border-color:var(--accent)}button:active:not(:disabled){transform:scale(.98)}
+button.pri{background:var(--accent);color:var(--on);border-color:var(--accent);font-weight:700;text-align:center}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.opts{display:grid;gap:8px;margin-top:12px}.opts.two{grid-template-columns:1fr 1fr}@media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+.ok{background:var(--good-bg)!important;border-color:var(--good)!important;color:var(--good)}.no{background:var(--bad-bg)!important;border-color:var(--bad)!important;color:var(--bad)}
+.fb{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:15px}.fb.ok{border:1px solid var(--good)}.fb.no{border:1px solid var(--bad)}
+.case{font-size:18px;margin:8px 0 0}.tag{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:var(--chip);border-radius:6px;padding:2px 8px;margin-bottom:6px}
+.big{font-size:44px;font-weight:800;color:var(--accent);line-height:1}.hearts{letter-spacing:2px}.small{font-size:13px;color:var(--muted)}
+.opt b{display:inline-block;min-width:1.4em;color:var(--gold)}
+.timer{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:12px}.timer i{display:block;height:100%;background:var(--gold);width:100%}
+</style></head><body><div class="wrap">
+<p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 30</p>
+<h1>Detectives de reacciones adversas</h1>
+<p class="lead">Cuatro rondas para reafirmar 3.1: efectos colaterales, secundarios y tóxicos; tipos de RAM; definiciones; gravedad, frecuencia y causalidad.</p>
+<div class="bar"><div class="steps" id="steps"></div><div class="score">Puntos: <span id="pts">0</span> · <span class="hearts" id="lives"></span></div></div>
+<div id="app"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let pts=0,lives=5,round=0,streak=0,best=0;
+const NAMES=['Clasifica el efecto','Detective de tipos','Une los términos','Casos de alto riesgo'];
+function hud(){$('#pts').textContent=pts;$('#lives').textContent='♥'.repeat(Math.max(lives,0))+'♡'.repeat(Math.max(5-lives,0));$('#steps').innerHTML=NAMES.map((_,i)=>`<i class="${i<round?'on':i==round?'cur':''}"></i>`).join('')}
+function reg(ok,base){if(ok){streak++;best=Math.max(best,streak);const bonus=streak>=3?5:0;pts+=base+bonus;return bonus}streak=0;lives--;return 0}
+function intro(){app.innerHTML=`<div class="card"><h2>Reglas</h2><p>Cada acierto suma puntos; tres aciertos seguidos dan +5 de bono por racha. Cada error te quita una vida y rompe la racha. Si pierdes las 5 vidas, la partida termina.</p><button class="pri" id="go">Empezar</button></div>`;$('#go').onclick=r1;hud()}
+function end(msg){app.innerHTML=`<div class="card" style="text-align:center"><p class="kicker">Resultado</p><div class="big">${pts}</div><p class="lead">${msg}</p><p class="small">Mejor racha: ${best}</p><button class="pri" id="again">Jugar de nuevo</button></div>`;$('#again').onclick=()=>{pts=0;lives=5;round=0;streak=0;best=0;intro()}}
+function over(){end('Te quedaste sin vidas. Repasa las diapositivas de 3.1 e inténtalo otra vez.')}
+function next(){round++;hud();[r1,r2,r3,r4,fin][round]()}
+function fin(){end((lives>=4?'Excelente: ya distingues efectos, reacciones y su causalidad.':lives>=2?'Buen trabajo. Repasa los puntos donde fallaste.':'Pasaste por poco. Vuelve a las diapositivas y repite.')+' Vidas restantes: '+lives)}
+/* Motor genérico de preguntas */
+function quiz(o){const q=sh(o.items).slice(0,o.n||o.items.length);let i=0;
+function show(){const it=q[i];const opts=o.opts?o.opts.map((t,k)=>({t,k})):sh(it.o.map((t,k)=>({t,k:k==0?0:1})));
+ const correct=o.opts?it.c:0;
+ app.innerHTML=`<div class="card"><p class="kicker">${o.kick} · ${i+1}/${q.length}</p><h2>${o.title}</h2>${it.tag?`<span class="tag">${it.tag}</span>`:''}<p class="case">${it.t}</p><div class="opts ${o.two?'two':''}">${opts.map((x,j)=>`<button class="opt" data-j="${j}">${o.letters?`<b>${o.letters[x.k]}</b>`:''}${x.t}</button>`).join('')}</div><div id="fb"></div></div>`;
+ const bs=app.querySelectorAll('[data-j]');
+ bs.forEach((b,j)=>b.onclick=()=>{bs.forEach(x=>x.disabled=true);const ok=opts[j].k===correct;const bonus=reg(ok,o.pts);b.classList.add(ok?'ok':'no');if(!ok)bs[opts.findIndex(x=>x.k===correct)].classList.add('ok');hud();
+  $('#fb').innerHTML=`<div class="fb ${ok?'ok':'no'}">${ok?`Correcto (+${o.pts+bonus}${bonus?', racha':''}). `:'No. '}${it.e}</div><p><button class="pri" id="nx">${i==q.length-1?o.last:'Continuar'}</button></p>`;
+  $('#nx').onclick=()=>{if(lives<=0)return over();i++;i<q.length?show():next()}})}
+show()}
+/* R1 */
+function r1(){quiz({kick:'Ronda 1 de 4',title:'¿Qué tipo de efecto es?',pts:10,two:true,opts:['Terapéutico','Colateral','Secundario','Tóxico'],last:'Siguiente ronda',n:10,items:[
+{t:'Atropina en una bradicardia sintomática: aumenta la frecuencia cardiaca.',c:0,e:'Es el efecto buscado para esa indicación.'},
+{t:'Atropina: el paciente presenta boca seca y retención urinaria.',c:1,e:'Es la misma acción antimuscarínica actuando en glándulas y vejiga.'},
+{t:'Antibiótico de amplio espectro: aparece candidiasis oral.',c:2,e:'Consecuencia indirecta: se altera la flora normal y proliferan los hongos.'},
+{t:'Sobredosis de paracetamol: necrosis hepática.',c:3,e:'Daño por dosis excesiva; es un efecto tóxico dependiente de la dosis.'},
+{t:'Morfina para el dolor: estreñimiento.',c:1,e:'Acción en receptores μ intestinales, predecible por el mecanismo.'},
+{t:'Ácido acetilsalicílico en dosis baja para prevención cardiovascular: inhibe la agregación plaquetaria.',c:0,e:'Aquí es el efecto buscado; en un analgésico sería colateral.'},
+{t:'Difenhidramina tomada para dormir: somnolencia.',c:0,e:'Por el contexto, la somnolencia es el efecto terapéutico buscado.'},
+{t:'Difenhidramina tomada para la rinitis: somnolencia.',c:1,e:'Mismo efecto, distinto contexto: aquí es colateral indeseable.'},
+{t:'Tras un antibiótico, el paciente tiene diarrea por alteración de la flora intestinal.',c:2,e:'Efecto secundario: consecuencia indirecta del efecto principal.'},
+{t:'Concentraciones muy altas de digoxina: arritmias y náusea.',c:3,e:'Toxicidad por exceso de dosis o falta de eliminación; el margen terapéutico es estrecho.'}]})}
+/* R2 */
+function r2(){const L=['A','B','C','D','E','F'];quiz({kick:'Ronda 2 de 4',title:'¿Qué tipo de reacción adversa es?',pts:15,two:true,letters:L,opts:['Aumentada (dosis-dependiente)','Bizarra (impredecible)','Crónica','Diferida','Fin de uso','Falla terapéutica'],last:'Siguiente ronda',n:8,items:[
+{t:'Un paciente se inyecta más insulina de la indicada y presenta hipoglucemia.',c:0,e:'Tipo A: exageración del efecto farmacológico, dependiente de la dosis.'},
+{t:'Veinte minutos después de la primera dosis de penicilina aparece anafilaxia.',c:1,e:'Tipo B: hipersensibilidad, no depende de la dosis y es impredecible.'},
+{t:'Tras meses de prednisona, el eje hipotálamo-hipófisis-suprarrenal queda suprimido.',c:2,e:'Tipo C: relacionada con la dosis acumulada y el tiempo de uso.'},
+{t:'Un recién nacido con focomelia; su madre tomó talidomida en el embarazo.',c:3,e:'Tipo D: reacción diferida, teratogénica.'},
+{t:'Un paciente suspende clonidina de golpe y presenta hipertensión rebote.',c:4,e:'Tipo E: aparece al retirar el fármaco; se previene retirándolo de forma gradual.'},
+{t:'Una paciente en tratamiento con anticonceptivo oral y rifampicina se embaraza.',c:5,e:'Tipo F: falla terapéutica por interacción (inducción enzimática).'},
+{t:'Un paciente con warfarina aumenta la dosis y presenta hematomas y sangrado.',c:0,e:'Tipo A: efecto anticoagulante exagerado, predecible y vigilado con el INR.'},
+{t:'Un paciente susceptible desarrolla hipertermia maligna con un anestésico halogenado.',c:1,e:'Tipo B: idiosincrasia de origen genético.'}]})}
+/* R3 */
+function r3(){const T=['Evento adverso','Reacción adversa (RAM)','Sospecha de RAM','Reacción adversa inesperada','Error de medicación','Falta de eficacia'];
+quiz({kick:'Ronda 3 de 4',title:'¿A qué término corresponde esta definición?',pts:10,two:true,opts:T,last:'Siguiente ronda',n:6,items:[
+{t:'Cualquier suceso médico indeseable durante el tratamiento, sin causalidad demostrada.',c:0,e:'Ejemplo: fractura por una caída mientras toma un fármaco.'},
+{t:'Respuesta no deseada a un medicamento, con relación causal al menos razonablemente atribuible.',c:1,e:'La causalidad se valora con algoritmos como el de Naranjo.'},
+{t:'Manifestación clínica o de laboratorio no deseada que ocurre tras administrar un medicamento y cuya relación causal se está evaluando.',c:2,e:'Es lo que se notifica a farmacovigilancia antes de confirmar la causalidad.'},
+{t:'Su naturaleza o severidad no está descrita en la información para prescribir del producto.',c:3,e:'Define una señal nueva de seguridad.'},
+{t:'Acontecimiento prevenible que puede causar daño al paciente, como dar un fármaco o una dosis equivocados.',c:4,e:'No es RAM aunque cause daño: pudo evitarse.'},
+{t:'Ausencia, disminución o cambio inesperado del efecto terapéutico con el uso indicado.',c:5,e:'Se notifica, aunque el paciente no haya tenido una reacción adversa.'}]})}
+/* R4 */
+function r4(){quiz({kick:'Ronda 4 de 4',title:'Casos de alto riesgo',pts:15,last:'Ver resultado',n:8,items:[
+{tag:'Gravedad',t:'Una anafilaxia dura solo minutos y cede con adrenalina. ¿Cómo se clasifica?',o:['Grave: pone en peligro la vida','No grave, porque fue breve','Leve, porque se resolvió','No es una reacción adversa'],e:'La gravedad depende del riesgo para el paciente, no de cuánto dure.'},
+{tag:'Frecuencia',t:'Una reacción aparece en 3 de cada 100 pacientes. ¿Qué categoría tiene?',o:['Frecuente (1 a 10 %)','Muy frecuente (≥ 10 %)','Rara (0.01 a 0.1 %)','Muy rara (< 0.01 %)'],e:'Frecuente: ≥ 1/100 a < 1/10.'},
+{tag:'Frecuencia',t:'Una reacción ocurre en 1 de cada 20,000 pacientes. ¿Qué categoría tiene?',o:['Muy rara (< 1/10,000)','Rara (1/10,000 a 1/1,000)','Poco frecuente','Frecuente'],e:'1/20,000 es menor que 1/10,000: muy rara. Solo se detecta con uso masivo (fase IV).'},
+{tag:'Causalidad',t:'En el algoritmo de Naranjo un caso suma 6 puntos. ¿Qué categoría le corresponde?',o:['Probable (5 a 8)','Definida (≥ 9)','Posible (1 a 4)','Dudosa (≤ 0)'],e:'5 a 8 puntos es probable.'},
+{tag:'Causalidad',t:'Un paciente que toma losartán se fractura la muñeca al resbalar. ¿Qué es?',o:['Un evento adverso sin causalidad demostrada','Una RAM tipo A','Una RAM tipo B','Una falla terapéutica'],e:'Ocurre durante el tratamiento, pero no hay motivo para atribuirla al fármaco.'},
+{tag:'Causalidad',t:'¿Qué dato refuerza más la causalidad, aunque casi nunca es ético buscarlo?',o:['Que reaparezca al reexponer al paciente','Que haya ocurrido en un hospital','Que el paciente sea joven','Que el fármaco sea genérico'],e:'La reaparición tras la reexposición es la evidencia más fuerte.'},
+{tag:'Notificación',t:'Según la NOM-220, ¿en cuántos días naturales debe notificarse una sospecha de reacción adversa grave?',o:['7 días naturales','90 días naturales','15 días hábiles','No tiene plazo'],e:'Grave: 7 días naturales; no grave: 90. Dos o más graves semejantes: hasta 48 horas.'},
+{tag:'Manejo',t:'Ante una reacción tipo B por hipersensibilidad, ¿qué es lo más adecuado?',o:['Suspender, tratar y evitar el fármaco definitivamente','Reducir la dosis a la mitad','Continuar y vigilar','Cambiar solo el horario'],e:'La reacción no depende de la dosis, así que ajustarla no sirve; se registra la alergia.'}]})}
+intro();
+</script></body></html>
+
+</body></html>
