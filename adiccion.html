@@ -1,0 +1,82 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+<title>Detectives de la adicción · Juego sesión 33</title>
+<style>
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--border:rgba(11,11,11,.14);--good:#006300;--good-bg:#e8f3e8;--bad:#b02f2f;--bad-bg:#fbeaea;--accent:#0b2545;--on:#fff;--gold:#a07d10;--teal:#1e6e6e;--chip:#eef1f5}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 56px}
+.kicker{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 6px}
+h1{font-size:28px;line-height:1.15;margin:0 0 6px}h2{font-size:20px;margin:0 0 4px}.lead{color:var(--ink2);margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.steps{display:flex;gap:6px;flex:1;min-width:200px}.steps i{flex:1;height:6px;border-radius:3px;background:var(--border)}.steps i.on{background:var(--teal)}.steps i.cur{background:var(--gold)}
+.score{font-weight:700;color:var(--accent)}
+button{font:inherit;cursor:pointer;border:1px solid var(--border);background:var(--chip);color:var(--ink);border-radius:10px;padding:10px 14px;text-align:left;transition:transform .08s}
+button:hover:not(:disabled){border-color:var(--accent)}button:active:not(:disabled){transform:scale(.98)}
+button.pri{background:var(--accent);color:var(--on);border-color:var(--accent);font-weight:700;text-align:center}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.opts{display:grid;gap:8px;margin-top:12px}.opts.two{grid-template-columns:1fr 1fr}@media(max-width:520px){.opts.two{grid-template-columns:1fr}}
+.ok{background:var(--good-bg)!important;border-color:var(--good)!important;color:var(--good)}.no{background:var(--bad-bg)!important;border-color:var(--bad)!important;color:var(--bad)}
+.fb{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:15px}.fb.ok{border:1px solid var(--good)}.fb.no{border:1px solid var(--bad)}
+.case{font-size:18px;margin:8px 0 0}.tag{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:var(--chip);border-radius:6px;padding:2px 8px;margin-bottom:6px}
+.big{font-size:44px;font-weight:800;color:var(--accent);line-height:1}.hearts{letter-spacing:2px}.hp{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle}.hp i{width:18px;height:10px;border-radius:2px;background:var(--border)}.hp i.on{background:var(--good)}.hp i.low{background:var(--bad)}.small{font-size:13px;color:var(--muted)}
+.opt b{display:inline-block;min-width:1.4em;color:var(--gold)}
+.timer{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:12px}.timer i{display:block;height:100%;background:var(--gold);width:100%}
+</style></head><body><div class="wrap">
+<p class="kicker">Farmacología Básica · Grupo 5PM6 · Sesión 33</p>
+<h1>Detectives de la adicción</h1>
+<p class="lead">Dos rondas para reafirmar 3.4: reconoce la sustancia de abuso por sus signos y aplica los conceptos y el tratamiento de la farmacodependencia.</p>
+<div class="bar"><div class="steps" id="steps"></div><div class="score">Puntos: <span id="pts">0</span> · <span class="hearts" id="lives"></span><span class="hp" id="hp" title="Barra de vida"></span></div></div>
+<div id="app"><div class="card"><p>Cargando…</p></div></div>
+</div>
+<script>
+window.addEventListener('error',function(e){var d=document.createElement('div');d.style.cssText='background:#fbeaea;color:#b02f2f;padding:10px;margin:8px 0;border:1px solid #b02f2f;border-radius:8px;font:14px system-ui';d.textContent='Error en la página: '+e.message+' (línea '+e.lineno+')';document.body.insertBefore(d,document.body.firstChild)});
+const $=s=>document.querySelector(s),app=$('#app');
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+let pts=0,lives=3,hp=5,round=0,streak=0,best=0;
+const NAMES=['¿Qué sustancia es?','Conceptos y tratamiento'];
+function health(){return (lives-1)*5+hp}
+function hud(){$('#pts').textContent=pts;$('#lives').textContent='♥'.repeat(Math.max(lives,0))+'♡'.repeat(Math.max(3-lives,0));$('#hp').innerHTML=[1,2,3,4,5].map(n=>`<i class="${n<=hp?(hp<=2?'low':'on'):''}"></i>`).join('');$('#steps').innerHTML=NAMES.map((_,i)=>`<i class="${i<round?'on':i==round?'cur':''}"></i>`).join('')}
+function reg(ok,base){if(ok){streak++;best=Math.max(best,streak);const bonus=streak>=3?5:0;pts+=base+bonus;if(streak%3==0&&hp<5)hp++;return bonus}streak=0;hp--;if(hp<=0){lives--;hp=5}return 0}
+function intro(){app.innerHTML=`<div class="card"><h2>Reglas</h2><p>Cada acierto suma puntos; tres aciertos seguidos dan +5 de bono por racha. Tienes 3 vidas (♥) y una barra de vida que resiste 5 errores: cada error le quita 1 punto y rompe la racha. Cada 3 aciertos seguidos recuperas 1 punto de la barra. Si la barra se vacía pierdes una vida y se llena de nuevo. Con las 3 vidas perdidas termina la partida.</p><button class="pri" id="go">Empezar</button></div>`;$('#go').onclick=r1;hud()}
+function end(msg){app.innerHTML=`<div class="card" style="text-align:center"><p class="kicker">Resultado</p><div class="big">${pts}</div><p class="lead">${msg}</p><p class="small">Mejor racha: ${best}</p><button class="pri" id="again">Jugar de nuevo</button></div>`;$('#again').onclick=()=>{pts=0;lives=3;hp=5;round=0;streak=0;best=0;intro()}}
+function over(){end('Te quedaste sin vidas. Repasa las diapositivas de 3.4 e inténtalo otra vez.')}
+function next(){round++;hud();[r1,r2,fin][round]()}
+function fin(){end((health()>=12?'Excelente: ya reconoces las sustancias de abuso y su tratamiento.':health()>=6?'Buen trabajo. Repasa los puntos donde fallaste.':'Pasaste por poco. Vuelve a las diapositivas y repite.')+' Vidas restantes: '+lives)}
+/* Motor genérico de preguntas */
+function quiz(o){const q=sh(o.items).slice(0,o.n||o.items.length);let i=0;
+function show(){const it=q[i];const opts=o.opts?o.opts.map((t,k)=>({t,k})):sh(it.o.map((t,k)=>({t,k:k==0?0:1})));
+ const correct=o.opts?it.c:0;
+ app.innerHTML=`<div class="card"><p class="kicker">${o.kick} · ${i+1}/${q.length}</p><h2>${o.title}</h2>${o.legend?`<p class="small">${o.legend}</p>`:''}${it.tag?`<span class="tag">${it.tag}</span>`:''}<p class="case">${it.t}</p><div class="opts ${o.two?'two':''}">${opts.map((x,j)=>`<button class="opt" data-j="${j}">${o.letters?`<b>${o.letters[x.k]}</b>`:''}${x.t}</button>`).join('')}</div><div id="fb"></div></div>`;
+ const bs=app.querySelectorAll('[data-j]');
+ bs.forEach((b,j)=>b.onclick=()=>{bs.forEach(x=>x.disabled=true);const ok=opts[j].k===correct;const bonus=reg(ok,o.pts);b.classList.add(ok?'ok':'no');if(!ok)bs[opts.findIndex(x=>x.k===correct)].classList.add('ok');hud();
+  $('#fb').innerHTML=`<div class="fb ${ok?'ok':'no'}">${ok?`Correcto (+${o.pts+bonus}${bonus?', racha':''}). `:'No. '}${it.e}</div><p><button class="pri" id="nx">${i==q.length-1?o.last:'Continuar'}</button></p>`;
+  $('#nx').onclick=()=>{if(lives<=0)return over();i++;i<q.length?show():next()}})}
+show()}
+/* R1 */
+function r1(){quiz({kick:'Ronda 1 de 2',title:'¿Qué sustancia es?',legend:'Pista: <b>etanol</b> = GABA-A y orden cero · <b>opioides</b> = receptor μ (miosis, bradipnea) · <b>nicotina</b> = receptor α4β2 · <b>anfetaminas</b> = liberan dopamina y noradrenalina.',pts:10,two:true,opts:['Etanol','Opioides','Nicotina','Anfetaminas'],last:'Siguiente ronda',n:10,items:[
+{t:'Hombre de 50 años, 72 horas sin beber: fiebre, desorientación, alucinaciones y taquicardia.',c:0,e:'Etanol: delirium tremens, la fase más grave de la abstinencia alcohólica.'},
+{t:'Tras suspender el consumo: lagrimeo, rinorrea, piel de gallina, bostezos, midriasis y diarrea.',c:1,e:'Opioides: abstinencia muy molesta, pero rara vez mortal.'},
+{t:'Una fumadora que dejó el cigarro tiene irritabilidad, insomnio, hambre y deseo intenso a los 2 días.',c:2,e:'Nicotina: la abstinencia alcanza su pico en 1 a 3 días y dura de 2 a 4 semanas.'},
+{t:'Estudiante que tomó pastillas “para rendir”: agitación, midriasis, taquicardia y 40 °C de temperatura.',c:3,e:'Anfetaminas: toxíndrome simpaticomimético con hipertermia; es urgencia médica.'},
+{t:'Persona inconsciente con miosis puntiforme y frecuencia respiratoria de 6 por minuto.',c:1,e:'Opioides: tríada de depresión respiratoria, miosis y depresión del SNC; se trata con naloxona.'},
+{t:'Ocho horas después del último trago: temblor, sudoración, ansiedad y náusea.',c:0,e:'Etanol: la abstinencia inicia a las 6 a 12 horas con signos de hiperactividad autonómica.'},
+{t:'Tras días de consumo intenso: fatiga extrema, hipersomnia, hambre y estado de ánimo deprimido (“crash”).',c:3,e:'Anfetaminas: la abstinencia es sobre todo psicológica, sin síndrome físico grave.'},
+{t:'Se elimina a razón de unos 15 mg/dL por hora, sin importar la concentración.',c:0,e:'Etanol: cinética de orden cero a las dosis habituales.'},
+{t:'Un paciente se trata con metadona o buprenorfina como terapia sustitutiva.',c:1,e:'Opioides: la metadona es agonista completo y la buprenorfina, agonista parcial.'},
+{t:'Se ofrece vareniclina, un agonista parcial del receptor α4β2, para dejar de fumar.',c:2,e:'Nicotina: alivia la abstinencia y reduce la recompensa del cigarro.'}]})}
+/* R2 */
+function r2(){quiz({kick:'Ronda 2 de 2',title:'Conceptos y tratamiento',legend:'Pista: dependencia = adaptación del organismo; adicción = uso compulsivo pese al daño.',pts:15,last:'Ver resultado',n:8,items:[
+{tag:'Concepto',t:'Una paciente con dolor oncológico recibe morfina por meses y tiene abstinencia si se suspende de golpe. ¿Qué es?',o:['Dependencia física esperada, no necesariamente adicción','Adicción','Abuso','Hábito'],e:'Dependencia física: adaptación al fármaco. La adicción exige uso compulsivo con pérdida de control y daño.'},
+{tag:'Tolerancia',t:'Con opioides crónicos, ¿a cuál de estos efectos casi no se desarrolla tolerancia?',o:['Miosis y estreñimiento','Analgesia','Euforia','Náusea'],e:'La tolerancia a miosis y estreñimiento es mínima; por eso persisten. La depresión respiratoria desarrolla tolerancia incompleta.'},
+{tag:'Factores',t:'¿Qué característica aumenta el potencial adictivo de una sustancia?',o:['Llegada muy rápida al cerebro (fumada o intravenosa)','Absorción lenta por vía oral','Vida media muy larga','Dosis pequeñas y graduales'],e:'Mientras más rápido sube la concentración cerebral, mayor es el refuerzo.'},
+{tag:'DSM-5',t:'¿Cuántos criterios del DSM-5 definen un trastorno por consumo grave?',o:['6 o más','2 a 3','4 a 5','Solo 1'],e:'De 11 criterios: 2 a 3 leve, 4 a 5 moderado y 6 o más grave.'},
+{tag:'Etanol',t:'En un paciente alcohólico con hipoglucemia, ¿qué se administra antes de la glucosa?',o:['Tiamina','Piridoxina','Naloxona','Flumazenil'],e:'La tiamina previene la encefalopatía de Wernicke, que la glucosa puede precipitar.'},
+{tag:'Opioides',t:'¿Por qué hay que vigilar al paciente después de la naloxona?',o:['Su efecto dura menos que el de muchos opioides y la depresión puede reaparecer','Produce miosis intensa','Causa depresión respiratoria','Es un agonista de receptores μ'],e:'Pueden requerirse nuevas dosis o una infusión.'},
+{tag:'Opioides',t:'Se prescribe naltrexona a un paciente que usó heroína ayer. ¿Qué puede ocurrir?',o:['Abstinencia precipitada por el antagonista','Mayor analgesia','Sobredosis','Nada: es un tratamiento seguro'],e:'La naltrexona se inicia después de la desintoxicación, porque bloquea los receptores μ.'},
+{tag:'Etanol',t:'¿Cómo actúa el disulfiram en la dependencia al alcohol?',o:['Inhibe la aldehído deshidrogenasa y produce malestar si se bebe','Bloquea los receptores μ','Es agonista parcial del receptor α4β2','Inhibe la recaptura de dopamina'],e:'Se acumula acetaldehído y aparece malestar intenso, lo que desalienta beber.'}]})}
+intro();
+</script></body></html>
+
+</body></html>
